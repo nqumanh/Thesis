@@ -1,0 +1,39 @@
+.HeaderSidebar {
+    height: 70px;
+    background-color: #ff9d01;
+    padding: 0 0 0 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.HeaderLogo {
+    display: flex;
+    width: 150px;
+}
+
+.Logo {
+    padding: 10px 0;
+    text-decoration: none;
+    flex: 1;
+}
+
+.ToggleSidebar {
+    display: flex;
+    width: 58px
+}
+
+.ToggleButton {
+    width: 100%;
+    background-color: #ff9d01;
+    padding: 26px 15px;
+    border: 0;
+}
+
+.ToggleIcon {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-direction: column;
+    width: 28px;
+    height: 18px;
+}

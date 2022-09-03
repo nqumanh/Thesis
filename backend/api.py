@@ -198,7 +198,7 @@ class CreateUserAccount(Resource):
         
 
 api.add_resource(GetAllCourses, '/')
-api.add_resource(CreateUserAccount, '/  ')
+api.add_resource(CreateUserAccount, '/')
 # api.add_resource(GetStudentById, '/student/<id>')
 api.add_resource(GetAllCoursesOfStudent, '/student-register/<id>')
 api.add_resource(GetAllMaterialInCourse, '/materials/<code_module>/<code_presentation>')
