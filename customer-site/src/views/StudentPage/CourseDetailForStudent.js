@@ -20,7 +20,7 @@ export default function CourseDetailForStudent () {
         setMaterials(data)
       })
     )
-  }, [])
+  }, [course])
 
   useEffect(() => {
     fetch(
@@ -30,7 +30,7 @@ export default function CourseDetailForStudent () {
         setAssessments(data)
       })
     )
-  }, [])
+  }, [course])
 
   const eleMaterial = materials.slice(0, 5).map(material => (
     <tr key={material.id_site}>

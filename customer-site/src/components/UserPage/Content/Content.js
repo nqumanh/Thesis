@@ -30,7 +30,7 @@ export default function Content (props) {
         setPresentations(data)
       })
     )
-  }, [props.userRole])
+  }, [path])
 
   const onFilter = (
     filterName,
