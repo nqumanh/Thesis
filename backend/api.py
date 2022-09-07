@@ -9,7 +9,7 @@ import uuid
 mysql = MySQL()
 app = Flask(__name__)
 
-cors = CORS(app)
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 app.config['CORS_HEADERS'] = 'Content-Type'
 # MySQL configurations
 app.config['MYSQL_DATABASE_USER'] = 'root'
@@ -26,7 +26,6 @@ api = Api(app)
 class CreateUserAccount(Resource):
     def post(self):
         try:
-            # Parse the arguments
             data = request.form
             username = data.get('username')
             password = data.get('password')
@@ -38,34 +37,70 @@ class CreateUserAccount(Resource):
                            VALUES ("{}", "{}", "{}", "{}")"""
                            .format(id, username, hashPassword, 'student'))
             con.commit()
-            cursor.close()
             return make_response('Successfully registered.', 201)
 
         except Exception as e:
             return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
 
 
-class Login(Resource):
+class EditUserPassword(Resource):
     def post(self):
         try:
-            # Parse the arguments
             data = request.form
             username = data.get('username')
-            password = data.get('password')
+            oldPassword = data.get('old_password')
+            newPassword = data.get('new_password')
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute("""select password from user_account 
                             where username="{}";"""
                            .format(username))
             password_hash = str(cursor.fetchall()[0][0])
-            auth_state = check_password_hash(password_hash, password)
+            auth_state = check_password_hash(password_hash, oldPassword)
             if auth_state:
-                return make_response('Login successfully!', 201)
+                hash_password = generate_password_hash(newPassword)
+                cursor.execute("""UPDATE user_account 
+                                SET password = \"{}\" 
+                                WHERE username=\"{}\";
+                                """.format(hash_password, username))
+                con.commit()
+                return make_response('Password changed!', 201)
             else:
                 raise Exception('Wrong Password!')
 
         except Exception as e:
             return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
+class Login(Resource):
+    def post(self):
+        try:
+            data = request.form
+            username = data.get('username')
+            password = data.get('password')
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""select password from user_account 
+                            where username=\"{}\";"""
+                           .format(username))
+            data = cursor.fetchall()
+            if (len(data) == 0):
+                raise Exception("Account does not exist")
+            password_hash = str(data[0][0])
+            auth_state = check_password_hash(password_hash, password)
+            if auth_state:
+                return make_response('Login successfully!', 201)
+            else:
+                return make_response('Wrong Password!', 401)
+
+        except Exception as e:
+            return make_response(str(e), 400)
         finally:
             cursor.close()
             con.close()
@@ -288,6 +323,7 @@ class GetAllMessages(Resource):
 
 api.add_resource(GetAllCourses, '/')
 api.add_resource(CreateUserAccount, '/create-user-account')
+api.add_resource(EditUserPassword, '/edit-user-password')
 api.add_resource(Login, '/login')
 api.add_resource(GetStudentById, '/student/<id>/profile')
 api.add_resource(GetParentsById, '/parents/<id>')

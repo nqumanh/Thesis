@@ -9,6 +9,7 @@ import CourseDetailForStudent from './views/StudentPage/CourseDetailForStudent'
 import Profile from './views/StudentPage/Profile'
 import Message from './views/StudentPage/Message'
 import Warning from './views/StudentPage/Warning'
+import Security from './views/StudentPage/Security'
 
 import 'bootstrap/dist/js/bootstrap.bundle';
 
@@ -39,6 +40,11 @@ export default function App () {
         exact
         path='/student/:id/warning'
         element={<Warning />}
+      />
+      <Route
+        exact
+        path='/student/:id/security'
+        element={<Security />}
       />
 
       {/*  */}

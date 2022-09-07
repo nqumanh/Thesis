@@ -1,17 +1,51 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+
+// async function loginUser(credentials) {
+//   return fetch('http://localhost:8080/login', {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     body: JSON.stringify(credentials)
+//   })
+//     .then(data => data.json())
+//  }
 
 export default function LoginPage () {
+  const navigate = useNavigate()
+
   const [studentId, setStudentId] = useState('')
   const [password, setPassword] = useState('')
 
   const onChange = e => {
     const { name, value } = e.target
-    if (name === 'email') {
+    if (name === 'username') {
       setStudentId(value)
     } else {
       setPassword(value)
     }
+  }
+
+  const handleSubmit = async e => {
+    e.preventDefault()
+
+    let formData = new FormData()
+    formData.append('username', studentId)
+    formData.append('password', password)
+
+    const requestOptions = {
+      method: 'POST',
+      body: formData
+    }
+    await fetch('http://localhost:5000/login', requestOptions)
+      .then(response => {
+        if (response.status===400) throw new Error("Account does not exist!");
+        if (response.status===401) throw new Error("Wrong Password!");
+        alert('Login successfully!')
+        navigate('/student/' + studentId)
+      })
+      .catch(err => alert(err))
   }
 
   return (
@@ -29,19 +63,20 @@ export default function LoginPage () {
             <div className='card shadow-lg'>
               <div className='card-body p-5'>
                 <h1 className='fs-4 card-title fw-bold mb-4'>Login</h1>
-                <form className='needs-validation'>
+                <form onSubmit={handleSubmit} className='needs-validation'>
                   <div className='mb-3'>
-                    <label className='mb-2 text-muted' htmlFor='email'>
-                      E-Mail Address
+                    <label className='mb-2 text-muted' htmlFor='username'>
+                      Username
                     </label>
                     <input
-                      id='email'
-                      type='email'
+                      id='username'
+                      type='text'
                       className='form-control'
-                      name='email'
+                      name='username'
                       value={studentId}
                       onChange={onChange}
                       required
+                      autoComplete='on'
                     ></input>
                     <div className='invalid-feedback'>Email is invalid</div>
                   </div>
@@ -80,11 +115,9 @@ export default function LoginPage () {
                         Remember Me
                       </label>
                     </div>
-                    <Link to={`/student/${studentId}`}>
-                      <button type='submit' className='btn btn-primary ms-auto'>
-                        Login
-                      </button>
-                    </Link>
+                    <button type='submit' className='btn btn-primary ms-auto'>
+                      Login
+                    </button>
                   </div>
                 </form>
               </div>

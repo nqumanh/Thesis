@@ -8,17 +8,8 @@ export default function Profile () {
   const pathname = location.pathname
   const pathArr = pathname.split('/')
   pathArr.pop()
-  // const studentId = pathArr[2]
   const allCoursesPath = pathArr.join('/')
 
-  // useEffect(() => {
-  //   fetch(`http://127.0.0.1:5000//student/${studentId}/profile`).then(res =>
-  //     res.json().then(data => {
-  //       setProfile(data)
-  //     })
-  //   )
-  // }, [])
-  // console.log(profile)
 
   return (
     <div className='card'>

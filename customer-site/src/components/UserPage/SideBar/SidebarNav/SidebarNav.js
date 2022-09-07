@@ -37,6 +37,13 @@ export default function NavBar () {
             </a>
           </span>
         </li>
+        <li className='NavItem'>
+          <span>
+            <a className='NavLink' href={location.pathname + '/security'}>
+              Security
+            </a>
+          </span>
+        </li>
       </ul>
     </div>
   )
