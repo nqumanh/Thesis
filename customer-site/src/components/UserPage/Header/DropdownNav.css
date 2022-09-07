@@ -70,6 +70,38 @@
     font-size: 40px;
 }
 
-.noti-count{
+.dropdown-menu--title {
+    text-align: center;
+    padding: 20px 25px;
+    color: #fff;
+}
+
+.dropdown-menu--list {
+    list-style-type: none;
+    padding: 20px 25px;
+    min-width: 300px;
+}
+
+.dropdown-menu--item {
+    padding: 0 !important;
+}
+
+.dropdown-menu--item--body {
+    padding-left: 15px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.dropdown-menu-item--body--header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.message-count {
     font-size: 0.5em !important;
+}
+
+.noti-count {
+    font-size: 0.3em !important;
 }

@@ -11,7 +11,7 @@ export default function StudentPage () {
     <div className='App'>
       <SideBar />
       <div className='MainFrame'>
-        <Header userRole={'Student'} id={id}/>
+        <Header userRole={'Student'} id={id} />
         <Content userRole={`student`} id={id} />
       </div>
     </div>

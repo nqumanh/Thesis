@@ -38,10 +38,11 @@ export default function HomePage () {
       <div className='container'>
         <h1 style={{ marginBottom: '50px' }}>Warning System</h1>
         <p style={{ display: 'block', width: '50%', marginBottom: '50px' }}>
-          lorem ipsum dolor sit amet, consectetur adip lorem ipsum dolor sit
-          amet, consectetur adip lorem ipsum dolor sit amet, consectetur adip
-          lorem ipsum dolor sit amet, consectetur adip lorem ipsum dolor sit
-          amet, consectetur adip
+          Warning system is any system of biological or technical nature
+          deployed by an individual or group to inform of a future danger. Its
+          purpose is to enable the deployer of the warning system to prepare for
+          the danger and act accordingly to mitigate or avoid it. lorem ipsum
+          dolor sit amet, consectetur adip 2630284.
         </p>
         <Link to='/dashboard'>
           <button type='button' className='btn btn-primary text-light'>

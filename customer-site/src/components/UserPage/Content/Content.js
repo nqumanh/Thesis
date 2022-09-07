@@ -20,17 +20,15 @@ export default function Content (props) {
   const [filter, setFilter] = useState(initialFilter)
   const [pagination, setPagination] = useState(initialPagination)
 
-  const path = Object.keys(props).length
-    ? props.userRole + '-register/' + props.id
-    : ''
-
   useEffect(() => {
-    fetch(`http://127.0.0.1:5000/${path}`).then(res =>
+    fetch(
+      `http://127.0.0.1:5000/${props.userRole + '-register/' + props.id}`
+    ).then(res =>
       res.json().then(data => {
         setPresentations(data)
       })
     )
-  }, [path])
+  }, [props])
 
   const onFilter = (
     filterName,
@@ -111,8 +109,8 @@ export default function Content (props) {
   let currentCourses = courses.slice(indexOfFirstCourse, indexOfLastCourse)
 
   return (
-    <div className='Content'>
-      <h3>Student Dashboard</h3>
+    <div className='Content mt-3'>
+      {/* <h3>Student Dashboard</h3> */}
       <nav aria-label='breadcrumb'>
         <ol className='breadcrumb'>
           {/* <li className='breadcrumb-item'>

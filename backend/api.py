@@ -1,8 +1,8 @@
 from flask import Flask, make_response, request
 from flask_restful import Resource, Api
 from flaskext.mysql import MySQL
-from flask_cors import CORS#, cross_origin
-from werkzeug.security import generate_password_hash#, check_password_hash
+from flask_cors import CORS  # , cross_origin
+from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 
 
@@ -22,9 +22,58 @@ mysql.init_app(app)
 
 api = Api(app)
 
+
+class CreateUserAccount(Resource):
+    def post(self):
+        try:
+            # Parse the arguments
+            data = request.form
+            username = data.get('username')
+            password = data.get('password')
+            hashPassword = generate_password_hash(password)
+            id = str(uuid.uuid4())
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""INSERT INTO warningsystem.user_account (id, username, password, role) 
+                           VALUES ("{}", "{}", "{}", "{}")"""
+                           .format(id, username, hashPassword, 'student'))
+            con.commit()
+            cursor.close()
+            return make_response('Successfully registered.', 201)
+
+        except Exception as e:
+            return {'error': str(e)}
+
+
+class Login(Resource):
+    def post(self):
+        try:
+            # Parse the arguments
+            data = request.form
+            username = data.get('username')
+            password = data.get('password')
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""select password from user_account 
+                            where username="{}";"""
+                           .format(username))
+            password_hash = str(cursor.fetchall()[0][0])
+            auth_state = check_password_hash(password_hash, password)
+            if auth_state:
+                return make_response('Login successfully!', 201)
+            else:
+                raise Exception('Wrong Password!')
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
 class GetAllCourses(Resource):
     def get(self):
-        try: 
+        try:
             conn = mysql.connect()
             cursor = conn.cursor()
             cursor.execute(
@@ -32,66 +81,99 @@ class GetAllCourses(Resource):
                 inner join course_info
                 on courses.code_module = course_info.code_module""")
             data = cursor.fetchall()
-            cursor.close()
             courses = []
             for row in data:
-                year = row[2][0:4];
-                monthStart = "February" if (row[2][4]=="B") else "October"
+                year = row[2][0:4]
+                monthStart = "February" if (row[2][4] == "B") else "October"
                 item = {
-                    "name": row[0], 
-                    "codeModule": row[1], 
-                    "codePresentation": row[2], 
-                    "major": row[3], 
-                    "year": year, 
-                    "monthStart": monthStart, 
-                    "length": row[4], 
-                    "studentCount": 40, 
+                    "name": row[0],
+                    "codeModule": row[1],
+                    "codePresentation": row[2],
+                    "major": row[3],
+                    "year": year,
+                    "monthStart": monthStart,
+                    "length": row[4],
+                    "studentCount": 40,
                 }
                 courses.append(item)
             return courses
-        
+
         except Exception as e:
             return {'error': str(e)}
-        
-        
-# class GetStudentById(Resource):
-#     def get(self, id):
-#         try: 
-#             con = mysql.connect();
-#             cursor = con.cursor()
-#             cursor.execute(
-#                 """SELECT t3.name, t1.code_module, t1.code_presentation, t3.major, t2.length, t2.id_educator
-#                     FROM student_register as t1
-#                     INNER JOIN courses as t2 ON t1.code_module = t2.code_module AND t1.code_presentation = t2.code_presentation
-#                     INNER JOIN course_info as t3 ON t2.code_module = t3.code_module
-#                     where t1.id_student = """+id+";")
-#             data = cursor.fetchall()
-#             cursor.close()
-#             courses = []
-#             for row in data:
-#                 year = row[2][0:4];
-#                 monthStart = "February" if (row[2][4]=="B") else "October"
-#                 item = {
-#                     "name": row[0], 
-#                     "codeModule": row[1], 
-#                     "codePresentation": row[2], 
-#                     "major": row[3], 
-#                     "year": year, 
-#                     "monthStart": monthStart, 
-#                     "length": row[4], 
-#                     "studentCount": 40, 
-#                 }
-#                 courses.append(item)
-#             return courses
+        finally:
+            cursor.close()
+            conn.close()
 
-#         except Exception as e:
-#             return {'error': str(e)}
-        
-        
+
+class GetStudentById(Resource):
+    def get(self, id):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute(
+                """select * from student_info 
+                where id_student = {}; 
+                """.format(id))
+            data = cursor.fetchall()
+
+            info = data[0]
+            profile = {
+                "id_student": info[0],
+                "gender": "Male" if info[1] == "M" else "Female",
+                "region": info[2],
+                "highest_education": info[3],
+                "imd_band": info[4],
+                "age_band": info[5],
+                "disability": info[6],
+                "parents_id": info[7],
+                "relationship_with_parents": info[8]
+            }
+            return profile
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetParentsById(Resource):
+    def get(self, id):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute(
+                """select * from parents
+                where personal_id = {}; 
+                """.format(id))
+            data = cursor.fetchall()
+
+            info = data[0]
+            profile = {
+                "name": info[0],
+                "personal_id": info[1],
+                "gender": info[2],
+                "highest_education": info[3],
+                "job": info[4],
+                "date_of_birth": info[5],
+                "email": info[6],
+                "phone_number": info[7],
+                "region": info[8],
+                "id_number": info[9]
+            }
+            return profile
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
 class GetAllCoursesOfStudent(Resource):
     def get(self, id):
-        try: 
-            con = mysql.connect();
+        try:
+            con = mysql.connect()
             cursor = con.cursor()
             cursor.execute(
                 """SELECT t3.name, t1.code_module, t1.code_presentation, t3.major, t2.length, t2.id_educator
@@ -103,17 +185,17 @@ class GetAllCoursesOfStudent(Resource):
             cursor.close()
             courses = []
             for row in data:
-                year = row[2][0:4];
-                monthStart = "February" if (row[2][4]=="B") else "October"
+                year = row[2][0:4]
+                monthStart = "February" if (row[2][4] == "B") else "October"
                 item = {
-                    "name": row[0], 
-                    "codeModule": row[1], 
-                    "codePresentation": row[2], 
-                    "major": row[3], 
-                    "year": year, 
-                    "monthStart": monthStart, 
-                    "length": row[4], 
-                    "studentCount": 40, 
+                    "name": row[0],
+                    "codeModule": row[1],
+                    "codePresentation": row[2],
+                    "major": row[3],
+                    "year": year,
+                    "monthStart": monthStart,
+                    "length": row[4],
+                    "studentCount": 40,
                 }
                 courses.append(item)
             return courses
@@ -124,15 +206,15 @@ class GetAllCoursesOfStudent(Resource):
 
 class GetAllMaterialInCourse(Resource):
     def get(self, code_module, code_presentation):
-        try: 
-            materials=[]
-            con = mysql.connect();
+        try:
+            materials = []
+            con = mysql.connect()
             cursor = con.cursor()
             cursor.execute("""
                 SELECT id_site, activity_type, week_from, week_to 
                 FROM warningsystem.material
                 where code_module =\""""+code_module+"\"and code_presentation=\""+code_presentation+"\";"
-                )
+                           )
             data = cursor.fetchall()
             for row in data:
                 material = {
@@ -151,15 +233,15 @@ class GetAllMaterialInCourse(Resource):
 
 class GetAllAssessmentInCourse(Resource):
     def get(self, code_module, code_presentation):
-        try: 
-            assessments=[]
-            con = mysql.connect();
+        try:
+            assessments = []
+            con = mysql.connect()
             cursor = con.cursor()
             cursor.execute("""
                 SELECT id_assessment, assessment_type, date, weight
                 FROM warningsystem.assessments
                 where code_module =\""""+code_module+"\"and code_presentation=\""+code_presentation+"\";"
-                )
+                           )
             data = cursor.fetchall()
             for row in data:
                 assessment = {
@@ -176,33 +258,46 @@ class GetAllAssessmentInCourse(Resource):
             return {'error': str(e)}
 
 
-class CreateUserAccount(Resource):
-    def post(self):
+class GetAllMessages(Resource):
+    def get(self, id):
         try:
-            # Parse the arguments
-            data = request.form
-            username = data.get('username')
-            password = data.get('password')
-            hashPassword = generate_password_hash(password)
-            id = str(uuid.uuid4())
-            print('hashPassword', hashPassword)
-            con = mysql.connect();
+            messages = []
+            con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""INSERT INTO warningsystem.user_account (id, username, password, role) VALUES ("{}", "{}", "{}", "{}")""".format(id, username, hashPassword, 'student'))
-            con.commit()
-            cursor.close()
-            return make_response('Successfully registered.', 201)
+            cursor.execute("""
+                SELECT * from message
+                WHERE user_id=\"{}\";
+                """.format(id))
+            data = cursor.fetchall()
+            for row in data:
+                message = {
+                    "code_module": row[1],
+                    "code_presentation": row[2],
+                    "content": row[3],
+                    "created_time": str(row[4]),
+                }
+                messages.append(message)
+            return messages
 
         except Exception as e:
             return {'error': str(e)}
-        
+        finally:
+            cursor.close()
+            con.close()
+
 
 api.add_resource(GetAllCourses, '/')
-api.add_resource(CreateUserAccount, '/')
-# api.add_resource(GetStudentById, '/student/<id>')
+api.add_resource(CreateUserAccount, '/create-user-account')
+api.add_resource(Login, '/login')
+api.add_resource(GetStudentById, '/student/<id>/profile')
+api.add_resource(GetParentsById, '/parents/<id>')
 api.add_resource(GetAllCoursesOfStudent, '/student-register/<id>')
-api.add_resource(GetAllMaterialInCourse, '/materials/<code_module>/<code_presentation>')
-api.add_resource(GetAllAssessmentInCourse, '/assessments/<code_module>/<code_presentation>')
+api.add_resource(GetAllMaterialInCourse,
+                 '/materials/<code_module>/<code_presentation>')
+api.add_resource(GetAllAssessmentInCourse,
+                 '/assessments/<code_module>/<code_presentation>')
+api.add_resource(GetAllMessages,
+                 '/message/<id>')
 
-if __name__ == '__main__':  
+if __name__ == '__main__':
     app.run(debug=True)
