@@ -56,9 +56,10 @@ class EditUserPassword(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute("""select password from user_account 
-                            where username="{}";"""
+                            where username=\"{}\";"""
                            .format(username))
-            password_hash = str(cursor.fetchall()[0][0])
+            data = cursor.fetchall()
+            password_hash = str(data[0][0])
             auth_state = check_password_hash(password_hash, oldPassword)
             if auth_state:
                 hash_password = generate_password_hash(newPassword)
@@ -67,12 +68,12 @@ class EditUserPassword(Resource):
                                 WHERE username=\"{}\";
                                 """.format(hash_password, username))
                 con.commit()
-                return make_response('Password changed!', 201)
+                return make_response('Password changed!', 200)
             else:
-                raise Exception('Wrong Password!')
+                return make_response('Wrong Password!', 403)
 
         except Exception as e:
-            return {'error': str(e)}
+            return make_response(str(e), 400)
         finally:
             cursor.close()
             con.close()
@@ -95,9 +96,9 @@ class Login(Resource):
             password_hash = str(data[0][0])
             auth_state = check_password_hash(password_hash, password)
             if auth_state:
-                return make_response('Login successfully!', 201)
+                return make_response('Login successfully!', 200)
             else:
-                return make_response('Wrong Password!', 401)
+                return make_response('Wrong Password!', 403)
 
         except Exception as e:
             return make_response(str(e), 400)

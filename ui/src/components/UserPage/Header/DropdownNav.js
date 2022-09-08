@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react'
+import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 import './DropdownNav.css'
@@ -64,9 +64,7 @@ export default function DropdownNav (props) {
           </div>
         </a>
         <div className='dropdown-menu dropdown-menu-end mt-1 p-0'>
-          <h6 className='dropdown-menu--title bg-warning'>
-            {props.id}
-          </h6>
+          <h6 className='dropdown-menu--title bg-warning'>{props.id}</h6>
           <ul className='dropdown-menu--list'>
             <li>
               <a
@@ -77,7 +75,10 @@ export default function DropdownNav (props) {
               </a>
             </li>
             <li>
-              <a className='dropdown-item' href='#ChangePassword'>
+              <a
+                className='dropdown-item'
+                href={location.pathname + '/security'}
+              >
                 Account Settings
               </a>
             </li>

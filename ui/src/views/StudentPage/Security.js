@@ -14,6 +14,8 @@ export default function Security () {
   pathArr.pop()
   const allCoursesPath = pathArr.join('/')
 
+  const username = pathArr[2]
+
   const onChange = e => {
     const { name, value } = e.target
     switch (name) {
@@ -29,19 +31,29 @@ export default function Security () {
     }
   }
 
-  const handleSubmit = event => {
+  const handleSubmit = async event => {
     event.preventDefault()
     if (newPassword !== confirmPassword) {
       alert('Password does not match!')
       return
     }
-    const isCorrectPassword = true
-    if (!isCorrectPassword) {
-      alert('Current Password is not correct!')
-      return
+
+    let formData = new FormData()
+    formData.append('username', username)
+    formData.append('old_password', currentPassword)
+    formData.append('new_password', newPassword)
+
+    const requestOptions = {
+      method: 'POST',
+      body: formData
     }
-    alert('Password Changed!')
-    navigate(allCoursesPath)
+    await fetch('http://localhost:5000/edit-user-password', requestOptions)
+      .then(response => {
+        if (response.status === 403) throw new Error('Wrong Password!')
+        alert('Password Changed!')
+        navigate('/student/' + username)
+      })
+      .catch(err => alert(err))
   }
 
   return (
@@ -57,6 +69,9 @@ export default function Security () {
               ></img>
             </div>
             <div className='card shadow-lg'>
+              <a href={allCoursesPath} className='float-end'>
+                Back to Dashboard
+              </a>
               <div className='card-body p-5'>
                 <h1 className='fs-4 card-title fw-bold mb-4'>
                   Change Password
