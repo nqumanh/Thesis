@@ -322,21 +322,40 @@ class GetAllMessages(Resource):
             con.close()
 
 
-class CreateParentsAccounts(Resource):
+def make_unique_email(arr):
+    unique = {}
+    for i in range(len(arr)):
+        ele = arr[i]
+        if ele not in unique:
+            unique[ele] = 0
+        else:
+            unique[ele] += 1
+            parts = ele.split('@')
+            parts[0] += str(unique[ele])
+            arr[i] = '@'.join(parts)
+    return arr
+
+
+class MakeEmailUnique(Resource):
     def post(self):
         try:
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""SELECT * FROM educator""")
+            cursor.execute("""SELECT name, personal_id, email FROM parents""")
             data = cursor.fetchall()
-            for row in data:
-                id = str(uuid.uuid4())
-                username = row[0]
-                print(row[0])
-                hashPassword = generate_password_hash(str(row[1]))
-                cursor.execute("""INSERT INTO user_account (id, username, password, role) 
-                           VALUES ("{}", "{}", "{}", "{}")"""
-                               .format(id, username, hashPassword, 'educator'))
+            idList = list(map(lambda x: x[1], list(data)))
+            oldEmails = list(map(
+                lambda x: "".join(x[0].split()).lower() + "@gmail.com",
+                list(data)
+            ))
+            updatedEmails = make_unique_email(oldEmails)
+            for i in range(len(idList)):
+                cursor.execute("""
+                UPDATE parents                
+                SET email = \"{}\"
+                WHERE personal_id=\"{}\";
+                """.format(updatedEmails[i], idList[i]))
+                print(idList[i])
             con.commit()
             return make_response('Account Created', 201)
 
@@ -347,7 +366,7 @@ class CreateParentsAccounts(Resource):
             con.close()
 
 
-api.add_resource(CreateParentsAccounts, '/create-user-accounts')
+api.add_resource(MakeEmailUnique, '/make-email-unique')
 api.add_resource(GetAllCourses, '/')
 api.add_resource(CreateUserAccount, '/create-user-account')
 api.add_resource(EditUserPassword, '/edit-user-password')
