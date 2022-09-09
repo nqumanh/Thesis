@@ -33,7 +33,7 @@ class CreateUserAccount(Resource):
             id = str(uuid.uuid4())
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""INSERT INTO warningsystem.user_account (id, username, password, role) 
+            cursor.execute("""INSERT INTO user_account (id, username, password, role) 
                            VALUES ("{}", "{}", "{}", "{}")"""
                            .format(id, username, hashPassword, 'student'))
             con.commit()
@@ -248,7 +248,7 @@ class GetAllMaterialInCourse(Resource):
             cursor = con.cursor()
             cursor.execute("""
                 SELECT id_site, activity_type, week_from, week_to 
-                FROM warningsystem.material
+                FROM material
                 where code_module =\""""+code_module+"\"and code_presentation=\""+code_presentation+"\";"
                            )
             data = cursor.fetchall()
@@ -275,7 +275,7 @@ class GetAllAssessmentInCourse(Resource):
             cursor = con.cursor()
             cursor.execute("""
                 SELECT id_assessment, assessment_type, date, weight
-                FROM warningsystem.assessments
+                FROM assessments
                 where code_module =\""""+code_module+"\"and code_presentation=\""+code_presentation+"\";"
                            )
             data = cursor.fetchall()
@@ -322,6 +322,32 @@ class GetAllMessages(Resource):
             con.close()
 
 
+class CreateParentsAccounts(Resource):
+    def post(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""SELECT * FROM educator""")
+            data = cursor.fetchall()
+            for row in data:
+                id = str(uuid.uuid4())
+                username = row[0]
+                print(row[0])
+                hashPassword = generate_password_hash(str(row[1]))
+                cursor.execute("""INSERT INTO user_account (id, username, password, role) 
+                           VALUES ("{}", "{}", "{}", "{}")"""
+                               .format(id, username, hashPassword, 'educator'))
+            con.commit()
+            return make_response('Account Created', 201)
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
+api.add_resource(CreateParentsAccounts, '/create-user-accounts')
 api.add_resource(GetAllCourses, '/')
 api.add_resource(CreateUserAccount, '/create-user-account')
 api.add_resource(EditUserPassword, '/edit-user-password')

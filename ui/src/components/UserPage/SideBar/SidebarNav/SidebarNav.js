@@ -1,5 +1,5 @@
 import React from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, Link } from 'react-router-dom'
 
 import './SidebarNav.css'
 
@@ -11,9 +11,9 @@ export default function NavBar () {
       <ul className='NavItemGroup'>
         <li className='NavItem'>
           <span>
-            <a className='NavLink' href={location.pathname}>
+            <Link className='NavLink' to={location.pathname}>
               Courses
-            </a>
+            </Link>
           </span>
         </li>
         <li className='NavItem'>
