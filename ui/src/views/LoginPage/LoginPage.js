@@ -31,8 +31,13 @@ export default function LoginPage () {
       .then(response => {
         if (response.status === 400) throw new Error('Account does not exist!')
         if (response.status === 403) throw new Error('Wrong Password!')
+        console.log(response)
+        const username = formData.get('username')
+        // const role = userId[0]
+        const id = parseInt(username.substring(1))
+        sessionStorage.setItem('username', username)
         alert('Login successfully!')
-        navigate('/student/' + studentId)
+        navigate('/student/' + id)
       })
       .catch(err => alert(err))
   }

@@ -295,28 +295,33 @@ class GetAllAssessmentInCourse(Resource):
 
 
 class GetAllMessages(Resource):
-    def get(self, id):
+    def get(self, username):
         try:
             messages = []
             con = mysql.connect()
             cursor = con.cursor()
+            cursor.execute("""SELECT id FROM user_account
+                           WHERE username = \"{}\";
+                           """.format(username))
+            id = cursor.fetchall()[0][0]
             cursor.execute("""
                 SELECT * from message
-                WHERE user_id=\"{}\";
-                """.format(id))
+                WHERE sender_id=\"{}\" OR receiver_id=\"{}\";
+                """.format(id, id)
+                           )
             data = cursor.fetchall()
             for row in data:
                 message = {
-                    "code_module": row[1],
-                    "code_presentation": row[2],
-                    "content": row[3],
+                    "sender_id": row[1],
+                    "receiver_id": row[2],
+                    "message": row[3],
                     "created_time": str(row[4]),
                 }
                 messages.append(message)
             return messages
 
         except Exception as e:
-            return {'error': str(e)}
+            return make_response(str(e), 400)
         finally:
             cursor.close()
             con.close()
@@ -379,7 +384,7 @@ api.add_resource(GetAllMaterialInCourse,
 api.add_resource(GetAllAssessmentInCourse,
                  '/assessments/<code_module>/<code_presentation>')
 api.add_resource(GetAllMessages,
-                 '/message/<id>')
+                 '/message/<username>')
 
 if __name__ == '__main__':
     app.run(debug=True)

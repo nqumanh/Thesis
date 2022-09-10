@@ -12,13 +12,14 @@ export default function DropdownNav (props) {
   const warning = ['First Warning', 'Second Warning']
 
   useEffect(() => {
-    fetch(
-      `http://localhost:5000/message/69ade80a-1256-4d96-8e3f-0b0d24aade57`
-    ).then(res =>
-      res.json().then(data => {
-        setMessages(data)
-      })
-    )
+    let username = sessionStorage.getItem('username')
+    fetch(`http://localhost:5000/message/${username}`)
+      .then(res =>
+        res.json().then(data => {
+          setMessages(data)
+        })
+      )
+      .catch(err => console(err))
   }, [])
 
   return (
@@ -107,29 +108,33 @@ export default function DropdownNav (props) {
             {messages.length} Messages
           </div>
           <ul className='dropdown-menu--list'>
-            {[...messages].map((message, index) => (
-              <li key={index}>
-                <a
-                  className='dropdown-item dropdown-menu--item d-flex flex-row'
-                  href={location.pathname + '/message'}
-                >
-                  <div className='UserAvatar'>
-                    <img
-                      style={{ borderRadius: '100%' }}
-                      src='https://www.radiustheme.com/demo/html/psdboss/akkhor/akkhor/img/figure/admin.jpg'
-                      alt='avatar'
-                    ></img>
-                  </div>
-                  <div className='dropdown-menu--item--body'>
-                    <div className='dropdown-menu-item--body--header'>
-                      <strong>{message.code_module}</strong>
-                      <small>{message.created_time}</small>
+            {Object.keys(messages).length === 0 ? (
+              <span>No messages</span>
+            ) : (
+              [...messages].map((message, index) => (
+                <li key={index}>
+                  <a
+                    className='dropdown-item dropdown-menu--item d-flex flex-row'
+                    href={location.pathname + '/message'}
+                  >
+                    <div className='UserAvatar'>
+                      <img
+                        style={{ borderRadius: '100%' }}
+                        src='https://www.radiustheme.com/demo/html/psdboss/akkhor/akkhor/img/figure/admin.jpg'
+                        alt='avatar'
+                      ></img>
                     </div>
-                    <p>{message.content}</p>
-                  </div>
-                </a>
-              </li>
-            ))}
+                    <div className='dropdown-menu--item--body'>
+                      <div className='dropdown-menu-item--body--header'>
+                        <strong>{message.sender_id}</strong>
+                        <small>{message.created_time}</small>
+                      </div>
+                      <p>{message.message}</p>
+                    </div>
+                  </a>
+                </li>
+              ))
+            )}
           </ul>
         </div>
       </li>
