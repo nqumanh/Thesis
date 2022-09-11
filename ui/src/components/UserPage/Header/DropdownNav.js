@@ -11,8 +11,11 @@ export default function DropdownNav (props) {
   const [messages, setMessages] = useState([])
   const warning = ['First Warning', 'Second Warning']
 
+  const username = sessionStorage.getItem('username')
+  const id = username.substring(1)
+  const role = username.substring(0,1)==="1"?"Student":username.substring(0,1)==="2"?"Parents":"Educator"
+
   useEffect(() => {
-    let username = sessionStorage.getItem('username')
     fetch(`http://localhost:5000/message/${username}`)
       .then(res =>
         res.json().then(data => {
@@ -20,7 +23,7 @@ export default function DropdownNav (props) {
         })
       )
       .catch(err => console(err))
-  }, [])
+  }, [username])
 
   return (
     <ul className='DropdownList'>
@@ -42,7 +45,7 @@ export default function DropdownNav (props) {
                 fontWeight: 'bold'
               }}
             >
-              {props.id}
+              {id}
             </h5>
             <span
               style={{
@@ -53,7 +56,7 @@ export default function DropdownNav (props) {
                 flex: '1'
               }}
             >
-              {props.userRole}
+              {role}
             </span>
           </div>
           <div className='UserAvatar'>
