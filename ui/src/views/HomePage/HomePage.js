@@ -42,13 +42,8 @@ export default function HomePage () {
           deployed by an individual or group to inform of a future danger. Its
           purpose is to enable the deployer of the warning system to prepare for
           the danger and act accordingly to mitigate or avoid it. lorem ipsum
-          dolor sit amet, consectetur adip 2630284.
+          dolor sit centimeter, consectetur azure 2630284.
         </p>
-        <Link to='/dashboard'>
-          <button type='button' className='btn btn-primary text-light'>
-            Go to Dashboard
-          </button>
-        </Link>
       </div>
     </div>
   )

@@ -3,7 +3,7 @@ import './Content.css'
 import TableData from './TableData'
 import Pagination from './Pagination'
 
-export default function Content (props) {
+export default function Content () {
   const initialFilter = {
     name: '',
     codeModule: '',
@@ -21,14 +21,15 @@ export default function Content (props) {
   const [pagination, setPagination] = useState(initialPagination)
 
   useEffect(() => {
-    fetch(
-      `http://127.0.0.1:5000/${props.userRole + '-register/' + props.id}`
-    ).then(res =>
-      res.json().then(data => {
-        setPresentations(data)
-      })
+    const username = sessionStorage.getItem('username')
+    const studentId = parseInt(username.substring(1))
+    fetch(`http://127.0.0.1:5000/${'student-register/' + studentId}`).then(
+      res =>
+        res.json().then(data => {
+          setPresentations(data)
+        })
     )
-  }, [props])
+  }, [])
 
   const onFilter = (
     filterName,

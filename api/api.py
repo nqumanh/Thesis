@@ -216,8 +216,10 @@ class GetAllCoursesOfStudent(Resource):
                     FROM student_register as t1
                     INNER JOIN courses as t2 ON t1.code_module = t2.code_module AND t1.code_presentation = t2.code_presentation
                     INNER JOIN course_info as t3 ON t2.code_module = t3.code_module
-                    where t1.id_student = """+id+";")
+                    where t1.id_student = \"{}\"; 
+                """.format(id))
             data = cursor.fetchall()
+            print(data)
             cursor.close()
             courses = []
             for row in data:
@@ -237,7 +239,7 @@ class GetAllCoursesOfStudent(Resource):
             return courses
 
         except Exception as e:
-            return {'error': str(e)}
+            return make_response(str(e), 400)
 
 
 class GetAllMaterialInCourse(Resource):
