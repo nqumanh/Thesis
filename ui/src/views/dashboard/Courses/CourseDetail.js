@@ -1,16 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
-export default function CourseDetailForStudent () {
+export default function CourseDetail () {
   const location = useLocation()
+  const course = location.state.presentation
   const [materials, setMaterials] = useState([])
   const [assessments, setAssessments] = useState([])
-
-  const course = location.state.presentation
-  const pathname = location.pathname
-  const pathArr = pathname.split("/")
-  pathArr.pop()
-  const allCoursesPath = pathArr.join('/')
 
   useEffect(() => {
     fetch(
@@ -52,18 +47,8 @@ export default function CourseDetailForStudent () {
 
   return (
     <div className='card'>
-      <nav aria-label='breadcrumb'>
-        <ol className='breadcrumb'>
-          <li className='breadcrumb-item'>
-            <a href={allCoursesPath}>All Courses</a>
-          </li>
-          <li className='breadcrumb-item active' aria-current='page'>
-            {course.name}
-          </li>
-        </ol>
-      </nav>
       <div className='card-body'>
-        <h5 className='card-title'>Course Infomation</h5>
+        <h3 className='card-title'>Course Information</h3>
         <div>Course Name: {course.name}</div>
         <div>Major: {course.major}</div>
         <div>Year: {course.year}</div>

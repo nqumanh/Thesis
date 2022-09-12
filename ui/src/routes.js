@@ -3,6 +3,7 @@ import Profile from './views/dashboard/Profile'
 import Warning from './views/dashboard/Warning'
 import Message from './views/dashboard/Message'
 import Security from './views/dashboard/Security'
+import CourseDetail from './views/dashboard/Courses/CourseDetail'
 
 const routes = [
   {
@@ -35,6 +36,12 @@ const routes = [
     path: '/security',
     element: Security
   },
+  {
+    name: 'Course Detail',
+    layout: '/dashboard',
+    path: '/course',
+    element: CourseDetail
+  }
 ]
 
 export default routes

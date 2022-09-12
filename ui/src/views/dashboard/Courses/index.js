@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import TableData from '../../components/UserPage/Content/TableData'
-import Pagination from '../../components/UserPage/Content/Pagination'
+import TableData from '../../../components/UserPage/Content/TableData'
+import Pagination from '../../../components/UserPage/Content/Pagination'
 
 export default function Content () {
   const initialFilter = {

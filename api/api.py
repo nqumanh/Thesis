@@ -148,21 +148,21 @@ class GetStudentById(Resource):
             cursor = con.cursor()
             cursor.execute(
                 """select * from student_info 
-                where id_student = {}; 
+                where id_student = \"{}\"; 
                 """.format(id))
             data = cursor.fetchall()
 
             info = data[0]
             profile = {
                 "id_student": info[0],
-                "gender": "Male" if info[1] == "M" else "Female",
-                "region": info[2],
-                "highest_education": info[3],
-                "imd_band": info[4],
-                "age_band": info[5],
-                "disability": info[6],
-                "parents_id": info[7],
-                "relationship_with_parents": info[8]
+                "parents_id": info[2],
+                "relationship_with_parents": info[3],
+                "gender": "Male" if info[4] == "M" else "Female",
+                "region": info[5],
+                "highest_education": info[6],
+                "imd_band": info[7],
+                "age_band": info[8],
+                "disability": info[9],
             }
             return profile
 
@@ -186,16 +186,16 @@ class GetParentsById(Resource):
 
             info = data[0]
             profile = {
-                "name": info[0],
-                "personal_id": info[1],
-                "gender": info[2],
-                "highest_education": info[3],
-                "job": info[4],
-                "date_of_birth": info[5],
-                "email": info[6],
-                "phone_number": info[7],
-                "region": info[8],
-                "id_number": info[9]
+                "personal_id": info[0],
+                "email": info[2],
+                "phone_number": info[3],
+                "name": info[4],
+                "gender": info[5],
+                "highest_education": info[6],
+                "job": info[7],
+                "date_of_birth": info[8],
+                "language": info[9],
+                "region": info[10]
             }
             return profile
 
@@ -219,7 +219,6 @@ class GetAllCoursesOfStudent(Resource):
                     where t1.id_student = \"{}\"; 
                 """.format(id))
             data = cursor.fetchall()
-            print(data)
             cursor.close()
             courses = []
             for row in data:
@@ -362,7 +361,7 @@ api.add_resource(GetAllCourses, '/')
 api.add_resource(CreateUserAccount, '/create-user-account')
 api.add_resource(EditUserPassword, '/edit-user-password')
 api.add_resource(Login, '/login')
-api.add_resource(GetStudentById, '/student/<id>/profile')
+api.add_resource(GetStudentById, '/student/<id>')
 api.add_resource(GetParentsById, '/parents/<id>')
 api.add_resource(GetAllCoursesOfStudent, '/student-register/<id>')
 api.add_resource(GetAllMaterialInCourse,
@@ -373,6 +372,7 @@ api.add_resource(GetAllMessages,
                  '/message/<username>')
 api.add_resource(GetAllWarning,
                  '/warning/<id>')
+
 
 if __name__ == '__main__':
     app.run(debug=True)

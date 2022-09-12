@@ -111,12 +111,8 @@ export default function Content () {
 
   return (
     <div className='Content mt-3'>
-      {/* <h3>Student Dashboard</h3> */}
       <nav aria-label='breadcrumb'>
         <ol className='breadcrumb'>
-          {/* <li className='breadcrumb-item'>
-            <a href={`#/`}>Home</a>
-          </li> */}
           <li className='breadcrumb-item active' aria-current='page'>
             All Courses
           </li>

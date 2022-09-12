@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
-
+import { Link } from 'react-router-dom'
 import './DropdownNav.css'
 import { BiEnvelope } from 'react-icons/bi'
 import { BiBell } from 'react-icons/bi'
 
 export default function DropdownNav () {
-  const location = useLocation()
-
   const [messages, setMessages] = useState([])
   const [warnings, setWarnings] = useState([])
 
@@ -86,25 +83,19 @@ export default function DropdownNav () {
           <h6 className='dropdown-menu--title bg-warning'>{id}</h6>
           <ul className='dropdown-menu--list'>
             <li>
-              <a
-                className='dropdown-item'
-                href={location.pathname + '/profile'}
-              >
+              <Link className='dropdown-item' to='/dashboard/profile'>
                 My Profile
-              </a>
+              </Link>
             </li>
             <li>
-              <a
-                className='dropdown-item'
-                href={location.pathname + '/security'}
-              >
+              <Link className='dropdown-item' to='dashboard/security'>
                 Account Settings
-              </a>
+              </Link>
             </li>
             <li>
-              <a className='dropdown-item' href='/login'>
+              <Link className='dropdown-item' to='/login'>
                 Log Out
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
@@ -133,7 +124,7 @@ export default function DropdownNav () {
                 <li key={index}>
                   <a
                     className='dropdown-item dropdown-menu--item d-flex flex-row'
-                    href={location.pathname + '/message'}
+                    href='dashboard/message'
                   >
                     <div className='UserAvatar'>
                       <img
@@ -177,7 +168,7 @@ export default function DropdownNav () {
               <li key={index}>
                 <a
                   className='dropdown-item dropdown-menu--item d-flex flex-row'
-                  href={location.pathname + '/warning'}
+                  href='dashboard/warning'
                 >
                   <div className='dropdown-menu--item--body'>
                     <div className='dropdown-menu-item--body--header'>
