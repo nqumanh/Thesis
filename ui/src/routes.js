@@ -1,9 +1,9 @@
-import Courses from './views/dashboard/Courses'
-import Profile from './views/dashboard/Profile'
-import Warning from './views/dashboard/Warning'
-import Message from './views/dashboard/Message'
-import Security from './views/dashboard/Security'
-import CourseDetail from './views/dashboard/Courses/CourseDetail'
+import Courses from './views/Dashboard/Courses'
+import Profile from './views/Dashboard/Profile'
+import Warning from './views/Dashboard/Warning'
+import Message from './views/Dashboard/Message'
+import Security from './views/Dashboard/Security'
+import CourseDetail from './views/Dashboard/Courses/CourseDetail'
 
 const routes = [
   {

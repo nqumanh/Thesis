@@ -88,7 +88,7 @@ export default function DropdownNav () {
               </Link>
             </li>
             <li>
-              <Link className='dropdown-item' to='dashboard/security'>
+              <Link className='dropdown-item' to='/dashboard/security'>
                 Account Settings
               </Link>
             </li>
@@ -122,9 +122,9 @@ export default function DropdownNav () {
             ) : (
               [...messages].map((message, index) => (
                 <li key={index}>
-                  <a
+                  <Link
                     className='dropdown-item dropdown-menu--item d-flex flex-row'
-                    href='dashboard/message'
+                    to='/dashboard/message'
                   >
                     <div className='UserAvatar'>
                       <img
@@ -140,7 +140,7 @@ export default function DropdownNav () {
                       </div>
                       <p>{message.message}</p>
                     </div>
-                  </a>
+                  </Link>
                 </li>
               ))
             )}
@@ -166,9 +166,9 @@ export default function DropdownNav () {
           <ul className='dropdown-menu--list'>
             {[...warnings].map((warning, index) => (
               <li key={index}>
-                <a
+                <Link
                   className='dropdown-item dropdown-menu--item d-flex flex-row'
-                  href='dashboard/warning'
+                  to='/dashboard/warning'
                 >
                   <div className='dropdown-menu--item--body'>
                     <div className='dropdown-menu-item--body--header'>
@@ -176,7 +176,7 @@ export default function DropdownNav () {
                     </div>
                     <p>{warning.created_time}</p>
                   </div>
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
