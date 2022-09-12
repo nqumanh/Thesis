@@ -329,51 +329,35 @@ class GetAllMessages(Resource):
             con.close()
 
 
-def make_unique_email(arr):
-    unique = {}
-    for i in range(len(arr)):
-        ele = arr[i]
-        if ele not in unique:
-            unique[ele] = 0
-        else:
-            unique[ele] += 1
-            parts = ele.split('@')
-            parts[0] += str(unique[ele])
-            arr[i] = '@'.join(parts)
-    return arr
-
-
-class MakeEmailUnique(Resource):
-    def post(self):
+class GetAllWarning(Resource):
+    def get(self, id):
         try:
+            warnings = []
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""SELECT name, personal_id, email FROM parents""")
+            cursor.execute("""SELECT * FROM warning
+                           WHERE id_student = \"{}\";
+                           """.format(id))
             data = cursor.fetchall()
-            idList = list(map(lambda x: x[1], list(data)))
-            oldEmails = list(map(
-                lambda x: "".join(x[0].split()).lower() + "@gmail.com",
-                list(data)
-            ))
-            updatedEmails = make_unique_email(oldEmails)
-            for i in range(len(idList)):
-                cursor.execute("""
-                UPDATE parents                
-                SET email = \"{}\"
-                WHERE personal_id=\"{}\";
-                """.format(updatedEmails[i], idList[i]))
-                print(idList[i])
-            con.commit()
-            return make_response('Account Created', 201)
+            for row in data:
+                warning = {
+                    "code_module": row[2],
+                    "code_presentation": row[3],
+                    "content": row[4],
+                    "status": row[5],
+                    "description": row[6],
+                    "created_time": str(row[7]),
+                }
+                warnings.append(warning)
+            return warnings
 
         except Exception as e:
-            return {'error': str(e)}
+            return make_response(str(e), 400)
         finally:
             cursor.close()
             con.close()
 
 
-api.add_resource(MakeEmailUnique, '/make-email-unique')
 api.add_resource(GetAllCourses, '/')
 api.add_resource(CreateUserAccount, '/create-user-account')
 api.add_resource(EditUserPassword, '/edit-user-password')
@@ -387,6 +371,8 @@ api.add_resource(GetAllAssessmentInCourse,
                  '/assessments/<code_module>/<code_presentation>')
 api.add_resource(GetAllMessages,
                  '/message/<username>')
+api.add_resource(GetAllWarning,
+                 '/warning/<id>')
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -5,15 +5,20 @@ import './DropdownNav.css'
 import { BiEnvelope } from 'react-icons/bi'
 import { BiBell } from 'react-icons/bi'
 
-export default function DropdownNav (props) {
+export default function DropdownNav () {
   const location = useLocation()
 
   const [messages, setMessages] = useState([])
-  const warning = ['First Warning', 'Second Warning']
+  const [warnings, setWarnings] = useState([])
 
   const username = sessionStorage.getItem('username')
   const id = username.substring(1)
-  const role = username.substring(0,1)==="1"?"Student":username.substring(0,1)==="2"?"Parents":"Educator"
+  const role =
+    username.substring(0, 1) === '1'
+      ? 'Student'
+      : username.substring(0, 1) === '2'
+      ? 'Parents'
+      : 'Educator'
 
   useEffect(() => {
     fetch(`http://localhost:5000/message/${username}`)
@@ -24,6 +29,16 @@ export default function DropdownNav (props) {
       )
       .catch(err => console(err))
   }, [username])
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/warning/${id}`)
+      .then(res =>
+        res.json().then(data => {
+          setWarnings(data)
+        })
+      )
+      .catch(err => console(err))
+  }, [id])
 
   return (
     <ul className='DropdownList'>
@@ -68,7 +83,7 @@ export default function DropdownNav (props) {
           </div>
         </a>
         <div className='dropdown-menu dropdown-menu-end mt-1 p-0'>
-          <h6 className='dropdown-menu--title bg-warning'>{props.id}</h6>
+          <h6 className='dropdown-menu--title bg-warning'>{id}</h6>
           <ul className='dropdown-menu--list'>
             <li>
               <a
@@ -150,15 +165,15 @@ export default function DropdownNav (props) {
         >
           <BiBell />
           <span className='position-absolute top-9 start-100 translate-middle badge border border-light rounded-pill bg-danger noti-count'>
-            {warning.length}
+            {warnings.length}
           </span>
         </a>
         <div className='dropdown-menu dropdown-menu-end mt-3 p-0'>
           <div className='dropdown-menu--title bg-danger'>
-            {warning.length} Warnings
+            {Object.keys(warnings).length} Warnings
           </div>
           <ul className='dropdown-menu--list'>
-            {[...warning].map((noti, index) => (
+            {[...warnings].map((warning, index) => (
               <li key={index}>
                 <a
                   className='dropdown-item dropdown-menu--item d-flex flex-row'
@@ -166,9 +181,9 @@ export default function DropdownNav (props) {
                 >
                   <div className='dropdown-menu--item--body'>
                     <div className='dropdown-menu-item--body--header'>
-                      <strong>{noti}</strong>
+                      <strong>{warning.content}</strong>
                     </div>
-                    <p>8:00</p>
+                    <p>{warning.created_time}</p>
                   </div>
                 </a>
               </li>
