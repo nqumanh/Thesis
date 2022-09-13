@@ -93,7 +93,11 @@ export default function DropdownNav () {
               </Link>
             </li>
             <li>
-              <Link className='dropdown-item' to='/login'>
+              <Link
+                className='dropdown-item'
+                to='/login'
+                onClick={() => sessionStorage.clear()}
+              >
                 Log Out
               </Link>
             </li>

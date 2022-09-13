@@ -1,20 +1,14 @@
 import React, { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 export default function Security () {
   const navigate = useNavigate()
-  const location = useLocation()
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
-  const pathname = location.pathname
-  const pathArr = pathname.split('/')
-  pathArr.pop()
-  const allCoursesPath = pathArr.join('/')
-
-  const username = pathArr[2]
+  const username = sessionStorage.getItem('username')
 
   const onChange = e => {
     const { name, value } = e.target
@@ -51,7 +45,7 @@ export default function Security () {
       .then(response => {
         if (response.status === 403) throw new Error('Wrong Password!')
         alert('Password Changed!')
-        navigate('/student/' + username)
+        navigate('/dashboard')
       })
       .catch(err => alert(err))
   }
@@ -69,9 +63,9 @@ export default function Security () {
               ></img>
             </div>
             <div className='card shadow-lg'>
-              <a href={allCoursesPath} className='float-end'>
+              <Link to='/dashboard' className='float-end'>
                 Back to Dashboard
-              </a>
+              </Link>
               <div className='card-body p-5'>
                 <h1 className='fs-4 card-title fw-bold mb-4'>
                   Change Password
