@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import TableData from '../../../components/Table/TableData'
-import Pagination from '../../../components/Table/Pagination'
+import TableData from 'components/Table/TableData'
+import Pagination from 'components/Table/Pagination'
 import axios from 'axios'
 
 export default function Content () {
@@ -113,14 +113,6 @@ export default function Content () {
 
   return (
     <div style={{ padding: '0 30px' }} className='mt-3'>
-      <nav aria-label='breadcrumb'>
-        <ol className='breadcrumb'>
-          <li className='breadcrumb-item active' aria-current='page'>
-            All Courses
-          </li>
-        </ol>
-      </nav>
-
       <div className='card'>
         <div className='card-body'>
           <h5 className='card-title'>Course List</h5>

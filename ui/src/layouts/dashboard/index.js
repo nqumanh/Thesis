@@ -1,8 +1,8 @@
 import React from 'react'
 import './dashboard.css'
-import SideBar from '../../components/UserPage/SideBar'
-import Header from '../../components/UserPage/Header'
-import routes from '../../routes'
+import SideBar from './SideBar'
+import Header from './Header'
+import routes from 'routes'
 import { Routes, Route } from 'react-router-dom'
 
 export default function StudentPage () {

@@ -10,10 +10,9 @@ import 'bootstrap/dist/js/bootstrap.bundle'
 export default function App () {
   return (
     <Routes>
-      <Route exact path='/dashboard/*' element={<Dashboard />} />
       <Route exact path='/' element={<HomePage />} />
-
       <Route exact path='/login' element={<LoginPage />} />
+      <Route exact path='/dashboard/*' element={<Dashboard />} />
     </Routes>
   )
 }

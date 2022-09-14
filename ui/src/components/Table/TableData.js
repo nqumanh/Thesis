@@ -19,20 +19,22 @@ export default function TableData (props) {
       name === 'filterMonthStart' ? value : filterMonthStart
     )
 
-    if (name === 'filterName') {
-      setFilterName(value)
-    }
-    if (name === 'filterCodeModule') {
-      setFilterCodeModule(value)
-    }
-    if (name === 'filterMajor') {
-      setFilterMajor(value)
-    }
-    if (name === 'filterYear') {
-      setFilterYear(value)
-    }
-    if (name === 'filterMonthStart') {
-      setFilterMonthStart(value)
+    switch (name) {
+      case 'filterName':
+        setFilterName(value)
+        break
+      case 'filterCodeModule':
+        setFilterCodeModule(value)
+        break
+      case 'filterMajor':
+        setFilterMajor(value)
+        break
+      case 'filterYear':
+        setFilterYear(value)
+        break
+      default:
+        setFilterMonthStart(value)
+        break
     }
   }
 
@@ -41,18 +43,26 @@ export default function TableData (props) {
     return <ClassItem key={id} index={index} presentation={presentation} />
   })
 
+  const headers = [
+    'Course',
+    'Code Module',
+    'Code Presentation',
+    'Major',
+    'Year',
+    'Month Start',
+    'Length',
+    'Student Count'
+  ]
+
   return (
     <table className='table table-bordered table-striped table-hover'>
       <thead>
         <tr>
-          <th scope='col'>Course</th>
-          <th scope='col'>Code Module</th>
-          <th scope='col'>Code Presentation</th>
-          <th scope='col'>Major</th>
-          <th scope='col'>Year</th>
-          <th scope='col'>Month Start</th>
-          <th scope='col'>Length</th>
-          <th scope='col'>Student Count</th>
+          {[...headers].map((header, index) => (
+            <th scope='col' key={index}>
+              {header}
+            </th>
+          ))}
         </tr>
       </thead>
 
