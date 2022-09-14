@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 
 export default function Profile () {
   const [warnings, setWarnings] = useState([])
@@ -6,13 +7,10 @@ export default function Profile () {
   useEffect(() => {
     let username = sessionStorage.getItem('username')
     let id = username.substring(1)
-    fetch(`http://localhost:5000/warning/${id}`)
-      .then(res =>
-        res.json().then(data => {
-          setWarnings(data)
-        })
-      )
-      .catch(err => console(err))
+    axios
+      .get(`http://localhost:5000/warning/${id}`)
+      .then(response => setWarnings(response.data))
+      .catch(error => console.log(error))
   }, [])
 
   return (

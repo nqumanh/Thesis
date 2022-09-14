@@ -3,6 +3,11 @@ import { Link } from 'react-router-dom'
 import './DropdownNav.css'
 import { BiEnvelope } from 'react-icons/bi'
 import { BiBell } from 'react-icons/bi'
+import axios from 'axios'
+
+function capitalizeFirstLetter (string) {
+  return string.charAt(0).toUpperCase() + string.slice(1)
+}
 
 export default function DropdownNav () {
   const [messages, setMessages] = useState([])
@@ -10,31 +15,20 @@ export default function DropdownNav () {
 
   const username = sessionStorage.getItem('username')
   const id = username.substring(1)
-  const role =
-    username.substring(0, 1) === '1'
-      ? 'Student'
-      : username.substring(0, 1) === '2'
-      ? 'Parents'
-      : 'Educator'
+  const role = capitalizeFirstLetter(sessionStorage.getItem('role'))
 
   useEffect(() => {
-    fetch(`http://localhost:5000/message/${username}`)
-      .then(res =>
-        res.json().then(data => {
-          setMessages(data)
-        })
-      )
-      .catch(err => console(err))
+    axios
+      .get(`http://localhost:5000/message/${username}`)
+      .then(response => setMessages(response.data))
+      .catch(error => console.log(error))
   }, [username])
 
   useEffect(() => {
-    fetch(`http://localhost:5000/warning/${id}`)
-      .then(res =>
-        res.json().then(data => {
-          setWarnings(data)
-        })
-      )
-      .catch(err => console(err))
+    axios
+      .get(`http://localhost:5000/warning/${id}`)
+      .then(response => setWarnings(response.data))
+      .catch(error => console.log(error))
   }, [id])
 
   return (
@@ -122,7 +116,7 @@ export default function DropdownNav () {
           </div>
           <ul className='dropdown-menu--list'>
             {Object.keys(messages).length === 0 ? (
-              <span>No messages</span>
+              <div className='text-center'>No messages</div>
             ) : (
               [...messages].map((message, index) => (
                 <li key={index}>
@@ -168,21 +162,25 @@ export default function DropdownNav () {
             {Object.keys(warnings).length} Warnings
           </div>
           <ul className='dropdown-menu--list'>
-            {[...warnings].map((warning, index) => (
-              <li key={index}>
-                <Link
-                  className='dropdown-item dropdown-menu--item d-flex flex-row'
-                  to='/dashboard/warning'
-                >
-                  <div className='dropdown-menu--item--body'>
-                    <div className='dropdown-menu-item--body--header'>
-                      <strong>{warning.content}</strong>
+            {Object.keys(warnings).length === 0 ? (
+              <div className='text-center'>No warnings</div>
+            ) : (
+              [...warnings].map((warning, index) => (
+                <li key={index}>
+                  <Link
+                    className='dropdown-item dropdown-menu--item d-flex flex-row'
+                    to='/dashboard/warning'
+                  >
+                    <div className='dropdown-menu--item--body'>
+                      <div className='dropdown-menu-item--body--header'>
+                        <strong>{warning.content}</strong>
+                      </div>
+                      <p>{warning.created_time}</p>
                     </div>
-                    <p>{warning.created_time}</p>
-                  </div>
-                </Link>
-              </li>
-            ))}
+                  </Link>
+                </li>
+              ))
+            )}
           </ul>
         </div>
       </li>

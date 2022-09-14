@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 
 export default function Profile () {
   const [messages, setMessages] = useState([])
@@ -6,13 +7,10 @@ export default function Profile () {
   const username = sessionStorage.getItem('username')
 
   useEffect(() => {
-    fetch(`http://localhost:5000/message/${username}`)
-      .then(res =>
-        res.json().then(data => {
-          setMessages(data)
-        })
-      )
-      .catch(err => console(err))
+    axios
+      .get(`http://localhost:5000/message/${username}`)
+      .then(response => setMessages(response.data))
+      .catch(error => console.log(error))
   }, [username])
 
   return (
@@ -25,7 +23,9 @@ export default function Profile () {
                 <h5 className='card-title'>Conversation</h5>
                 <ul className='list-group list-group-flush'>
                   {[...messages].map((message, index) => (
-                    <li className="list-group-item" key={index}>{message.sender_id}</li>
+                    <li className='list-group-item' key={index}>
+                      {message.sender_id}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -37,7 +37,9 @@ export default function Profile () {
               <div className='card-body'>
                 <ul className='list-group list-group-flush'>
                   {[...messages].map((message, index) => (
-                    <li className="list-group-item" key={index}>{message.message}</li>
+                    <li className='list-group-item' key={index}>
+                      {message.message}
+                    </li>
                   ))}
                 </ul>
               </div>

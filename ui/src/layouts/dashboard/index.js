@@ -1,7 +1,7 @@
 import React from 'react'
 import './dashboard.css'
-import SideBar from '../../components/UserPage/SideBar/Sidebar'
-import Header from '../../components/UserPage/Header/Header'
+import SideBar from '../../components/UserPage/SideBar'
+import Header from '../../components/UserPage/Header'
 import routes from '../../routes'
 import { Routes, Route } from 'react-router-dom'
 

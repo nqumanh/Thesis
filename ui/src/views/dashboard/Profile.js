@@ -1,3 +1,4 @@
+import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 
 export default function Profile () {
@@ -7,19 +8,17 @@ export default function Profile () {
   useEffect(() => {
     let username = sessionStorage.getItem('username')
     let id = parseInt(username.substring(1))
-    fetch(`http://127.0.0.1:5000/student/${id}`).then(res =>
-      res.json().then(data => {
-        setProfile(data)
-      })
-    )
+    axios
+      .get(`http://127.0.0.1:5000/student/${id}`)
+      .then(response => setProfile(response.data))
+      .catch(error => console.log(error))
   }, [])
 
   useEffect(() => {
-    fetch(`http://127.0.0.1:5000/parents/${profile.parents_id}`).then(res =>
-      res.json().then(data => {
-        setParentsInfo(data)
-      })
-    )
+    axios
+      .get(`http://127.0.0.1:5000/parents/${profile.parents_id}`)
+      .then(response => setParentsInfo(response.data))
+      .catch(error => console.log(error))
   }, [profile])
 
   return (

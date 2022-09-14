@@ -87,16 +87,18 @@ class Login(Resource):
             password = data.get('password')
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""select password from user_account 
+            cursor.execute("""select username, password, role from user_account 
                             where username=\"{}\";"""
                            .format(username))
             data = cursor.fetchall()
             if (len(data) == 0):
                 raise Exception("Account does not exist")
-            password_hash = str(data[0][0])
+            username = data[0][0]
+            password_hash = str(data[0][1])
+            role = data[0][2]
             auth_state = check_password_hash(password_hash, password)
             if auth_state:
-                return make_response('Login successfully!', 200)
+                return {'username': username, 'role': role}
             else:
                 return make_response('Wrong Password!', 403)
 

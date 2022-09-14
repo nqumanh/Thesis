@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 
 export default function LoginPage () {
@@ -23,20 +24,21 @@ export default function LoginPage () {
     formData.append('username', studentId)
     formData.append('password', password)
 
-    const requestOptions = {
-      method: 'POST',
-      body: formData
-    }
-    await fetch('http://localhost:5000/login', requestOptions)
-      .then(response => {
-        if (response.status === 400) throw new Error('Account does not exist!')
-        if (response.status === 403) throw new Error('Wrong Password!')
-        const username = formData.get('username')
-        sessionStorage.setItem('username', username)
+    axios({
+      method: 'post',
+      url: 'http://localhost:5000/login',
+      data: formData,
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+      .then(function (response) {
+        sessionStorage.setItem('username', response.data.username)
+        sessionStorage.setItem('role', response.data.role)
         alert('Login successfully!')
         navigate(`/dashboard`)
       })
-      .catch(err => alert(err))
+      .catch(function (response) {
+        alert(response.response.data)
+      })
   }
 
   return (

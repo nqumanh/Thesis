@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import axios from 'axios'
 
 export default function CourseDetail () {
   const location = useLocation()
@@ -8,23 +9,21 @@ export default function CourseDetail () {
   const [assessments, setAssessments] = useState([])
 
   useEffect(() => {
-    fetch(
-      `http://127.0.0.1:5000/materials/${course.codeModule}/${course.codePresentation}`
-    ).then(res =>
-      res.json().then(data => {
-        setMaterials(data)
-      })
-    )
+    axios
+      .get(
+        `http://127.0.0.1:5000/materials/${course.codeModule}/${course.codePresentation}`
+      )
+      .then(response => setMaterials(response.data))
+      .catch(error => console.log(error))
   }, [course])
 
   useEffect(() => {
-    fetch(
-      `http://127.0.0.1:5000/assessments/${course.codeModule}/${course.codePresentation}`
-    ).then(res =>
-      res.json().then(data => {
-        setAssessments(data)
-      })
-    )
+    axios
+      .get(
+        `http://127.0.0.1:5000/assessments/${course.codeModule}/${course.codePresentation}`
+      )
+      .then(response => setAssessments(response.data))
+      .catch(error => console.log(error))
   }, [course])
 
   const eleMaterial = materials.slice(0, 5).map(material => (

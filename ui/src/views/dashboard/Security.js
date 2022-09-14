@@ -1,3 +1,4 @@
+import axios from 'axios'
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 
@@ -37,17 +38,14 @@ export default function Security () {
     formData.append('old_password', currentPassword)
     formData.append('new_password', newPassword)
 
-    const requestOptions = {
-      method: 'POST',
-      body: formData
-    }
-    await fetch('http://localhost:5000/edit-user-password', requestOptions)
+    await axios
+      .post('http://localhost:5000/edit-user-password', formData)
       .then(response => {
-        if (response.status === 403) throw new Error('Wrong Password!')
+        console.log(response.data)
         alert('Password Changed!')
         navigate('/dashboard')
       })
-      .catch(err => alert(err))
+      .catch(error => alert(error.response.data))
   }
 
   return (
@@ -92,7 +90,7 @@ export default function Security () {
                   <div className='mb-3'>
                     <div className='mb-2 w-100'>
                       <label className='text-muted' htmlFor='password'>
-                        Current Password
+                        New Password
                       </label>
                     </div>
                     <input
@@ -110,7 +108,7 @@ export default function Security () {
                   <div className='mb-3'>
                     <div className='mb-2 w-100'>
                       <label className='text-muted' htmlFor='password'>
-                        Current Password
+                        Confirm Password
                       </label>
                     </div>
                     <input

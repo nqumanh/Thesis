@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import TableData from '../../../components/UserPage/Content/TableData'
-import Pagination from '../../../components/UserPage/Content/Pagination'
+import TableData from '../../../components/Table/TableData'
+import Pagination from '../../../components/Table/Pagination'
+import axios from 'axios'
 
 export default function Content () {
   const initialFilter = {
@@ -22,12 +23,14 @@ export default function Content () {
   useEffect(() => {
     const username = sessionStorage.getItem('username')
     const studentId = parseInt(username.substring(1))
-    fetch(`http://127.0.0.1:5000/${'student-register/' + studentId}`).then(
-      res =>
-        res.json().then(data => {
-          setPresentations(data)
-        })
-    )
+    axios
+      .get(`http://127.0.0.1:5000/${'student-register/' + studentId}`)
+      .then(function (response) {
+        setPresentations(response.data)
+      })
+      .catch(function (error) {
+        console.log(error)
+      })
   }, [])
 
   const onFilter = (
@@ -109,13 +112,9 @@ export default function Content () {
   let currentCourses = courses.slice(indexOfFirstCourse, indexOfLastCourse)
 
   return (
-    <div style={{padding: "0 30px"}}className='mt-3'>
-      {/* <h3>Student Dashboard</h3> */}
+    <div style={{ padding: '0 30px' }} className='mt-3'>
       <nav aria-label='breadcrumb'>
         <ol className='breadcrumb'>
-          {/* <li className='breadcrumb-item'>
-            <a href={`#/`}>Home</a>
-          </li> */}
           <li className='breadcrumb-item active' aria-current='page'>
             All Courses
           </li>

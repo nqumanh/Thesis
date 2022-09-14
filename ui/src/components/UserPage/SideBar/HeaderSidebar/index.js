@@ -6,7 +6,11 @@ export default function HeaderSidebar () {
     <div className='HeaderSidebar'>
       <div className='HeaderLogo'>
         <a className='Logo' href='/#'>
-          <img src='https://dms.iitd.ac.in/wp-content/uploads/2018/07/Courses.png' style={{height: '100%'}} alt='Logo'></img>
+          <img
+            src='https://dms.iitd.ac.in/wp-content/uploads/2018/07/Courses.png'
+            style={{ height: '100%' }}
+            alt='Logo'
+          ></img>
         </a>
       </div>
       <div className='ToggleSidebar'>
