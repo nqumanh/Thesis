@@ -3,7 +3,6 @@ import Dashboard from './views/Dashboard'
 import Profile from './views/Dashboard/Profile'
 import Warning from './views/Dashboard/Warning'
 import Message from './views/Dashboard/Message'
-import Security from './views/Dashboard/Security'
 import CourseDetail from './views/Dashboard/CourseDetail'
 
 const routes = [
@@ -30,12 +29,6 @@ const routes = [
     layout: '/dashboard',
     path: '/message',
     element: Message
-  },
-  {
-    name: 'Security',
-    layout: '/dashboard',
-    path: '/security',
-    element: Security
   },
   {
     name: 'Course Detail',

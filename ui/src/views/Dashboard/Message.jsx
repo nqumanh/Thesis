@@ -6,7 +6,6 @@ export default function Profile() {
   const [messages, setMessages] = useState([]);
 
   const username = sessionStorage.getItem("username");
-  const id = sessionStorage.getItem("id");
 
   useEffect(() => {
     axios
@@ -16,25 +15,33 @@ export default function Profile() {
   }, [username]);
 
   let displayedMessages = [...messages].map((message) => {
-    let justify = message.sender_id === id ? "message-right" : "message-left";
+    let justify =
+      message.sender_id === username ? "message-right" : "message-left";
     return {
       message: message.message,
       display: justify,
     };
   });
 
-  let educatorList = [
-    ...new Set(messages.map((message) => message.sender_id)),
-  ].filter((message) => message !== id);
-
-  const [contacts, setContacts] = useState([]);
-
-  useEffect(() => {
-    axios
-      .post(`http://localhost:5000/get-contacts`, { listId: educatorList })
-      .then((response) => setContacts(response.data))
-      .catch((error) => console.log(error));
-  }, [educatorList]);
+  let contacts = messages.map((message) => {
+    if (message.id === message.sender_id)
+      return {
+        name: message.receiver_id,
+        sender: "You: ",
+        message: message.message,
+      };
+    return {
+      name: message.sender_id,
+      sender: "",
+      message: message.message,
+    };
+  });
+  let unique = new Map();
+  for (let i = 0; i < contacts.length; i++) {
+    unique.set(contacts[i].name, contacts[i]);
+  }
+  contacts = [...unique.values()];
+  contacts= contacts.filter((contact) => contact.name !== username);
 
   return (
     <div className="card">
@@ -45,9 +52,15 @@ export default function Profile() {
               <div className="card-body">
                 <h5 className="card-title">Conversation</h5>
                 <ul className="list-group list-group-flush">
-                  {contacts.map((message, index) => (
+                  {contacts.map((contact, index) => (
                     <li className="list-group-item" key={index}>
-                      {message}
+                      <div>
+                        <strong>{contact.name}</strong>
+                      </div>
+                      <p>
+                        {contact.sender}
+                        {contact.message}
+                      </p>
                     </li>
                   ))}
                 </ul>

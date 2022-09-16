@@ -309,7 +309,12 @@ class GetAllMessages(Resource):
                            """.format(username))
             id = cursor.fetchall()[0][0]
             cursor.execute("""
-                SELECT * from message
+                SELECT 
+                    (SELECT username from user_account where id=sender_id) as sender, 
+	                (SELECT username from user_account where id=receiver_id) as receiver, 
+                    message, 
+                    created_time 
+                FROM message
                 WHERE sender_id=\"{}\" OR receiver_id=\"{}\"
                 ORDER BY created_time;
                 """.format(id, id)
@@ -317,10 +322,10 @@ class GetAllMessages(Resource):
             data = cursor.fetchall()
             for row in data:
                 message = {
-                    "sender_id": row[1],
-                    "receiver_id": row[2],
-                    "message": row[3],
-                    "created_time": str(row[4]),
+                    "sender_id": row[0],
+                    "receiver_id": row[1],
+                    "message": row[2],
+                    "created_time": str(row[3]),
                 }
                 messages.append(message)
             return messages
@@ -339,7 +344,8 @@ class GetAllWarning(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute("""SELECT * FROM warning
-                           WHERE id_student = \"{}\";
+                           WHERE id_student = \"{}\"
+                           ORDER BY created_time DESC;
                            """.format(id))
             data = cursor.fetchall()
             for row in data:

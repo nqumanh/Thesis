@@ -30,6 +30,26 @@ export default function DropdownNav () {
       .then(response => setWarnings(response.data))
       .catch(error => console.log(error))
   }, [id])
+  let contacts = messages.map(message => {
+    if (username === message.sender_id)
+      return {
+        name: message.receiver_id,
+        sender: 'You: ',
+        message: message.message,
+        created_time: message.created_time
+      }
+    return {
+      name: message.sender_id,
+      sender: '',
+      message: message.message,
+      created_time: message.created_time
+    }
+  })
+  let unique = new Map()
+  for (let i = 0; i < contacts.length; i++) {
+    unique.set(contacts[i].name, contacts[i])
+  }
+  contacts = [...unique.values()]
 
   return (
     <ul className='DropdownList'>
@@ -82,7 +102,7 @@ export default function DropdownNav () {
               </Link>
             </li>
             <li>
-              <Link className='dropdown-item' to='/dashboard/security'>
+              <Link className='dropdown-item' to='/change-password'>
                 Account Settings
               </Link>
             </li>
@@ -107,18 +127,18 @@ export default function DropdownNav () {
         >
           <BiEnvelope />
           <span className='position-absolute top-0 start-100 translate-middle badge border border-light rounded-pill bg-success message-count'>
-            {messages.length}
+            {contacts.length}
           </span>
         </a>
         <div className='dropdown-menu dropdown-menu-end mt-4 p-0'>
           <div className='dropdown-menu--title bg-success'>
-            {messages.length} Messages
+            {contacts.length} Messages
           </div>
           <ul className='dropdown-menu--list'>
-            {Object.keys(messages).length === 0 ? (
+            {Object.keys(contacts).length === 0 ? (
               <div className='text-center'>No messages</div>
             ) : (
-              [...messages].map((message, index) => (
+              contacts.map((contact, index) => (
                 <li key={index}>
                   <Link
                     className='dropdown-item dropdown-menu--item d-flex flex-row'
@@ -133,10 +153,13 @@ export default function DropdownNav () {
                     </div>
                     <div className='dropdown-menu--item--body'>
                       <div className='dropdown-menu-item--body--header'>
-                        <strong>{message.sender_id}</strong>
-                        <small>{message.created_time}</small>
+                        <strong>{contact.name}</strong>
+                        <small>{contact.created_time}</small>
                       </div>
-                      <p>{message.message}</p>
+                      <p>
+                        {contact.sender}
+                        {contact.message}
+                      </p>
                     </div>
                   </Link>
                 </li>
