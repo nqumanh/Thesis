@@ -41,10 +41,10 @@ export default function Profile() {
     unique.set(contacts[i].name, contacts[i]);
   }
   contacts = [...unique.values()];
-  contacts= contacts.filter((contact) => contact.name !== username);
+  contacts = contacts.filter((contact) => contact.name !== username);
 
   return (
-    <div className="card">
+    <div className="card m-4">
       <div className="container">
         <div className="row">
           <div className="col-3">

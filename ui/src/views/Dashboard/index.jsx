@@ -42,8 +42,7 @@ export default function Dashboard() {
   
   return (
     <div>
-      <div style={{ padding: "30px" }}>
-        <div className="card">
+        <div className="card m-4">
           <div className="card-body">
             <h5 className="card-title">Course List</h5>
             <TableData presentations={presentations} />
@@ -55,6 +54,5 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-    </div>
   );
 }

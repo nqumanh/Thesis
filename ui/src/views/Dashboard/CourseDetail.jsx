@@ -45,7 +45,7 @@ export default function CourseDetail() {
   ));
 
   return (
-    <div className="card">
+    <div className="card m-4">
       <div className="card-body">
         <h3 className="card-title">Course Information</h3>
         <div>Course Name: {course.name}</div>

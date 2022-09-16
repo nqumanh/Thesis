@@ -22,7 +22,7 @@ export default function Profile() {
   }, [profile]);
 
   return (
-    <div className="card">
+    <div className="card m-4">
       <div className="card-body">
         <h5 className="card-title">My Profile</h5>
         <div>ID: {profile.id_student}</div>

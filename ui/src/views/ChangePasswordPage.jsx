@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { IoArrowBack } from "react-icons/io5";
 
 export default function Security() {
   const navigate = useNavigate();
@@ -61,10 +62,10 @@ export default function Security() {
               ></img>
             </div>
             <div className="card shadow-lg">
-              <Link to="/dashboard" className="float-end">
-                Back to Dashboard
+              <Link to="/dashboard" className="float-end ms-3 mt-3 h3">
+                <IoArrowBack />
               </Link>
-              <div className="card-body p-5">
+              <div className="card-body p-5 pt-3">
                 <h1 className="fs-4 card-title fw-bold mb-4">
                   Change Password
                 </h1>
