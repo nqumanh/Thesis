@@ -1,16 +1,17 @@
-import Courses from './views/Dashboard/Courses'
+// import Courses from './views/Dashboard/Courses'
+import Dashboard from './views/Dashboard'
 import Profile from './views/Dashboard/Profile'
 import Warning from './views/Dashboard/Warning'
 import Message from './views/Dashboard/Message'
 import Security from './views/Dashboard/Security'
-import CourseDetail from './views/Dashboard/Courses/CourseDetail'
+import CourseDetail from './views/Dashboard/CourseDetail'
 
 const routes = [
   {
-    name: 'Courses',
+    name: 'Default Dashboard',
     layout: '/dashboard',
     path: '/',
-    element: Courses
+    element: Dashboard
   },
   {
     name: 'Profile',

@@ -59,11 +59,12 @@ export default function Pagination (props) {
   ))
 
   return (
-    <div className='d-flex justify-content-between'>
+    <div className='d-flex justify-content-end'>
       <div className='d-flex'>
-        <label className='col-sm-7 col-form-label'>Rows per page:</label>
+        <div className='d-flex align-items-center me-2'>Rows per page:</div>
         <select
           className='form-select'
+          style={{ flex: 1 }}
           name='rowsPerPage'
           value={selectedRowsPerPage}
           onChange={changeRowsPerPage}
@@ -75,8 +76,8 @@ export default function Pagination (props) {
           <option value='All'>All</option>
         </select>
       </div>
-      <nav>
-        <ul className='pagination justify-content-end'>
+      <nav style={{ margin: '0 0 0 30px', display: 'flex' }}>
+        <ul className='pagination justify-content-end m-0'>
           <li className='page-item'>
             <a
               className={currentPage === 1 ? 'page-link disabled' : 'page-link'}

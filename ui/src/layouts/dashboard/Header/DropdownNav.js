@@ -14,7 +14,7 @@ export default function DropdownNav () {
   const [warnings, setWarnings] = useState([])
 
   const username = sessionStorage.getItem('username')
-  const id = username.substring(1)
+  const id = parseInt(username.substring(1))
   const role = capitalizeFirstLetter(sessionStorage.getItem('role'))
 
   useEffect(() => {

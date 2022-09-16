@@ -87,18 +87,19 @@ class Login(Resource):
             password = data.get('password')
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""select username, password, role from user_account 
+            cursor.execute("""select id, username, password, role from user_account 
                             where username=\"{}\";"""
                            .format(username))
             data = cursor.fetchall()
             if (len(data) == 0):
                 raise Exception("Account does not exist")
-            username = data[0][0]
-            password_hash = str(data[0][1])
-            role = data[0][2]
+            id = data[0][0]
+            username = data[0][1]
+            password_hash = str(data[0][2])
+            role = data[0][3]
             auth_state = check_password_hash(password_hash, password)
             if auth_state:
-                return {'username': username, 'role': role}
+                return {'id': id, 'username': username, 'role': role}
             else:
                 return make_response('Wrong Password!', 403)
 
@@ -309,7 +310,8 @@ class GetAllMessages(Resource):
             id = cursor.fetchall()[0][0]
             cursor.execute("""
                 SELECT * from message
-                WHERE sender_id=\"{}\" OR receiver_id=\"{}\";
+                WHERE sender_id=\"{}\" OR receiver_id=\"{}\"
+                ORDER BY created_time;
                 """.format(id, id)
                            )
             data = cursor.fetchall()
@@ -359,21 +361,90 @@ class GetAllWarning(Resource):
             con.close()
 
 
+class GetAllCoursesOfEducator(Resource):
+    def get(self, id):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute(
+                """SELECT course_info.name, 
+                        courses.code_module, 
+                        courses.code_presentation, 
+                        course_info.major, 
+                        courses.length 
+                    FROM courses
+                    INNER JOIN course_info ON courses.code_module = course_info.code_module
+                    WHERE courses.id_educator = \"{}\";
+                """.format(id))
+            data = cursor.fetchall()
+            courses = []
+            for row in data:
+                item = {
+                    "name": row[0],
+                    "codeModule": row[1],
+                    "codePresentation": row[2],
+                    'year': row[2][0:4],
+                    'monthStart': "February" if (row[2][4] == "B") else "October",
+                    "major": row[3],
+                    "length": row[4],
+                }
+                courses.append(item)
+            return courses
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetContacts(Resource):
+    def post(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            content = request.json["listId"]
+            for i in range(len(content)):
+                cursor.execute("""SELECT name FROM educator 
+                               WHERE id_system= \"{}\"
+                               """.format(content[i]))
+                data = cursor.fetchall()[0][0]
+                content[i] = data
+            return content
+        finally:
+            cursor.close()
+            con.close()
+
+
+# __________________________________________________________________
+
+
+# admin
 api.add_resource(GetAllCourses, '/')
 api.add_resource(CreateUserAccount, '/create-user-account')
-api.add_resource(EditUserPassword, '/edit-user-password')
+
+# all users
 api.add_resource(Login, '/login')
-api.add_resource(GetStudentById, '/student/<id>')
-api.add_resource(GetParentsById, '/parents/<id>')
+api.add_resource(EditUserPassword, '/edit-user-password')
+api.add_resource(GetAllMessages,
+                 '/message/<username>')
+api.add_resource(GetContacts, '/get-contacts')
+
+# student
 api.add_resource(GetAllCoursesOfStudent, '/student-register/<id>')
+api.add_resource(GetStudentById, '/student/<id>')
+api.add_resource(GetAllWarning,
+                 '/warning/<id>')
 api.add_resource(GetAllMaterialInCourse,
                  '/materials/<code_module>/<code_presentation>')
 api.add_resource(GetAllAssessmentInCourse,
                  '/assessments/<code_module>/<code_presentation>')
-api.add_resource(GetAllMessages,
-                 '/message/<username>')
-api.add_resource(GetAllWarning,
-                 '/warning/<id>')
+
+# educator
+api.add_resource(GetAllCoursesOfEducator, '/get-courses-of-educator/<id>')
+
+# parents
+api.add_resource(GetParentsById, '/parents/<id>')
 
 
 if __name__ == '__main__':
