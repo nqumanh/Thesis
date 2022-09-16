@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import './DropdownNav.css'
 import { BiEnvelope } from 'react-icons/bi'
 import { BiBell } from 'react-icons/bi'
 import axios from 'axios'
+import './DropdownNav.css'
 
 function capitalizeFirstLetter (string) {
   return string.charAt(0).toUpperCase() + string.slice(1)

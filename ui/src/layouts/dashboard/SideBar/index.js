@@ -5,11 +5,11 @@ import './Sidebar.css'
 import HeaderSidebar from './HeaderSidebar'
 import SidebarNav from './SidebarNav'
 
-export default function Sidebar () {
+export default function Sidebar (props) {
 
   return (
     <div className='Sidebar'>
-      <HeaderSidebar />
+      <HeaderSidebar onToggle={props.onToggle}/>
       <SidebarNav />
     </div>
   )

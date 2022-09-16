@@ -2,7 +2,7 @@ import React from 'react'
 import './HeaderSidebar.css'
 import { Link } from 'react-router-dom'
 
-export default function HeaderSidebar () {
+export default function HeaderSidebar (props) {
   return (
     <div className='HeaderSidebar'>
       <div className='HeaderLogo'>
@@ -15,7 +15,7 @@ export default function HeaderSidebar () {
         </Link>
       </div>
       <div className='ToggleSidebar'>
-        <button className='ToggleButton'>
+        <button className='ToggleButton' onClick={() => props.onToggle()}>
           <span className='ToggleIcon'>
             <span
               style={{
