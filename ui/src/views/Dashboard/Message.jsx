@@ -4,15 +4,17 @@ import "./message.css";
 
 export default function Profile() {
   const [messages, setMessages] = useState([]);
-
+  const token = localStorage.getItem("token");
   const username = sessionStorage.getItem("username");
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5000/message/${username}`)
+      .get(`http://localhost:5000/message/${username}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((response) => setMessages(response.data))
       .catch((error) => console.log(error));
-  }, [username]);
+  }, [username, token]);
 
   let displayedMessages = [...messages].map((message) => {
     let justify =

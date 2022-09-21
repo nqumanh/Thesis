@@ -6,6 +6,7 @@ import axios from "axios";
 export default function Dashboard() {
   const role = sessionStorage.getItem("role");
   const [courses, setCourses] = useState([]);
+  const token = localStorage.getItem("token");
 
   const initialPagination = {
     rowsPerPage: 5,
@@ -29,12 +30,12 @@ export default function Dashboard() {
         ? `http://127.0.0.1:5000/student-register/${id}`
         : `http://localhost:5000/get-courses-of-educator/${id}`;
     axios
-      .get(url)
+      .get(url, { headers: {"Authorization" : `Bearer ${token}`} })
       .then((response) => {
         setCourses(response.data);
       })
       .catch((error) => console.log(error));
-  }, [role]);
+  }, [role, token]);
 
   const indexOfLastCourse = pagination.currentPage * pagination.rowsPerPage;
   const indexOfFirstCourse = indexOfLastCourse - pagination.rowsPerPage;

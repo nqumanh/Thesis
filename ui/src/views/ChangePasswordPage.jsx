@@ -11,6 +11,7 @@ export default function Security() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const username = sessionStorage.getItem("username");
+  const token = localStorage.getItem("token");
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -40,9 +41,10 @@ export default function Security() {
     formData.append("new_password", newPassword);
 
     await axios
-      .post("http://localhost:5000/edit-user-password", formData)
+      .post("http://localhost:5000/edit-user-password", formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((response) => {
-        console.log(response.data);
         alert("Password Changed!");
         navigate("/dashboard");
       })

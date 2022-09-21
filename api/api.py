@@ -1,4 +1,4 @@
-from flask import Flask, make_response, request
+from flask import Flask, make_response, request, jsonify
 from flask_restful import Resource, Api
 from flaskext.mysql import MySQL
 from flask_cors import CORS  # , cross_origin
@@ -12,6 +12,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import mean_squared_error
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
 
 
 mysql = MySQL()
@@ -25,6 +29,8 @@ app.config['MYSQL_DATABASE_PASSWORD'] = 'qm187606595'
 app.config['MYSQL_DATABASE_DB'] = 'warningsystem'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 
+app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
+jwt = JWTManager(app)
 
 mysql.init_app(app)
 
@@ -32,11 +38,11 @@ api = Api(app)
 
 
 class CreateUserAccount(Resource):
+    @jwt_required()
     def post(self):
         try:
             data = request.form
-            username = data.get('username')
-            password = data.get('password')
+            username, password = data.get('username'), data.get('password')
             hashPassword = generate_password_hash(password)
             id = str(uuid.uuid4())
             con = mysql.connect()
@@ -55,12 +61,12 @@ class CreateUserAccount(Resource):
 
 
 class EditUserPassword(Resource):
+    @jwt_required()
     def post(self):
         try:
             data = request.form
-            username = data.get('username')
-            oldPassword = data.get('old_password')
-            newPassword = data.get('new_password')
+            username, oldPassword, newPassword = data.get(
+                'username'), data.get('old_password'), data.get('new_password')
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute("""select password from user_account 
@@ -91,8 +97,7 @@ class Login(Resource):
     def post(self):
         try:
             data = request.form
-            username = data.get('username')
-            password = data.get('password')
+            username, password = data.get('username'), data.get('password')
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute("""select id, username, password, role from user_account 
@@ -100,14 +105,13 @@ class Login(Resource):
                            .format(username))
             data = cursor.fetchall()
             if (len(data) == 0):
-                raise Exception("Account does not exist")
-            id = data[0][0]
-            username = data[0][1]
-            password_hash = str(data[0][2])
-            role = data[0][3]
+                return make_response("Account does not exist", 404)
+            id, username, password_hash, role = data[0]
             auth_state = check_password_hash(password_hash, password)
+            # return {'id': id, 'username': username, 'role': role}
             if auth_state:
-                return {'id': id, 'username': username, 'role': role}
+                access_token = create_access_token(identity=username)
+                return jsonify(access_token=access_token, id=id, username=username, role=role)
             else:
                 return make_response('Wrong Password!', 403)
 
@@ -119,6 +123,7 @@ class Login(Resource):
 
 
 class GetAllCourses(Resource):
+    @jwt_required()
     def get(self):
         try:
             conn = mysql.connect()
@@ -153,6 +158,7 @@ class GetAllCourses(Resource):
 
 
 class GetStudentById(Resource):
+    @jwt_required()
     def get(self, id):
         try:
             con = mysql.connect()
@@ -161,9 +167,7 @@ class GetStudentById(Resource):
                 """select * from student_info 
                 where id_student = \"{}\"; 
                 """.format(id))
-            data = cursor.fetchall()
-
-            info = data[0]
+            info = cursor.fetchall()[0]
             profile = {
                 "id_student": info[0],
                 "parents_id": info[2],
@@ -185,6 +189,7 @@ class GetStudentById(Resource):
 
 
 class GetParentsById(Resource):
+    @jwt_required()
     def get(self, id):
         try:
             con = mysql.connect()
@@ -193,9 +198,7 @@ class GetParentsById(Resource):
                 """select * from parents
                 where personal_id = {}; 
                 """.format(id))
-            data = cursor.fetchall()
-
-            info = data[0]
+            info = cursor.fetchall()[0]
             profile = {
                 "personal_id": info[0],
                 "email": info[2],
@@ -218,6 +221,7 @@ class GetParentsById(Resource):
 
 
 class GetAllCoursesOfStudent(Resource):
+    @jwt_required()
     def get(self, id):
         try:
             con = mysql.connect()
@@ -253,6 +257,7 @@ class GetAllCoursesOfStudent(Resource):
 
 
 class GetAllMaterialInCourse(Resource):
+    @jwt_required()
     def get(self, code_module, code_presentation):
         try:
             materials = []
@@ -280,6 +285,7 @@ class GetAllMaterialInCourse(Resource):
 
 
 class GetAllAssessmentInCourse(Resource):
+    @jwt_required()
     def get(self, code_module, code_presentation):
         try:
             assessments = []
@@ -309,6 +315,7 @@ class GetAllAssessmentInCourse(Resource):
 
 
 class GetAllMessages(Resource):
+    @jwt_required()
     def get(self, username):
         try:
             messages = []
@@ -348,6 +355,7 @@ class GetAllMessages(Resource):
 
 
 class GetAllWarning(Resource):
+    @jwt_required()
     def get(self, id):
         try:
             warnings = []
@@ -378,6 +386,7 @@ class GetAllWarning(Resource):
 
 
 class GetAllCoursesOfEducator(Resource):
+    @jwt_required()
     def get(self, id):
         try:
             con = mysql.connect()
@@ -415,6 +424,7 @@ class GetAllCoursesOfEducator(Resource):
 
 
 class GetContacts(Resource):
+    @jwt_required()
     def post(self):
         try:
             con = mysql.connect()
@@ -433,6 +443,7 @@ class GetContacts(Resource):
 
 
 class GetStudentAssessment(Resource):
+    @jwt_required()
     def get(self, id, code_module, code_presentation):
         try:
             con = mysql.connect()
@@ -494,30 +505,28 @@ class PredictExamResult(Resource):
                 comp_score = reduce(lambda avg, ele: avg +
                                     float(ele[0])*float(ele[1])/100 if ele[0] != '?' else avg, list(data), 0)
                 result['comp_score'] = comp_score
-                
-            print(results[0])
-            
-            X = np.array(list(map(lambda x: [x['comp_score']], results))) #
-            y = np.array(list(map(lambda x: float(x['score']), results))) #
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
 
-            classifier = LogisticRegression(random_state = 0)
-            
+            X = np.array(list(map(lambda x: [x['comp_score']], results)))
+            y = np.array(list(map(lambda x: float(x['score']), results)))
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=0)
+
+            classifier = LogisticRegression(random_state=0)
+
             # X_train = X_train.reshape(-1,1)
             # X_test = X_test.reshape(-1,1)
-            
+
             classifier.fit(X_train, y_train)
             y_pred = classifier.predict(X_test)
-            # print(y_pred)
-            y_pred_pass = list(map(lambda x: 1 if x>=40 else 0, y_pred))
-            y_test_pass = list(map(lambda x: 1 if x>=40 else 0, y_test))
-            print(y_test_pass)
+            # y_pred_pass = list(map(lambda x: 1 if x>=40 else 0, y_pred))
+            # y_test_pass = list(map(lambda x: 1 if x>=40 else 0, y_test))
+            # print(y_test_pass)
             # cm = confusion_matrix(y_test_pass, y_pred_pass)
             # print(cm)
             # accuracies = cross_val_score(estimator = classifier, X = X_train, y = y_train, cv = 10)
             # print("Accuracy: {:.2f} %".format(accuracies.mean()*100))
             # print("Standard Deviation: {:.2f} %".format(accuracies.std()*100))
-            
+
             # mse = mean_squared_error(y_test, y_pred)
             # print(mse) #247.85
             # accuracies = cross_val_score(

@@ -4,22 +4,27 @@ import React, { useEffect, useState } from "react";
 export default function Profile() {
   const [profile, setProfile] = useState([]);
   const [parentsInfo, setParentsInfo] = useState([]);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     let username = sessionStorage.getItem("username");
     let id = parseInt(username.substring(1));
     axios
-      .get(`http://127.0.0.1:5000/student/${id}`)
+      .get(`http://127.0.0.1:5000/student/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((response) => setProfile(response.data))
       .catch((error) => console.log(error));
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     axios
-      .get(`http://127.0.0.1:5000/parents/${profile.parents_id}`)
+      .get(`http://127.0.0.1:5000/parents/${profile.parents_id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((response) => setParentsInfo(response.data))
       .catch((error) => console.log(error));
-  }, [profile]);
+  }, [profile, token]);
 
   return (
     <div className="card m-4">

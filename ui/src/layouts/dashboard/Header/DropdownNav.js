@@ -12,6 +12,7 @@ function capitalizeFirstLetter (string) {
 export default function DropdownNav () {
   const [messages, setMessages] = useState([])
   const [warnings, setWarnings] = useState([])
+  const token = localStorage.getItem('token')
 
   const username = sessionStorage.getItem('username')
   const id = parseInt(username.substring(1))
@@ -19,17 +20,21 @@ export default function DropdownNav () {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5000/message/${username}`)
+      .get(`http://localhost:5000/message/${username}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
       .then(response => setMessages(response.data))
       .catch(error => console.log(error))
-  }, [username])
+  }, [username, token])
 
   useEffect(() => {
     axios
-      .get(`http://localhost:5000/warning/${id}`)
+      .get(`http://localhost:5000/warning/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
       .then(response => setWarnings(response.data))
       .catch(error => console.log(error))
-  }, [id])
+  }, [id, token])
   let contacts = messages.map(message => {
     if (username === message.sender_id)
       return {

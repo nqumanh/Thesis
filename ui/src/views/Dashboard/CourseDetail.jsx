@@ -9,25 +9,27 @@ export default function CourseDetail() {
   const [assessments, setAssessments] = useState([]);
   const role = sessionStorage.getItem("role");
   const id = parseInt(sessionStorage.getItem("username").substring(1));
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     axios
       .get(
-        `http://127.0.0.1:5000/materials/${course.codeModule}/${course.codePresentation}`
+        `http://127.0.0.1:5000/materials/${course.codeModule}/${course.codePresentation}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((response) => setMaterials(response.data))
       .catch((error) => console.log(error));
-  }, [course]);
+  }, [course, token]);
 
   useEffect(() => {
     let url = `http://127.0.0.1:5000/assessments/${course.codeModule}/${course.codePresentation}`;
     if (role === "student")
       url = `http://127.0.0.1:5000/student-assessment/${id}/${course.codeModule}/${course.codePresentation}`;
     axios
-      .get(url)
+      .get(url, { headers: { Authorization: `Bearer ${token}` } })
       .then((response) => setAssessments(response.data))
       .catch((error) => console.log(error));
-  }, [id, role, course]);
+  }, [id, role, course, token]);
 
   const eleMaterial = materials.slice(0, 5).map((material) => (
     <tr key={material.id_site}>

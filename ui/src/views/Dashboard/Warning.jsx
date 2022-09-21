@@ -3,15 +3,16 @@ import axios from "axios";
 
 export default function Profile() {
   const [warnings, setWarnings] = useState([]);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     let username = sessionStorage.getItem("username");
     let id = username.substring(1);
     axios
-      .get(`http://localhost:5000/warning/${id}`)
+      .get(`http://localhost:5000/warning/${id}`, { headers: {"Authorization" : `Bearer ${token}`} })
       .then((response) => setWarnings(response.data))
       .catch((error) => console.log(error));
-  }, []);
+  }, [token]);
 
   return (
     <div className="card m-4">
