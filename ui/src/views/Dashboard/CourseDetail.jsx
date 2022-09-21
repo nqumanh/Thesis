@@ -7,6 +7,8 @@ export default function CourseDetail() {
   const course = location.state.presentation;
   const [materials, setMaterials] = useState([]);
   const [assessments, setAssessments] = useState([]);
+  const role = sessionStorage.getItem("role");
+  const id = parseInt(sessionStorage.getItem("username").substring(1));
 
   useEffect(() => {
     axios
@@ -18,13 +20,14 @@ export default function CourseDetail() {
   }, [course]);
 
   useEffect(() => {
+    let url = `http://127.0.0.1:5000/assessments/${course.codeModule}/${course.codePresentation}`;
+    if (role === "student")
+      url = `http://127.0.0.1:5000/student-assessment/${id}/${course.codeModule}/${course.codePresentation}`;
     axios
-      .get(
-        `http://127.0.0.1:5000/assessments/${course.codeModule}/${course.codePresentation}`
-      )
+      .get(url)
       .then((response) => setAssessments(response.data))
       .catch((error) => console.log(error));
-  }, [course]);
+  }, [id, role, course]);
 
   const eleMaterial = materials.slice(0, 5).map((material) => (
     <tr key={material.id_site}>
@@ -35,14 +38,27 @@ export default function CourseDetail() {
     </tr>
   ));
 
-  const eleAssessment = assessments.map((assessment) => (
-    <tr key={assessment.id_assessment}>
-      <td>{assessment.id_assessment}</td>
+  const eleAssessment = assessments.map((assessment, index) => (
+    <tr key={index}>
       <td>{assessment.assessment_type}</td>
-      <td>{assessment.date}</td>
+      <td>{assessment.date_submitted}</td>
+      <td>{assessment.score}</td>
       <td>{assessment.weight}</td>
     </tr>
   ));
+
+  const displayAvgPoint = () => {
+    if (role === "student")
+      return (
+        <h5 style={{ textAlign: "right" }}>
+          Average Point:{" "}
+          {assessments.reduce(
+            (avg, ass) => avg + parseInt(ass.score * ass.weight) / 100 / 2,
+            0
+          )}
+        </h5>
+      );
+  };
 
   return (
     <div className="card m-4">
@@ -74,14 +90,15 @@ export default function CourseDetail() {
         <table className="table table-bordered">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Assessment Type</th>
-              <th>Date</th>
+              <th>Date Submitted</th>
+              <th>Score</th>
               <th>Weight</th>
             </tr>
           </thead>
           <tbody>{eleAssessment}</tbody>
         </table>
+        {displayAvgPoint()}
       </div>
     </div>
   );

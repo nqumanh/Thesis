@@ -34,7 +34,7 @@ export default function LoginPage () {
         sessionStorage.setItem('username', response.data.username)
         sessionStorage.setItem('role', response.data.role)
         sessionStorage.setItem('id', response.data.id)
-        alert('Login successfully!')
+        // alert('Login successfully!')
         navigate(`/dashboard`)
       })
       .catch(function (response) {

@@ -4,6 +4,14 @@ from flaskext.mysql import MySQL
 from flask_cors import CORS  # , cross_origin
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
+from functools import reduce
+import numpy as np
+# from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import mean_squared_error
 
 
 mysql = MySQL()
@@ -291,11 +299,13 @@ class GetAllAssessmentInCourse(Resource):
                     "weight": row[3],
                 }
                 assessments.append(assessment)
-            cursor.close()
             return assessments
 
         except Exception as e:
             return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
 
 
 class GetAllMessages(Resource):
@@ -422,12 +432,113 @@ class GetContacts(Resource):
             con.close()
 
 
+class GetStudentAssessment(Resource):
+    def get(self, id, code_module, code_presentation):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""
+                SELECT assessment_type, date_submitted, score, weight from student_assessments as a
+                INNER JOIN assessments as b on a.id_assessment = b.id_assessment
+                WHERE id_student = \"{}\"; """
+                           .format(id)
+                           )
+            assessments = []
+            data = cursor.fetchall()
+            for row in data:
+                assessment = {
+                    'assessment_type': row[0],
+                    'date_submitted': row[1],
+                    'score': row[2],
+                    'weight': row[3]
+                }
+                assessments.append(assessment)
+            return assessments
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
+class PredictExamResult(Resource):
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""
+                SELECT * FROM assessments
+                INNER JOIN student_assessments 
+                ON assessments.id_assessment = student_assessments.id_assessment
+                WHERE assessment_type = \"Exam\" AND DATE !=\"?\"; 
+                            """
+                           )
+            data = cursor.fetchall()
+            results = []
+            for row in data:
+                result = {
+                    "code_module": row[1],
+                    "code_presentation": row[2],
+                    "id_student": row[7],
+                    "score": row[9]
+                }
+                results.append(result)
+            for result in results:
+                cursor.execute("""
+                    select score, weight from student_assessments as a
+                    inner join assessments as b on a.id_assessment = b.id_assessment
+                    where id_student = \"{}\" AND assessment_type!=\"Exam\" AND code_module=\"{}\" AND code_presentation=\"{}\";
+                               """.format(result['id_student'], result['code_module'], result['code_presentation']))
+                data = cursor.fetchall()
+                comp_score = reduce(lambda avg, ele: avg +
+                                    float(ele[0])*float(ele[1])/100 if ele[0] != '?' else avg, list(data), 0)
+                result['comp_score'] = comp_score
+                
+            print(results[0])
+            
+            X = np.array(list(map(lambda x: [x['comp_score']], results))) #
+            y = np.array(list(map(lambda x: float(x['score']), results))) #
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+
+            classifier = LogisticRegression(random_state = 0)
+            
+            # X_train = X_train.reshape(-1,1)
+            # X_test = X_test.reshape(-1,1)
+            
+            classifier.fit(X_train, y_train)
+            y_pred = classifier.predict(X_test)
+            # print(y_pred)
+            y_pred_pass = list(map(lambda x: 1 if x>=40 else 0, y_pred))
+            y_test_pass = list(map(lambda x: 1 if x>=40 else 0, y_test))
+            print(y_test_pass)
+            # cm = confusion_matrix(y_test_pass, y_pred_pass)
+            # print(cm)
+            # accuracies = cross_val_score(estimator = classifier, X = X_train, y = y_train, cv = 10)
+            # print("Accuracy: {:.2f} %".format(accuracies.mean()*100))
+            # print("Standard Deviation: {:.2f} %".format(accuracies.std()*100))
+            
+            # mse = mean_squared_error(y_test, y_pred)
+            # print(mse) #247.85
+            # accuracies = cross_val_score(
+            #     estimator=classifier, X=X_train, y=y_train, cv=10)
+            return 1
+            #{'confusion_matrix': cm, 'accuracy': "{:.2f} %".format(accuracies.mean()*100), 'standard_deviation': "{:.2f} %".format(accuracies.std()*100)}
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
 # __________________________________________________________________
 
 
 # admin
 api.add_resource(GetAllCourses, '/')
 api.add_resource(CreateUserAccount, '/create-user-account')
+api.add_resource(PredictExamResult, '/predict-exam-result')
 
 # all users
 api.add_resource(Login, '/login')
@@ -441,13 +552,15 @@ api.add_resource(GetAllCoursesOfStudent, '/student-register/<id>')
 api.add_resource(GetStudentById, '/student/<id>')
 api.add_resource(GetAllWarning,
                  '/warning/<id>')
+api.add_resource(GetStudentAssessment,
+                 '/student-assessment/<id>/<code_module>/<code_presentation>')
+
+# educator
+api.add_resource(GetAllCoursesOfEducator, '/get-courses-of-educator/<id>')
 api.add_resource(GetAllMaterialInCourse,
                  '/materials/<code_module>/<code_presentation>')
 api.add_resource(GetAllAssessmentInCourse,
                  '/assessments/<code_module>/<code_presentation>')
-
-# educator
-api.add_resource(GetAllCoursesOfEducator, '/get-courses-of-educator/<id>')
 
 # parents
 api.add_resource(GetParentsById, '/parents/<id>')
