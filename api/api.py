@@ -13,7 +13,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import mean_squared_error
 from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt_identity
+# from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
 
@@ -513,26 +513,10 @@ class PredictExamResult(Resource):
 
             classifier = LogisticRegression(random_state=0)
 
-            # X_train = X_train.reshape(-1,1)
-            # X_test = X_test.reshape(-1,1)
-
             classifier.fit(X_train, y_train)
             y_pred = classifier.predict(X_test)
-            # y_pred_pass = list(map(lambda x: 1 if x>=40 else 0, y_pred))
-            # y_test_pass = list(map(lambda x: 1 if x>=40 else 0, y_test))
-            # print(y_test_pass)
-            # cm = confusion_matrix(y_test_pass, y_pred_pass)
-            # print(cm)
-            # accuracies = cross_val_score(estimator = classifier, X = X_train, y = y_train, cv = 10)
-            # print("Accuracy: {:.2f} %".format(accuracies.mean()*100))
-            # print("Standard Deviation: {:.2f} %".format(accuracies.std()*100))
 
-            # mse = mean_squared_error(y_test, y_pred)
-            # print(mse) #247.85
-            # accuracies = cross_val_score(
-            #     estimator=classifier, X=X_train, y=y_train, cv=10)
             return 1
-            #{'confusion_matrix': cm, 'accuracy': "{:.2f} %".format(accuracies.mean()*100), 'standard_deviation': "{:.2f} %".format(accuracies.std()*100)}
 
         except Exception as e:
             return {'error': str(e)}
