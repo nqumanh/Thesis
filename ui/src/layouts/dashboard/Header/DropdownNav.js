@@ -35,6 +35,7 @@ export default function DropdownNav () {
       .then(response => setWarnings(response.data))
       .catch(error => console.log(error))
   }, [id, token])
+
   let contacts = messages.map(message => {
     if (username === message.sender_id)
       return {
@@ -115,7 +116,10 @@ export default function DropdownNav () {
               <Link
                 className='dropdown-item'
                 to='/login'
-                onClick={() => sessionStorage.clear()}
+                onClick={() => {
+                  sessionStorage.clear()
+                  localStorage.clear()
+                }}
               >
                 Log Out
               </Link>
