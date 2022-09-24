@@ -47,7 +47,7 @@ class CreateUserAccount(Resource):
             id = str(uuid.uuid4())
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""INSERT INTO user_account (id, username, password, role) 
+            cursor.execute("""INSERT INTO user_account (id, username, password, role)
                            VALUES ("{}", "{}", "{}", "{}")"""
                            .format(id, username, hashPassword, 'student'))
             con.commit()
@@ -69,7 +69,7 @@ class EditUserPassword(Resource):
                 'username'), data.get('old_password'), data.get('new_password')
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""select password from user_account 
+            cursor.execute("""select password from user_account
                             where username=\"{}\";"""
                            .format(username))
             data = cursor.fetchall()
@@ -77,8 +77,8 @@ class EditUserPassword(Resource):
             auth_state = check_password_hash(password_hash, oldPassword)
             if auth_state:
                 hash_password = generate_password_hash(newPassword)
-                cursor.execute("""UPDATE user_account 
-                                SET password = \"{}\" 
+                cursor.execute("""UPDATE user_account
+                                SET password = \"{}\"
                                 WHERE username=\"{}\";
                                 """.format(hash_password, username))
                 con.commit()
@@ -100,7 +100,7 @@ class Login(Resource):
             username, password = data.get('username'), data.get('password')
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""select id, username, password, role from user_account 
+            cursor.execute("""select id, username, password, role from user_account
                             where username=\"{}\";"""
                            .format(username))
             data = cursor.fetchall()
@@ -129,7 +129,7 @@ class GetAllCourses(Resource):
             conn = mysql.connect()
             cursor = conn.cursor()
             cursor.execute(
-                """SELECT name,courses.code_module,code_presentation, major, length FROM courses 
+                """SELECT name,courses.code_module,code_presentation, major, length FROM courses
                 inner join course_info
                 on courses.code_module = course_info.code_module""")
             data = cursor.fetchall()
@@ -164,8 +164,8 @@ class GetStudentById(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute(
-                """select * from student_info 
-                where id_student = \"{}\"; 
+                """select * from student_info
+                where id_student = \"{}\";
                 """.format(id))
             info = cursor.fetchall()[0]
             profile = {
@@ -196,7 +196,7 @@ class GetParentsById(Resource):
             cursor = con.cursor()
             cursor.execute(
                 """select * from parents
-                where personal_id = {}; 
+                where personal_id = {};
                 """.format(id))
             info = cursor.fetchall()[0]
             profile = {
@@ -231,7 +231,7 @@ class GetAllCoursesOfStudent(Resource):
                     FROM student_register as t1
                     INNER JOIN courses as t2 ON t1.code_module = t2.code_module AND t1.code_presentation = t2.code_presentation
                     INNER JOIN course_info as t3 ON t2.code_module = t3.code_module
-                    where t1.id_student = \"{}\"; 
+                    where t1.id_student = \"{}\";
                 """.format(id))
             data = cursor.fetchall()
             cursor.close()
@@ -264,7 +264,7 @@ class GetAllMaterialInCourse(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute("""
-                SELECT id_site, activity_type, week_from, week_to 
+                SELECT id_site, activity_type, week_from, week_to
                 FROM material
                 where code_module =\""""+code_module+"\"and code_presentation=\""+code_presentation+"\";"
                            )
@@ -326,11 +326,11 @@ class GetAllMessages(Resource):
                            """.format(username))
             id = cursor.fetchall()[0][0]
             cursor.execute("""
-                SELECT 
-                    (SELECT username from user_account where id=sender_id) as sender, 
-	                (SELECT username from user_account where id=receiver_id) as receiver, 
-                    message, 
-                    created_time 
+                SELECT
+                    (SELECT username from user_account where id=sender_id) as sender,
+	                (SELECT username from user_account where id=receiver_id) as receiver,
+                    message,
+                    created_time
                 FROM message
                 WHERE sender_id=\"{}\" OR receiver_id=\"{}\"
                 ORDER BY created_time;
@@ -392,11 +392,11 @@ class GetAllCoursesOfEducator(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute(
-                """SELECT course_info.name, 
-                        courses.code_module, 
-                        courses.code_presentation, 
-                        course_info.major, 
-                        courses.length 
+                """SELECT course_info.name,
+                        courses.code_module,
+                        courses.code_presentation,
+                        course_info.major,
+                        courses.length
                     FROM courses
                     INNER JOIN course_info ON courses.code_module = course_info.code_module
                     WHERE courses.id_educator = \"{}\";
@@ -431,7 +431,7 @@ class GetContacts(Resource):
             cursor = con.cursor()
             content = request.json["listId"]
             for i in range(len(content)):
-                cursor.execute("""SELECT name FROM educator 
+                cursor.execute("""SELECT name FROM educator
                                WHERE id_system= \"{}\"
                                """.format(content[i]))
                 data = cursor.fetchall()[0][0]
@@ -480,9 +480,9 @@ class PredictExamResult(Resource):
             cursor = con.cursor()
             cursor.execute("""
                 SELECT * FROM assessments
-                INNER JOIN student_assessments 
+                INNER JOIN student_assessments
                 ON assessments.id_assessment = student_assessments.id_assessment
-                WHERE assessment_type = \"Exam\" AND DATE !=\"?\"; 
+                WHERE assessment_type = \"Exam\" AND DATE !=\"?\";
                             """
                            )
             data = cursor.fetchall()
@@ -525,6 +525,53 @@ class PredictExamResult(Resource):
             con.close()
 
 
+class PredictByScores(Resource):
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""
+                SELECT code_module, code_presentation, id_student
+                FROM assessments
+                INNER JOIN student_assessments
+                ON assessments.id_assessment = student_assessments.id_assessment
+                WHERE code_module = \'CCC\' AND assessment_type = \'Exam\'
+                            """
+                           )
+            data = cursor.fetchall()
+            validInfo = []
+            for row in data:
+                codeModule, codePresentation, idStudent = row
+                cursor.execute("""
+                    SELECT * FROM assessments
+                    INNER JOIN student_assessments
+                    ON assessments.id_assessment = student_assessments.id_assessment
+                    WHERE code_module = '{}' AND code_presentation='{}' AND id_student='{}';
+                """.format(codeModule, codePresentation, idStudent)
+                )
+                assessments = list(cursor.fetchall())
+                totalWeight = reduce(
+                    lambda sum, ele: sum+ele[5], assessments, 0)
+                if totalWeight == 200:
+                    allAssessments = list(reduce(lambda a, b: a+b, list(map(lambda x: [x[5], 0 if x[-1] ==
+                                                                                       '?' else int(x[-1])], assessments))
+                                                 ))
+                    validInfo.append(
+                        [idStudent, codeModule, codePresentation]+allAssessments)
+            for row in validInfo:
+                cursor.execute("""
+                    INSERT INTO scores_for_prediction 
+                    VALUES (\'{}\',\'{}\',\'{}\',{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}); 
+                """.format(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13], row[14], row[15], row[16], row[17], row[18], row[19], row[20]))
+            con.commit()
+            return 1
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
 # __________________________________________________________________
 
 
@@ -532,6 +579,10 @@ class PredictExamResult(Resource):
 api.add_resource(GetAllCourses, '/')
 api.add_resource(CreateUserAccount, '/create-user-account')
 api.add_resource(PredictExamResult, '/predict-exam-result')
+
+api.add_resource(PredictByScores, '/predict-by-scores')
+# api.add_resource(PredictByInteractions, '/predict-by-interactions')
+# api.add_resource(PredictByPerformance, '/predict-by-performance')
 
 # all users
 api.add_resource(Login, '/login')
