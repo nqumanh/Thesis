@@ -6,9 +6,11 @@
     margin: 0;
 }
 
-.DropdownUser {
+.header-nav__user {
     display: flex;
-    margin-right: 28px;
+    justify-content: center;
+    flex-direction: column;
+    margin-right: 15px;
 }
 
 .DropdownToggle {
@@ -25,27 +27,12 @@
     align-items: center;
 }
 
-.dropdown-toggle--user::after {
-    color: #999898;
-    position: absolute;
-    top: 14px;
-    right: 47px;
-    margin: 0;
-    vertical-align: 0.255em;
-
-    content: "";
-    border-top: 0.3em solid;
-    border-right: 0.3em solid transparent;
-    border-bottom: 0;
-    border-left: 0.3em solid transparent;
-}
-
 .UserInfo {
     height: 40px;
     width: 110px;
     display: flex;
     flex-direction: column;
-    padding: 0 26px 0 0;
+    padding: 0 10px 0 0;
 }
 
 .UserAvatar {
@@ -54,7 +41,7 @@
 
 .DropdownMessage {
     width: 34px;
-    margin-right: 28px;
+    margin-right: 16px;
     display: flex;
     justify-content: center;
     flex-direction: column;
@@ -63,11 +50,28 @@
 
 .DropdownNotification {
     width: 25px;
-    margin-right: 18px;
+    margin-right: 20px;
     display: flex;
     justify-content: center;
     flex-direction: column;
     font-size: 40px;
+}
+
+.dropdown-setting {
+    font-size: 25px;
+    color: #0d6efd;
+    margin-right: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.dropdown-logout {
+    font-size: 30px;
+    color: #0d6efd;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .dropdown-menu--title {

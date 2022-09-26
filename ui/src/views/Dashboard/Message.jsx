@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import "./message.css";
 
 export default function Profile() {
@@ -46,39 +47,53 @@ export default function Profile() {
   contacts = contacts.filter((contact) => contact.name !== username);
 
   return (
-    <div className="card m-4">
-      <div className="container">
-        <div className="row">
-          <div className="col-3">
-            <div className="card">
-              <div className="card-body">
-                <h5 className="card-title">Conversation</h5>
-                <ul className="list-group list-group-flush">
-                  {contacts.map((contact, index) => (
-                    <li className="list-group-item" key={index}>
-                      <div>
-                        <strong>{contact.name}</strong>
-                      </div>
-                      <p>
-                        {contact.sender}
-                        {contact.message}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
+    <div>
+      <nav className="ms-4 mt-3" aria-label="breadcrumb">
+        <ol className="breadcrumb">
+          <li className="breadcrumb-item">
+            <Link style={{ textDecoration: "none" }} to="/dashboard">
+              Course
+            </Link>
+          </li>
+          <li className="breadcrumb-item active" aria-current="page">
+            Message
+          </li>
+        </ol>
+      </nav>
+      <div className="card m-4">
+        <div className="container">
+          <div className="row">
+            <div className="col-3">
+              <div className="card">
+                <div className="card-body">
+                  <h5 className="card-title">Conversation</h5>
+                  <ul className="list-group list-group-flush">
+                    {contacts.map((contact, index) => (
+                      <li className="list-group-item" key={index}>
+                        <div>
+                          <strong>{contact.name}</strong>
+                        </div>
+                        <p>
+                          {contact.sender}
+                          {contact.message}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="col-9">
-            <div className="card">
-              <div className="card-body">
-                <div className="d-inline">
-                  {displayedMessages.map((message, index) => (
-                    <div className={`${message.display}`} key={index}>
-                      {message.message}
-                    </div>
-                  ))}
+            <div className="col-9">
+              <div className="card">
+                <div className="card-body">
+                  <div className="d-inline">
+                    {displayedMessages.map((message, index) => (
+                      <div className={`${message.display}`} key={index}>
+                        {message.message}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

@@ -12,10 +12,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import mean_squared_error
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, JWTManager
 # from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
 
 
 mysql = MySQL()
@@ -556,13 +554,14 @@ class PredictByScores(Resource):
                     allAssessments = list(reduce(lambda a, b: a+b, list(map(lambda x: [x[5], 0 if x[-1] ==
                                                                                        '?' else int(x[-1])], assessments))
                                                  ))
+                    allAssessments.sort(key=lambda a: a[0])
                     validInfo.append(
                         [idStudent, codeModule, codePresentation]+allAssessments)
             for row in validInfo:
                 cursor.execute("""
                     INSERT INTO scores_for_prediction 
-                    VALUES (\'{}\',\'{}\',\'{}\',{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}); 
-                """.format(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13], row[14], row[15], row[16], row[17], row[18], row[19], row[20]))
+                    VALUES (\'{}\',\'{}\',\'{}\',{}); 
+                """.format(row[0], row[1], row[2], ','.join(list(map(lambda x: str(x), row[3:])))))
             con.commit()
             return 1
 

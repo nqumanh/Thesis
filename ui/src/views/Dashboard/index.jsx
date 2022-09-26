@@ -30,7 +30,7 @@ export default function Dashboard() {
         ? `http://127.0.0.1:5000/student-register/${id}`
         : `http://localhost:5000/get-courses-of-educator/${id}`;
     axios
-      .get(url, { headers: {"Authorization" : `Bearer ${token}`} })
+      .get(url, { headers: { Authorization: `Bearer ${token}` } })
       .then((response) => {
         setCourses(response.data);
       })
@@ -40,20 +40,27 @@ export default function Dashboard() {
   const indexOfLastCourse = pagination.currentPage * pagination.rowsPerPage;
   const indexOfFirstCourse = indexOfLastCourse - pagination.rowsPerPage;
   let presentations = courses.slice(indexOfFirstCourse, indexOfLastCourse);
-  
+
   return (
     <div>
-        <div className="card m-4">
-          <div className="card-body">
-            <h5 className="card-title">Course List</h5>
-            <TableData presentations={presentations} />
-            <Pagination
-              rowsPerPage={pagination.rowsPerPage}
-              totalCourses={courses.length}
-              paginate={paginate}
-            />
-          </div>
+      <nav className="ms-4 mt-3" aria-label="breadcrumb">
+        <ol className="breadcrumb">
+          <li className="breadcrumb-item active" aria-current="page">
+            Course List
+          </li>
+        </ol>
+      </nav>
+
+      <div className="card m-4">
+        <div className="card-body m-2">
+          <TableData presentations={presentations} />
+          <Pagination
+            rowsPerPage={pagination.rowsPerPage}
+            totalCourses={courses.length}
+            paginate={paginate}
+          />
         </div>
       </div>
+    </div>
   );
 }

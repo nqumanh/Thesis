@@ -6,17 +6,15 @@ import './SidebarNav.css'
 export default function NavBar () {
   const links = [
     {
-      name: 'Courses',
-      to: '/dashboard'
-      // subLink: [
-      //   { name: 'Course List', to: '/dashboard' },
-      //   { name: 'Assessments', to: '/dashboard' },
-      //   { name: 'Material', to: '/dashboard' }
-      // ]
+      name: 'Course',
+      to: '/dashboard',
+      subLink: [
+        { name: 'Course List', to: '/dashboard' },
+        { name: 'Warning', to: '/dashboard/warning' },
+        { name: 'Message', to: '/dashboard/message' }
+      ]
     },
     { name: 'Profile', to: '/dashboard/profile' },
-    { name: 'Warning', to: '/dashboard/warning' },
-    { name: 'Message', to: '/dashboard/message' },
     { name: 'Account Settings', to: '/change-password' }
   ]
   return (
@@ -26,10 +24,7 @@ export default function NavBar () {
           <div key={index}>
             <li className='NavItem'>
               <span>
-                <Link className='NavLink' to={link.to}>
-                  {link.name}
-                </Link>
-                {/* {link.subLink ? (
+                {link.subLink ? (
                   <div
                     type='button'
                     data-bs-toggle='collapse'
@@ -43,10 +38,10 @@ export default function NavBar () {
                   <Link className='NavLink' to={link.to}>
                     {link.name}
                   </Link>
-                )} */}
+                )}
               </span>
             </li>
-            {/* <ul
+            <ul
               id='collapseExample'
               className='collapse'
               style={{ backgroundColor: '#051f3e' }}
@@ -58,7 +53,7 @@ export default function NavBar () {
                   </li>
                 </Link>
               ))}
-            </ul> */}
+            </ul>
           </div>
         ))}
       </ul>

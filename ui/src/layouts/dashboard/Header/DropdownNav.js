@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { BiEnvelope } from 'react-icons/bi'
 import { BiBell } from 'react-icons/bi'
+import { TbLogout } from 'react-icons/tb'
+import { FiSettings } from 'react-icons/fi'
 import axios from 'axios'
 import './DropdownNav.css'
 
@@ -59,73 +61,44 @@ export default function DropdownNav () {
 
   return (
     <ul className='DropdownList'>
-      <li className='DropdownUser dropdown'>
-        <a
-          className='DropdownToggle dropdown-toggle--user'
-          href='/#'
-          data-bs-toggle='dropdown'
-        >
-          <div className='UserInfo'>
-            <h5
-              style={{
-                margin: '0',
-                font: '15px Roboto, sans-serif',
-                color: '#111111',
-                display: 'flex',
-                justifyContent: 'flex-end',
-                flex: '1',
-                fontWeight: 'bold'
-              }}
-            >
-              {id}
-            </h5>
-            <span
-              style={{
-                color: '#646464',
-                font: '13px Roboto, sans-serif',
-                display: 'flex',
-                justifyContent: 'flex-end',
-                flex: '1'
-              }}
-            >
-              {role}
-            </span>
-          </div>
-          <div className='UserAvatar'>
-            <img
-              style={{ borderRadius: '100%' }}
-              src='https://www.radiustheme.com/demo/html/psdboss/akkhor/akkhor/img/figure/admin.jpg'
-              alt='avatar'
-            ></img>
-          </div>
-        </a>
-        <div className='dropdown-menu dropdown-menu-end mt-1 p-0'>
-          <h6 className='dropdown-menu--title bg-warning'>{id}</h6>
-          <ul className='dropdown-menu--list'>
-            <li>
-              <Link className='dropdown-item' to='/dashboard/profile'>
-                My Profile
-              </Link>
-            </li>
-            <li>
-              <Link className='dropdown-item' to='/change-password'>
-                Account Settings
-              </Link>
-            </li>
-            <li>
-              <Link
-                className='dropdown-item'
-                to='/login'
-                onClick={() => {
-                  sessionStorage.clear()
-                  localStorage.clear()
+      <li className='header-nav__user'>
+        <Link style={{ textDecoration: 'none' }} to='/dashboard/profile'>
+          <div className='d-flex'>
+            <div className='UserInfo'>
+              <h5
+                style={{
+                  margin: '0',
+                  font: '15px Roboto, sans-serif',
+                  color: '#111111',
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  flex: '1',
+                  fontWeight: 'bold'
                 }}
               >
-                Log Out
-              </Link>
-            </li>
-          </ul>
-        </div>
+                {id}
+              </h5>
+              <span
+                style={{
+                  color: '#646464',
+                  font: '13px Roboto, sans-serif',
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  flex: '1'
+                }}
+              >
+                {role}
+              </span>
+            </div>
+            <div className='UserAvatar'>
+              <img
+                style={{ borderRadius: '100%' }}
+                src='https://www.radiustheme.com/demo/html/psdboss/akkhor/akkhor/img/figure/admin.jpg'
+                alt='avatar'
+              ></img>
+            </div>
+          </div>
+        </Link>
       </li>
 
       <li className='DropdownMessage'>
@@ -215,6 +188,25 @@ export default function DropdownNav () {
             )}
           </ul>
         </div>
+      </li>
+
+      <li className='dropdown-setting'>
+        <Link className='d-flex' to='/change-password'>
+          <FiSettings />
+        </Link>
+      </li>
+
+      <li className='dropdown-logout'>
+        <Link
+          style={{ display: 'flex' }}
+          to='/login'
+          onClick={() => {
+            sessionStorage.clear()
+            localStorage.clear()
+          }}
+        >
+          <TbLogout />
+        </Link>
       </li>
     </ul>
   )
