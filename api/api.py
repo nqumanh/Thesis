@@ -571,6 +571,55 @@ class PredictByScores(Resource):
             cursor.close()
             con.close()
 
+
+class StudentAssessmentForPredict(Resource):
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""
+                SELECT code_module, code_presentation, id_student
+                FROM assessments
+                INNER JOIN student_assessments
+                ON assessments.id_assessment = student_assessments.id_assessment
+                WHERE code_module = \'CCC\' AND assessment_type = \'Exam\'
+                            """
+                           )
+            data = cursor.fetchall()
+            student_assessments = []
+            for row in data:
+                codeModule, codePresentation, idStudent = row
+                cursor.execute("""
+                    SELECT score,weight FROM assessments
+                    INNER JOIN student_assessments
+                    ON assessments.id_assessment = student_assessments.id_assessment
+                    WHERE code_module = '{}' AND code_presentation='{}' AND id_student='{}';
+                """.format(codeModule, codePresentation, idStudent)
+                )
+                assessments = list(cursor.fetchall())
+                assessmentsList = list(map(lambda x: [x[1], 0 if x[0] ==
+                                                      '?' else int(x[0])], assessments))
+                while len(assessmentsList) < 9:
+                    assessmentsList.insert(-1, ['NULL', 'NULL'])
+                assessments = list(reduce(lambda a, b: a+b, assessmentsList
+                                          ))
+                student_assessments.append(
+                    [idStudent, codeModule, codePresentation]+assessments)
+            for row in student_assessments:
+                cursor.execute("""
+                    INSERT INTO prediction_scores
+                    VALUES (\'{}\',\'{}\',\'{}\',{}); 
+                """.format(row[0], row[1], row[2], ','.join(list(map(lambda x: str(x), row[3:])))))
+            con.commit()
+            return len(student_assessments)
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
 # __________________________________________________________________
 
 
@@ -580,6 +629,9 @@ api.add_resource(CreateUserAccount, '/create-user-account')
 api.add_resource(PredictExamResult, '/predict-exam-result')
 
 api.add_resource(PredictByScores, '/predict-by-scores')
+api.add_resource(StudentAssessmentForPredict,
+                 '/student-assessment-for-predict')
+
 # api.add_resource(PredictByInteractions, '/predict-by-interactions')
 # api.add_resource(PredictByPerformance, '/predict-by-performance')
 
