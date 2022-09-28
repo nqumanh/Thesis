@@ -618,6 +618,55 @@ class StudentAssessmentForPredict(Resource):
         finally:
             cursor.close()
             con.close()
+            
+            
+class PredictByInteractions(Resource):
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""
+                SELECT code_module, code_presentation, id_student
+                FROM assessments
+                INNER JOIN student_assessments
+                ON assessments.id_assessment = student_assessments.id_assessment
+                WHERE code_module = \'CCC\' AND assessment_type = \'Exam\'
+                            """
+                           )
+            data = cursor.fetchall()
+            student_interaction = []
+            for row in data:
+                codeModule, codePresentation, idStudent = row
+                cursor.execute("""
+                    SELECT SUM(sum_click) FROM student_interaction
+                    WHERE code_module = '{}' AND code_presentation='{}' AND id_student='{}';
+                """.format(codeModule, codePresentation, idStudent)
+                )
+                totalClicks = int(cursor.fetchall()[0][0])
+                cursor.execute("""
+                    SELECT COUNT(*) FROM (
+                        SELECT COUNT(date) FROM student_interaction
+                        WHERE code_module = '{}' AND code_presentation='{}' AND id_student='{}'
+                        group by date
+                    ) AS NUM_OF_INTERACTION_DATE
+                """.format(codeModule, codePresentation, idStudent)
+                )
+                interactionFrequency = cursor.fetchall()[0][0]
+                student_interaction.append(
+                    [idStudent, codeModule, codePresentation, totalClicks, interactionFrequency])
+            for row in student_interaction:
+                cursor.execute("""
+                    INSERT INTO prediction_interaction
+                    VALUES (\'{}\',\'{}\',\'{}\',{}); 
+                """.format(row[0], row[1], row[2], ','.join(list(map(lambda x: str(x), row[3:])))))
+            con.commit()
+            return len(data)
+        
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
 
 
 # __________________________________________________________________
@@ -632,7 +681,7 @@ api.add_resource(PredictByScores, '/predict-by-scores')
 api.add_resource(StudentAssessmentForPredict,
                  '/student-assessment-for-predict')
 
-# api.add_resource(PredictByInteractions, '/predict-by-interactions')
+api.add_resource(PredictByInteractions, '/predict-by-interactions')
 # api.add_resource(PredictByPerformance, '/predict-by-performance')
 
 # all users
