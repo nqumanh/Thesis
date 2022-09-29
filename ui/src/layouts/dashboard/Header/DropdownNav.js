@@ -12,6 +12,7 @@ function capitalizeFirstLetter (string) {
 }
 
 export default function DropdownNav () {
+  const [name, setName] = useState('')
   const [messages, setMessages] = useState([])
   const [warnings, setWarnings] = useState([])
   const token = localStorage.getItem('token')
@@ -37,6 +38,17 @@ export default function DropdownNav () {
       .then(response => setWarnings(response.data))
       .catch(error => console.log(error))
   }, [id, token])
+
+  useEffect(() => {
+    if (role === 'Educator') {
+    }
+    axios
+      .get(`http://localhost:5000/get-educator-name/${username}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(response => setName(response.data.name))
+      .catch(error => console.log(error))
+  }, [username, role, token])
 
   let contacts = messages.map(message => {
     if (username === message.sender_id)
@@ -65,19 +77,19 @@ export default function DropdownNav () {
         <Link style={{ textDecoration: 'none' }} to='/dashboard/profile'>
           <div className='d-flex'>
             <div className='UserInfo'>
-              <h5
+              <span
                 style={{
                   margin: '0',
                   font: '15px Roboto, sans-serif',
                   color: '#111111',
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  flex: '1',
-                  fontWeight: 'bold'
+                  display: 'inline',
+                  fontWeight: 'bold',
+                  textAlign: 'right'
                 }}
+                className='text-truncate'
               >
-                {id}
-              </h5>
+                {name}
+              </span>
               <span
                 style={{
                   color: '#646464',

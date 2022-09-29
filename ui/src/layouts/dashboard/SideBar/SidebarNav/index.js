@@ -22,7 +22,7 @@ export default function NavBar () {
       <ul className='NavItemGroup'>
         {links.map((link, index) => (
           <div key={index}>
-            <li className='NavItem'>
+            <li className='NavItem NavLink'>
               <span>
                 {link.subLink ? (
                   <div

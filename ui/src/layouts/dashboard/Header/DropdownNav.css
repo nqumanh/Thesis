@@ -29,7 +29,7 @@
 
 .UserInfo {
     height: 40px;
-    width: 110px;
+    min-width: 110px;
     display: flex;
     flex-direction: column;
     padding: 0 10px 0 0;

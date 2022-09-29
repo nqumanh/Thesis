@@ -35,6 +35,204 @@ mysql.init_app(app)
 api = Api(app)
 
 
+class PredictByScores(Resource):
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""
+                SELECT code_module, code_presentation, id_student
+                FROM assessments
+                INNER JOIN student_assessments
+                ON assessments.id_assessment = student_assessments.id_assessment
+                WHERE code_module = \'CCC\' AND assessment_type = \'Exam\'
+                            """
+                           )
+            data = cursor.fetchall()
+            validInfo = []
+            for row in data:
+                codeModule, codePresentation, idStudent = row
+                cursor.execute("""
+                    SELECT * FROM assessments
+                    INNER JOIN student_assessments
+                    ON assessments.id_assessment = student_assessments.id_assessment
+                    WHERE code_module = '{}' AND code_presentation='{}' AND id_student='{}';
+                """.format(codeModule, codePresentation, idStudent)
+                )
+                assessments = list(cursor.fetchall())
+                totalWeight = reduce(
+                    lambda sum, ele: sum+ele[5], assessments, 0)
+                if totalWeight == 200:
+                    allAssessments = list(reduce(lambda a, b: a+b, list(map(lambda x: [x[5], 0 if x[-1] ==
+                                                                                       '?' else int(x[-1])], assessments))
+                                                 ))
+                    allAssessments.sort(key=lambda a: a[0])
+                    validInfo.append(
+                        [idStudent, codeModule, codePresentation]+allAssessments)
+            for row in validInfo:
+                cursor.execute("""
+                    INSERT INTO scores_for_prediction 
+                    VALUES (\'{}\',\'{}\',\'{}\',{}); 
+                """.format(row[0], row[1], row[2], ','.join(list(map(lambda x: str(x), row[3:])))))
+            con.commit()
+            return 1
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
+class StudentAssessmentForPredict(Resource):
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""
+                SELECT code_module, code_presentation, id_student
+                FROM assessments
+                INNER JOIN student_assessments
+                ON assessments.id_assessment = student_assessments.id_assessment
+                WHERE code_module = \'CCC\' AND assessment_type = \'Exam\'
+                            """
+                           )
+            data = cursor.fetchall()
+            student_assessments = []
+            for row in data:
+                codeModule, codePresentation, idStudent = row
+                cursor.execute("""
+                    SELECT score,weight FROM assessments
+                    INNER JOIN student_assessments
+                    ON assessments.id_assessment = student_assessments.id_assessment
+                    WHERE code_module = '{}' AND code_presentation='{}' AND id_student='{}';
+                """.format(codeModule, codePresentation, idStudent)
+                )
+                assessments = list(cursor.fetchall())
+                assessmentsList = list(map(lambda x: [x[1], 0 if x[0] ==
+                                                      '?' else int(x[0])], assessments))
+                while len(assessmentsList) < 9:
+                    assessmentsList.insert(-1, ['NULL', 'NULL'])
+                assessments = list(reduce(lambda a, b: a+b, assessmentsList
+                                          ))
+                student_assessments.append(
+                    [idStudent, codeModule, codePresentation]+assessments)
+            for row in student_assessments:
+                cursor.execute("""
+                    INSERT INTO prediction_scores
+                    VALUES (\'{}\',\'{}\',\'{}\',{}); 
+                """.format(row[0], row[1], row[2], ','.join(list(map(lambda x: str(x), row[3:])))))
+            con.commit()
+            return len(student_assessments)
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
+class PredictByInteractions(Resource):
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""
+                SELECT code_module, code_presentation, id_student
+                FROM assessments
+                INNER JOIN student_assessments
+                ON assessments.id_assessment = student_assessments.id_assessment
+                WHERE code_module = \'CCC\' AND assessment_type = \'Exam\'
+                            """
+                           )
+            data = cursor.fetchall()
+            student_interaction = []
+            for row in data:
+                codeModule, codePresentation, idStudent = row
+                cursor.execute("""
+                    SELECT SUM(sum_click) FROM student_interaction
+                    WHERE code_module = '{}' AND code_presentation='{}' AND id_student='{}';
+                """.format(codeModule, codePresentation, idStudent)
+                )
+                totalClicks = int(cursor.fetchall()[0][0])
+                cursor.execute("""
+                    SELECT COUNT(*) FROM (
+                        SELECT COUNT(date) FROM student_interaction
+                        WHERE code_module = '{}' AND code_presentation='{}' AND id_student='{}'
+                        group by date
+                    ) AS NUM_OF_INTERACTION_DATE
+                """.format(codeModule, codePresentation, idStudent)
+                )
+                interactionFrequency = cursor.fetchall()[0][0]
+                student_interaction.append(
+                    [idStudent, codeModule, codePresentation, totalClicks, interactionFrequency])
+            for row in student_interaction:
+                cursor.execute("""
+                    INSERT INTO prediction_interaction
+                    VALUES (\'{}\',\'{}\',\'{}\',{}); 
+                """.format(row[0], row[1], row[2], ','.join(list(map(lambda x: str(x), row[3:])))))
+            con.commit()
+            return len(data)
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
+class PredictExamResult(Resource):
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""
+                SELECT * FROM assessments
+                INNER JOIN student_assessments
+                ON assessments.id_assessment = student_assessments.id_assessment
+                WHERE assessment_type = \"Exam\" AND DATE !=\"?\";
+                            """
+                           )
+            data = cursor.fetchall()
+            results = []
+            for row in data:
+                result = {
+                    "code_module": row[1],
+                    "code_presentation": row[2],
+                    "id_student": row[7],
+                    "score": row[9]
+                }
+                results.append(result)
+            for result in results:
+                cursor.execute("""
+                    select score, weight from student_assessments as a
+                    inner join assessments as b on a.id_assessment = b.id_assessment
+                    where id_student = \"{}\" AND assessment_type!=\"Exam\" AND code_module=\"{}\" AND code_presentation=\"{}\";
+                               """.format(result['id_student'], result['code_module'], result['code_presentation']))
+                data = cursor.fetchall()
+                comp_score = reduce(lambda avg, ele: avg +
+                                    float(ele[0])*float(ele[1])/100 if ele[0] != '?' else avg, list(data), 0)
+                result['comp_score'] = comp_score
+
+            X = np.array(list(map(lambda x: [x['comp_score']], results)))
+            y = np.array(list(map(lambda x: float(x['score']), results)))
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=0)
+
+            classifier = LogisticRegression(random_state=0)
+
+            classifier.fit(X_train, y_train)
+            y_pred = classifier.predict(X_test)
+
+            return 1
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+            
 class CreateUserAccount(Resource):
     @jwt_required()
     def post(self):
@@ -383,7 +581,7 @@ class GetAllWarning(Resource):
             con.close()
 
 
-class GetAllCoursesOfEducator(Resource):
+class GetCoursesOfEducator(Resource):
     @jwt_required()
     def get(self, id):
         try:
@@ -471,203 +669,24 @@ class GetStudentAssessment(Resource):
             con.close()
 
 
-class PredictExamResult(Resource):
-    def get(self):
+class GetEducatorName(Resource):
+    @jwt_required()
+    def get(self, username):
         try:
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute("""
-                SELECT * FROM assessments
-                INNER JOIN student_assessments
-                ON assessments.id_assessment = student_assessments.id_assessment
-                WHERE assessment_type = \"Exam\" AND DATE !=\"?\";
-                            """
-                           )
-            data = cursor.fetchall()
-            results = []
-            for row in data:
-                result = {
-                    "code_module": row[1],
-                    "code_presentation": row[2],
-                    "id_student": row[7],
-                    "score": row[9]
-                }
-                results.append(result)
-            for result in results:
-                cursor.execute("""
-                    select score, weight from student_assessments as a
-                    inner join assessments as b on a.id_assessment = b.id_assessment
-                    where id_student = \"{}\" AND assessment_type!=\"Exam\" AND code_module=\"{}\" AND code_presentation=\"{}\";
-                               """.format(result['id_student'], result['code_module'], result['code_presentation']))
-                data = cursor.fetchall()
-                comp_score = reduce(lambda avg, ele: avg +
-                                    float(ele[0])*float(ele[1])/100 if ele[0] != '?' else avg, list(data), 0)
-                result['comp_score'] = comp_score
-
-            X = np.array(list(map(lambda x: [x['comp_score']], results)))
-            y = np.array(list(map(lambda x: float(x['score']), results)))
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=0)
-
-            classifier = LogisticRegression(random_state=0)
-
-            classifier.fit(X_train, y_train)
-            y_pred = classifier.predict(X_test)
-
-            return 1
-
+                SELECT name FROM educator as e
+                INNER JOIN user_account as a ON e.id_system = a.id 
+                WHERE username = \'{}\';
+            """.format(username))
+            name = cursor.fetchone()[0]
+            return jsonify(name=name)
         except Exception as e:
             return {'error': str(e)}
         finally:
             cursor.close()
             con.close()
-
-
-class PredictByScores(Resource):
-    def get(self):
-        try:
-            con = mysql.connect()
-            cursor = con.cursor()
-            cursor.execute("""
-                SELECT code_module, code_presentation, id_student
-                FROM assessments
-                INNER JOIN student_assessments
-                ON assessments.id_assessment = student_assessments.id_assessment
-                WHERE code_module = \'CCC\' AND assessment_type = \'Exam\'
-                            """
-                           )
-            data = cursor.fetchall()
-            validInfo = []
-            for row in data:
-                codeModule, codePresentation, idStudent = row
-                cursor.execute("""
-                    SELECT * FROM assessments
-                    INNER JOIN student_assessments
-                    ON assessments.id_assessment = student_assessments.id_assessment
-                    WHERE code_module = '{}' AND code_presentation='{}' AND id_student='{}';
-                """.format(codeModule, codePresentation, idStudent)
-                )
-                assessments = list(cursor.fetchall())
-                totalWeight = reduce(
-                    lambda sum, ele: sum+ele[5], assessments, 0)
-                if totalWeight == 200:
-                    allAssessments = list(reduce(lambda a, b: a+b, list(map(lambda x: [x[5], 0 if x[-1] ==
-                                                                                       '?' else int(x[-1])], assessments))
-                                                 ))
-                    allAssessments.sort(key=lambda a: a[0])
-                    validInfo.append(
-                        [idStudent, codeModule, codePresentation]+allAssessments)
-            for row in validInfo:
-                cursor.execute("""
-                    INSERT INTO scores_for_prediction 
-                    VALUES (\'{}\',\'{}\',\'{}\',{}); 
-                """.format(row[0], row[1], row[2], ','.join(list(map(lambda x: str(x), row[3:])))))
-            con.commit()
-            return 1
-
-        except Exception as e:
-            return {'error': str(e)}
-        finally:
-            cursor.close()
-            con.close()
-
-
-class StudentAssessmentForPredict(Resource):
-    def get(self):
-        try:
-            con = mysql.connect()
-            cursor = con.cursor()
-            cursor.execute("""
-                SELECT code_module, code_presentation, id_student
-                FROM assessments
-                INNER JOIN student_assessments
-                ON assessments.id_assessment = student_assessments.id_assessment
-                WHERE code_module = \'CCC\' AND assessment_type = \'Exam\'
-                            """
-                           )
-            data = cursor.fetchall()
-            student_assessments = []
-            for row in data:
-                codeModule, codePresentation, idStudent = row
-                cursor.execute("""
-                    SELECT score,weight FROM assessments
-                    INNER JOIN student_assessments
-                    ON assessments.id_assessment = student_assessments.id_assessment
-                    WHERE code_module = '{}' AND code_presentation='{}' AND id_student='{}';
-                """.format(codeModule, codePresentation, idStudent)
-                )
-                assessments = list(cursor.fetchall())
-                assessmentsList = list(map(lambda x: [x[1], 0 if x[0] ==
-                                                      '?' else int(x[0])], assessments))
-                while len(assessmentsList) < 9:
-                    assessmentsList.insert(-1, ['NULL', 'NULL'])
-                assessments = list(reduce(lambda a, b: a+b, assessmentsList
-                                          ))
-                student_assessments.append(
-                    [idStudent, codeModule, codePresentation]+assessments)
-            for row in student_assessments:
-                cursor.execute("""
-                    INSERT INTO prediction_scores
-                    VALUES (\'{}\',\'{}\',\'{}\',{}); 
-                """.format(row[0], row[1], row[2], ','.join(list(map(lambda x: str(x), row[3:])))))
-            con.commit()
-            return len(student_assessments)
-
-        except Exception as e:
-            return {'error': str(e)}
-        finally:
-            cursor.close()
-            con.close()
-            
-            
-class PredictByInteractions(Resource):
-    def get(self):
-        try:
-            con = mysql.connect()
-            cursor = con.cursor()
-            cursor.execute("""
-                SELECT code_module, code_presentation, id_student
-                FROM assessments
-                INNER JOIN student_assessments
-                ON assessments.id_assessment = student_assessments.id_assessment
-                WHERE code_module = \'CCC\' AND assessment_type = \'Exam\'
-                            """
-                           )
-            data = cursor.fetchall()
-            student_interaction = []
-            for row in data:
-                codeModule, codePresentation, idStudent = row
-                cursor.execute("""
-                    SELECT SUM(sum_click) FROM student_interaction
-                    WHERE code_module = '{}' AND code_presentation='{}' AND id_student='{}';
-                """.format(codeModule, codePresentation, idStudent)
-                )
-                totalClicks = int(cursor.fetchall()[0][0])
-                cursor.execute("""
-                    SELECT COUNT(*) FROM (
-                        SELECT COUNT(date) FROM student_interaction
-                        WHERE code_module = '{}' AND code_presentation='{}' AND id_student='{}'
-                        group by date
-                    ) AS NUM_OF_INTERACTION_DATE
-                """.format(codeModule, codePresentation, idStudent)
-                )
-                interactionFrequency = cursor.fetchall()[0][0]
-                student_interaction.append(
-                    [idStudent, codeModule, codePresentation, totalClicks, interactionFrequency])
-            for row in student_interaction:
-                cursor.execute("""
-                    INSERT INTO prediction_interaction
-                    VALUES (\'{}\',\'{}\',\'{}\',{}); 
-                """.format(row[0], row[1], row[2], ','.join(list(map(lambda x: str(x), row[3:])))))
-            con.commit()
-            return len(data)
-        
-        except Exception as e:
-            return {'error': str(e)}
-        finally:
-            cursor.close()
-            con.close()
-
 
 # __________________________________________________________________
 
@@ -700,7 +719,9 @@ api.add_resource(GetStudentAssessment,
                  '/student-assessment/<id>/<code_module>/<code_presentation>')
 
 # educator
-api.add_resource(GetAllCoursesOfEducator, '/get-courses-of-educator/<id>')
+api.add_resource(GetEducatorName, '/get-educator-name/<username>')
+api.add_resource(GetCoursesOfEducator,
+                 '/get-courses-of-educator/<id>')
 api.add_resource(GetAllMaterialInCourse,
                  '/materials/<code_module>/<code_presentation>')
 api.add_resource(GetAllAssessmentInCourse,
