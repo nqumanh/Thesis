@@ -213,16 +213,22 @@ class PredictExamResult(Resource):
                 comp_score = reduce(lambda avg, ele: avg +
                                     float(ele[0])*float(ele[1])/100 if ele[0] != '?' else avg, list(data), 0)
                 result['comp_score'] = comp_score
-
+            print(list(map(lambda x: x['score'], results)))
             X = np.array(list(map(lambda x: [x['comp_score']], results)))
-            y = np.array(list(map(lambda x: float(x['score']), results)))
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=0)
+            # 2094
+            y = np.array(
+                list(map(lambda x: 1 if float(x['score']) >= 40 else 0, results)))
+            print(y)
+            print(len(list(filter(lambda x: x == 0, y))))
+            # X_train, X_test, y_train, y_test = train_test_split(
+            #     X, y, test_size=0.2, random_state=0)
 
-            classifier = LogisticRegression(random_state=0)
+            classifier = LogisticRegression()
+            classifier.fit(X, y)
 
-            classifier.fit(X_train, y_train)
-            y_pred = classifier.predict(X_test)
+            predicted = classifier.predict(np.array(X).reshape(-1, 1))
+            print(len(list(filter(lambda x: x == 0, predicted))))
+            # y_pred = classifier.predict(X_test)
 
             return 1
 
@@ -232,7 +238,7 @@ class PredictExamResult(Resource):
             cursor.close()
             con.close()
 
-            
+
 class CreateUserAccount(Resource):
     @jwt_required()
     def post(self):
