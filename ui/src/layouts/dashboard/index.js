@@ -19,12 +19,12 @@ export default function Dashboard () {
       <div className='MainFrame'>
         <Header onToggle={onToggle} toggle={toggle}/>
         <Routes>
-          {routes.map((prop, key) => (
+          {routes.map((prop, index) => (
             <Route
               exact
               path={prop.path}
               element={<prop.element />}
-              key={key}
+              key={index}
             />
           ))}
         </Routes>

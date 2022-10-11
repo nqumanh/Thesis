@@ -15,7 +15,7 @@ export default function NavBar () {
       ]
     },
     { name: 'Profile', to: '/dashboard/profile' },
-    { name: 'Account Settings', to: '/change-password' }
+    { name: 'Account Settings', to: '/dashboard/setting' }
   ]
   return (
     <div className='NavBar'>
