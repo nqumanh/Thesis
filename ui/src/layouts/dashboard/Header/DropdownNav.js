@@ -205,7 +205,7 @@ export default function DropdownNav () {
       </li>
 
       <li className='dropdown-setting'>
-        <Link className='d-flex' to='/change-password'>
+        <Link className='d-flex' to='/dashboard/setting'>
           <FiSettings />
         </Link>
       </li>

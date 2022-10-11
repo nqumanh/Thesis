@@ -55,7 +55,7 @@ export default function Setting() {
       <nav className="ms-4 mt-3" aria-label="breadcrumb">
         <ol className="breadcrumb">
           <li className="breadcrumb-item active" aria-current="page">
-            Profile
+            Account Settings
           </li>
         </ol>
       </nav>
