@@ -6,8 +6,6 @@ import LoginPage from './views/LoginPage'
 import ChangePasswordPage from './views/ChangePasswordPage'
 import Dashboard from './layouts/dashboard'
 
-import 'bootstrap/dist/js/bootstrap.bundle'
-
 export default function App () {
   return (
     <Routes>

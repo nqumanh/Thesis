@@ -40,10 +40,12 @@ export default function DropdownNav () {
   }, [id, token])
 
   useEffect(() => {
-    if (role === 'Educator') {
+    let url = `http://localhost:5000/get-educator-name/${username}`
+    if (role === 'Student') {
+      url = `http://localhost:5000/get-student-name/${username}`
     }
     axios
-      .get(`http://localhost:5000/get-educator-name/${username}`, {
+      .get(url, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then(response => setName(response.data.name))

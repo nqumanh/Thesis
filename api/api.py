@@ -240,14 +240,14 @@ class Predict(Resource):
             classifier.fit(X, y)
             # classifier.fit(X_train, y_train)
             # predicted = classifier.predict(np.array(X).reshape(-1, 1))
-            
+
             predicted = classifier.predict(np.array(X))
             # print(len(list(filter(lambda x: x == 0, predicted))))
             # print(len(list(filter(lambda x: x == 1, predicted))))
             # print(len(list(filter(lambda x: x == 0, y))))
             # print(len(list(filter(lambda x: x == 1, y))))
-            
-            Score = classifier.score(X,y)
+
+            Score = classifier.score(X, y)
             Accuracy = metrics.accuracy_score(y, predicted)
             Precision = metrics.precision_score(y, predicted)
             Sensitivity_recall = metrics.recall_score(y, predicted)
@@ -256,7 +256,7 @@ class Predict(Resource):
 
             print({"Score": Score, "Accuracy": Accuracy, "Precision": Precision, "Sensitivity_recall":
                   Sensitivity_recall, "Specificity": Specificity, "F1_score": F1_score})
-            
+
             # print(len(list(filter(lambda x: x == 0, predicted))))
 
             # y_pred = classifier.predict(X_test)
@@ -271,7 +271,7 @@ class Predict(Resource):
 
 
 class EditUserPassword(Resource):
-    @ jwt_required()
+    @jwt_required()
     def post(self):
         try:
             data = request.form
@@ -333,7 +333,7 @@ class Login(Resource):
 
 
 class GetAllCourses(Resource):
-    @ jwt_required()
+    @jwt_required()
     def get(self):
         try:
             conn = mysql.connect()
@@ -368,7 +368,7 @@ class GetAllCourses(Resource):
 
 
 class GetStudentById(Resource):
-    @ jwt_required()
+    @jwt_required()
     def get(self, id):
         try:
             con = mysql.connect()
@@ -399,7 +399,7 @@ class GetStudentById(Resource):
 
 
 class GetParentsById(Resource):
-    @ jwt_required()
+    @jwt_required()
     def get(self, id):
         try:
             con = mysql.connect()
@@ -431,7 +431,7 @@ class GetParentsById(Resource):
 
 
 class GetAllCoursesOfStudent(Resource):
-    @ jwt_required()
+    @jwt_required()
     def get(self, id):
         try:
             con = mysql.connect()
@@ -467,7 +467,7 @@ class GetAllCoursesOfStudent(Resource):
 
 
 class GetAllMaterialInCourse(Resource):
-    @ jwt_required()
+    @jwt_required()
     def get(self, code_module, code_presentation):
         try:
             materials = []
@@ -495,7 +495,7 @@ class GetAllMaterialInCourse(Resource):
 
 
 class GetAllAssessmentInCourse(Resource):
-    @ jwt_required()
+    @jwt_required()
     def get(self, code_module, code_presentation):
         try:
             assessments = []
@@ -525,7 +525,7 @@ class GetAllAssessmentInCourse(Resource):
 
 
 class GetAllMessages(Resource):
-    @ jwt_required()
+    @jwt_required()
     def get(self, username):
         try:
             messages = []
@@ -565,7 +565,7 @@ class GetAllMessages(Resource):
 
 
 class GetAllWarning(Resource):
-    @ jwt_required()
+    @jwt_required()
     def get(self, id):
         try:
             warnings = []
@@ -596,7 +596,7 @@ class GetAllWarning(Resource):
 
 
 class GetCoursesOfEducator(Resource):
-    @ jwt_required()
+    @jwt_required()
     def get(self, id):
         try:
             con = mysql.connect()
@@ -634,7 +634,7 @@ class GetCoursesOfEducator(Resource):
 
 
 class GetContacts(Resource):
-    @ jwt_required()
+    @jwt_required()
     def post(self):
         try:
             con = mysql.connect()
@@ -653,7 +653,7 @@ class GetContacts(Resource):
 
 
 class GetStudentAssessment(Resource):
-    @ jwt_required()
+    @jwt_required()
     def get(self, id, code_module, code_presentation):
         try:
             con = mysql.connect()
@@ -684,7 +684,7 @@ class GetStudentAssessment(Resource):
 
 
 class GetEducatorName(Resource):
-    @ jwt_required()
+    @jwt_required()
     def get(self, username):
         try:
             con = mysql.connect()
@@ -701,6 +701,28 @@ class GetEducatorName(Resource):
         finally:
             cursor.close()
             con.close()
+            
+        
+class GetStudentName(Resource):
+    @jwt_required()
+    def get(self, username):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""
+                SELECT name FROM student_info as s
+                INNER JOIN user_account as a ON s.id_system = a.id
+                WHERE username = \'{}\';
+            """.format(username))
+            name = cursor.fetchone()[0]
+            print(name)
+            return jsonify(name=name)
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+            
 
 # __________________________________________________________________
 
@@ -723,6 +745,7 @@ api.add_resource(GetAllMessages,
 api.add_resource(GetContacts, '/get-contacts')
 
 # student
+api.add_resource(GetStudentName, '/get-student-name/<username>')
 api.add_resource(GetAllCoursesOfStudent, '/student-register/<id>')
 api.add_resource(GetStudentById, '/student/<id>')
 api.add_resource(GetAllWarning,
