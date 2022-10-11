@@ -16,4 +16,5 @@
 .NavLink {
     text-decoration: none;
     color: #9EA8B5;
+    list-style-type: none;
 }

@@ -43,7 +43,7 @@ export default function NavBar () {
             </li>
             <ul
               id='collapseExample'
-              className='collapse'
+              className='collapse show'
               style={{ backgroundColor: '#051f3e' }}
             >
               {link.subLink?.map((subLink, index) => (
