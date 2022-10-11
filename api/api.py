@@ -279,8 +279,9 @@ class EditUserPassword(Resource):
                 'username'), data.get('old_password'), data.get('new_password')
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""select password from user_account
-                            where username=\"{}\";"""
+            cursor.execute("""SELECT password 
+                            FROM user_account
+                            WHERE username=\"{}\";"""
                            .format(username))
             data = cursor.fetchall()
             password_hash = str(data[0][0])
@@ -310,8 +311,9 @@ class Login(Resource):
             username, password = data.get('username'), data.get('password')
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""select id, username, password, role from user_account
-                            where username=\"{}\";"""
+            cursor.execute("""SELECT id, username, password, role 
+                            FROM user_account
+                            WHERE username=\"{}\";"""
                            .format(username))
             data = cursor.fetchall()
             if (len(data) == 0):
@@ -339,9 +341,10 @@ class GetAllCourses(Resource):
             conn = mysql.connect()
             cursor = conn.cursor()
             cursor.execute(
-                """SELECT name,courses.code_module,code_presentation, major, length FROM courses
-                inner join course_info
-                on courses.code_module = course_info.code_module""")
+                """SELECT name,courses.code_module,code_presentation, major, length 
+                FROM courses
+                JOIN course_info
+                ON courses.code_module = course_info.code_module""")
             data = cursor.fetchall()
             courses = []
             for row in data:
@@ -374,20 +377,21 @@ class GetStudentById(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute(
-                """select * from student_info
-                where id_student = \"{}\";
+                """SELECT id_student, parents_id, relationship_with_parents, gender, region, highest_education, imd_band, age_band, disability 
+                FROM student_info
+                WHERE id_student = \"{}\";
                 """.format(id))
             info = cursor.fetchall()[0]
             profile = {
                 "id_student": info[0],
-                "parents_id": info[2],
-                "relationship_with_parents": info[3],
-                "gender": "Male" if info[4] == "M" else "Female",
-                "region": info[5],
-                "highest_education": info[6],
-                "imd_band": info[7],
-                "age_band": info[8],
-                "disability": info[9],
+                "parents_id": info[1],
+                "relationship_with_parents": info[2],
+                "gender": "Male" if info[3] == "M" else "Female",
+                "region": info[4],
+                "highest_education": info[5],
+                "imd_band": info[6],
+                "age_band": info[7],
+                "disability": info[8],
             }
             return profile
 
@@ -405,21 +409,22 @@ class GetParentsById(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute(
-                """select * from parents
-                where personal_id = {};
+                """SELECT personal_id, email, phone_number, name, gender, highest_education, job, date_of_birth, language, region
+                FROM parents
+                WHERE personal_id = {};
                 """.format(id))
             info = cursor.fetchall()[0]
             profile = {
                 "personal_id": info[0],
-                "email": info[2],
-                "phone_number": info[3],
-                "name": info[4],
-                "gender": info[5],
-                "highest_education": info[6],
-                "job": info[7],
-                "date_of_birth": info[8],
-                "language": info[9],
-                "region": info[10]
+                "email": info[1],
+                "phone_number": info[2],
+                "name": info[3],
+                "gender": info[4],
+                "highest_education": info[5],
+                "job": info[6],
+                "date_of_birth": info[7],
+                "language": info[8],
+                "region": info[9]
             }
             return profile
 
@@ -437,11 +442,13 @@ class GetAllCoursesOfStudent(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute(
-                """SELECT t3.name, t1.code_module, t1.code_presentation, t3.major, t2.length, t2.id_educator
-                    FROM student_register as t1
-                    INNER JOIN courses as t2 ON t1.code_module = t2.code_module AND t1.code_presentation = t2.code_presentation
-                    INNER JOIN course_info as t3 ON t2.code_module = t3.code_module
-                    where t1.id_student = \"{}\";
+                """ SELECT t3.name, t1.code_module, t1.code_presentation, t3.major, t2.length, t2.id_educator
+                    FROM student_register AS t1
+                    JOIN courses AS t2 
+                    ON t1.code_module = t2.code_module AND t1.code_presentation = t2.code_presentation
+                    JOIN course_info AS t3 
+                    ON t2.code_module = t3.code_module
+                    WHERE t1.id_student = \"{}\";
                 """.format(id))
             data = cursor.fetchall()
             cursor.close()
@@ -473,10 +480,10 @@ class GetAllMaterialInCourse(Resource):
             materials = []
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""
-                SELECT id_site, activity_type, week_from, week_to
+            cursor.execute("""SELECT id_site, activity_type, week_from, week_to
                 FROM material
-                where code_module =\""""+code_module+"\"and code_presentation=\""+code_presentation+"\";"
+                WHERE code_module =\"{}\" AND code_presentation=\"{}\";
+                """.format(code_module, code_presentation)
                            )
             data = cursor.fetchall()
             for row in data:
@@ -501,10 +508,10 @@ class GetAllAssessmentInCourse(Resource):
             assessments = []
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""
-                SELECT id_assessment, assessment_type, date, weight
+            cursor.execute("""SELECT id_assessment, assessment_type, date, weight
                 FROM assessments
-                where code_module =\""""+code_module+"\"and code_presentation=\""+code_presentation+"\";"
+                WHERE code_module =\"{}\" AND code_presentation=\"{}\";
+                """.format(code_module, code_presentation)
                            )
             data = cursor.fetchall()
             for row in data:
@@ -535,17 +542,21 @@ class GetAllMessages(Resource):
                            WHERE username = \"{}\";
                            """.format(username))
             id = cursor.fetchall()[0][0]
-            cursor.execute("""
-                SELECT
-                    (SELECT username from user_account where id=sender_id) as sender,
-	                (SELECT username from user_account where id=receiver_id) as receiver,
+            cursor.execute(
+                """SELECT
+                    (SELECT username from user_account 
+                        WHERE id=sender_id) 
+                    AS sender,
+	                (SELECT username from user_account 
+                        WHERE id=receiver_id
+                    ) AS receiver,
                     message,
                     created_time
                 FROM message
                 WHERE sender_id=\"{}\" OR receiver_id=\"{}\"
                 ORDER BY created_time;
                 """.format(id, id)
-                           )
+            )
             data = cursor.fetchall()
             for row in data:
                 message = {
@@ -571,19 +582,20 @@ class GetAllWarning(Resource):
             warnings = []
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""SELECT * FROM warning
-                           WHERE id_student = \"{}\"
-                           ORDER BY created_time DESC;
-                           """.format(id))
+            cursor.execute("""SELECT code_module, code_presentation, content, status, description, created_time
+                            FROM warning
+                            WHERE id_student = \"{}\"
+                            ORDER BY created_time DESC;
+                            """.format(id))
             data = cursor.fetchall()
             for row in data:
                 warning = {
-                    "code_module": row[2],
-                    "code_presentation": row[3],
-                    "content": row[4],
-                    "status": row[5],
-                    "description": row[6],
-                    "created_time": str(row[7]),
+                    "code_module": row[0],
+                    "code_presentation": row[1],
+                    "content": row[2],
+                    "status": row[3],
+                    "description": row[4],
+                    "created_time": str(row[5]),
                 }
                 warnings.append(warning)
             return warnings
@@ -608,7 +620,8 @@ class GetCoursesOfEducator(Resource):
                         course_info.major,
                         courses.length
                     FROM courses
-                    INNER JOIN course_info ON courses.code_module = course_info.code_module
+                    JOIN course_info 
+                    ON courses.code_module = course_info.code_module
                     WHERE courses.id_educator = \"{}\";
                 """.format(id))
             data = cursor.fetchall()
@@ -641,7 +654,8 @@ class GetContacts(Resource):
             cursor = con.cursor()
             content = request.json["listId"]
             for i in range(len(content)):
-                cursor.execute("""SELECT name FROM educator
+                cursor.execute("""SELECT name 
+                               FROM educator
                                WHERE id_system= \"{}\"
                                """.format(content[i]))
                 data = cursor.fetchall()[0][0]
@@ -658,11 +672,12 @@ class GetStudentAssessment(Resource):
         try:
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""
-                SELECT assessment_type, date_submitted, score, weight from student_assessments as a
-                INNER JOIN assessments as b on a.id_assessment = b.id_assessment
-                WHERE id_student = \"{}\"; """
-                           .format(id)
+            cursor.execute("""SELECT assessment_type, date_submitted, score, weight 
+                FROM student_assessments AS a
+                JOIN assessments AS b 
+                ON a.id_assessment = b.id_assessment
+                WHERE id_student = \"{}\";
+                """.format(id)
                            )
             assessments = []
             data = cursor.fetchall()
@@ -689,8 +704,8 @@ class GetEducatorName(Resource):
         try:
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""
-                SELECT name FROM educator as e
+            cursor.execute(
+                """SELECT name FROM educator as e
                 INNER JOIN user_account as a ON e.id_system = a.id
                 WHERE username = \'{}\';
             """.format(username))
@@ -701,17 +716,18 @@ class GetEducatorName(Resource):
         finally:
             cursor.close()
             con.close()
-            
-        
+
+
 class GetStudentName(Resource):
     @jwt_required()
     def get(self, username):
         try:
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""
-                SELECT name FROM student_info as s
-                INNER JOIN user_account as a ON s.id_system = a.id
+            cursor.execute(
+                """SELECT name FROM student_info AS s
+                JOIN user_account AS a 
+                ON s.id_system = a.id
                 WHERE username = \'{}\';
             """.format(username))
             name = cursor.fetchone()[0]
@@ -722,7 +738,7 @@ class GetStudentName(Resource):
         finally:
             cursor.close()
             con.close()
-            
+
 
 # __________________________________________________________________
 
