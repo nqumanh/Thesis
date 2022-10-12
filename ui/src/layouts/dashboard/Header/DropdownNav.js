@@ -116,92 +116,27 @@ export default function DropdownNav () {
       </li>
 
       <li className='DropdownMessage'>
-        <a
-          href='/#'
+        <Link
+          to='/dashboard/message'
           className='DropdownToggle position-relative'
-          data-bs-toggle='dropdown'
         >
           <BiEnvelope />
           <span className='position-absolute top-0 start-100 translate-middle badge border border-light rounded-pill bg-success message-count'>
             {contacts.length}
           </span>
-        </a>
-        <div className='dropdown-menu dropdown-menu-end mt-4 p-0'>
-          <div className='dropdown-menu--title bg-success'>
-            {contacts.length} Messages
-          </div>
-          <ul className='dropdown-menu--list'>
-            {Object.keys(contacts).length === 0 ? (
-              <div className='text-center'>No messages</div>
-            ) : (
-              contacts.map((contact, index) => (
-                <li key={index}>
-                  <Link
-                    className='dropdown-item dropdown-menu--item d-flex flex-row'
-                    to='/dashboard/message'
-                  >
-                    <div className='UserAvatar'>
-                      <img
-                        style={{ borderRadius: '100%' }}
-                        src='https://www.radiustheme.com/demo/html/psdboss/akkhor/akkhor/img/figure/admin.jpg'
-                        alt='avatar'
-                      ></img>
-                    </div>
-                    <div className='dropdown-menu--item--body'>
-                      <div className='dropdown-menu-item--body--header'>
-                        <strong>{contact.name}</strong>
-                        <small>{contact.created_time}</small>
-                      </div>
-                      <p>
-                        {contact.sender}
-                        {contact.message}
-                      </p>
-                    </div>
-                  </Link>
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
+        </Link>
       </li>
 
       <li className='DropdownNotification'>
-        <a
-          href='/#'
+        <Link
+          to='/dashboard/warning'
           className='DropdownToggle position-relative'
-          data-bs-toggle='dropdown'
         >
           <BiBell />
           <span className='position-absolute top-9 start-100 translate-middle badge border border-light rounded-pill bg-danger noti-count'>
             {warnings.length}
           </span>
-        </a>
-        <div className='dropdown-menu dropdown-menu-end mt-3 p-0'>
-          <div className='dropdown-menu--title bg-danger'>
-            {Object.keys(warnings).length} Warnings
-          </div>
-          <ul className='dropdown-menu--list'>
-            {Object.keys(warnings).length === 0 ? (
-              <div className='text-center'>No warnings</div>
-            ) : (
-              [...warnings].map((warning, index) => (
-                <li key={index}>
-                  <Link
-                    className='dropdown-item dropdown-menu--item d-flex flex-row'
-                    to='/dashboard/warning'
-                  >
-                    <div className='dropdown-menu--item--body'>
-                      <div className='dropdown-menu-item--body--header'>
-                        <strong>{warning.content}</strong>
-                      </div>
-                      <p>{warning.created_time}</p>
-                    </div>
-                  </Link>
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
+        </Link>
       </li>
 
       <li className='dropdown-setting'>

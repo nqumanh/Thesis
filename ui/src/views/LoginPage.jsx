@@ -65,7 +65,7 @@ export default function LoginPage() {
                     <input
                       id="username"
                       type="text"
-                      className="form-control"
+                      className="form-control w-100"
                       name="username"
                       value={studentId}
                       onChange={onChange}
@@ -87,7 +87,7 @@ export default function LoginPage() {
                     <input
                       id="password"
                       type="password"
-                      className="form-control"
+                      className="form-control w-100"
                       name="password"
                       value={password}
                       onChange={onChange}

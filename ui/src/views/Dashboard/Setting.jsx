@@ -63,67 +63,71 @@ export default function Setting() {
         <div className="card m-4">
           <div className="card-body">
             <h5 className="card-title">Change Password</h5>
-            <form onSubmit={handleSubmit} className="needs-validation">
-              <div className="mb-3">
-                <div className="mb-2 w-100">
-                  <label className="text-muted" htmlFor="password">
-                    Current Password
-                  </label>
-                </div>
-                <input
-                  type="password"
-                  className="form-control"
-                  name="current-password"
-                  value={currentPassword}
-                  onChange={onChange}
-                  required
-                  autoComplete="on"
-                ></input>
-                <div className="invalid-feedback">Password is required</div>
-              </div>
+            <div className="row">
+              <div className="col-md-6 offset-md-3">
+                <form onSubmit={handleSubmit} className="needs-validation">
+                  <div className="mb-3">
+                    <div className="mb-2 w-100">
+                      <label className="text-muted" htmlFor="password">
+                        Current Password
+                      </label>
+                    </div>
+                    <input
+                      type="password"
+                      className="form-control"
+                      name="current-password"
+                      value={currentPassword}
+                      onChange={onChange}
+                      required
+                      autoComplete="on"
+                    ></input>
+                    <div className="invalid-feedback">Password is required</div>
+                  </div>
 
-              <div className="mb-3">
-                <div className="mb-2 w-100">
-                  <label className="text-muted" htmlFor="password">
-                    New Password
-                  </label>
-                </div>
-                <input
-                  type="password"
-                  className="form-control"
-                  name="new-password"
-                  value={newPassword}
-                  onChange={onChange}
-                  required
-                  autoComplete="on"
-                ></input>
-                <div className="invalid-feedback">Password is required</div>
-              </div>
+                  <div className="mb-3">
+                    <div className="mb-2 w-100">
+                      <label className="text-muted" htmlFor="password">
+                        New Password
+                      </label>
+                    </div>
+                    <input
+                      type="password"
+                      className="form-control"
+                      name="new-password"
+                      value={newPassword}
+                      onChange={onChange}
+                      required
+                      autoComplete="on"
+                    ></input>
+                    <div className="invalid-feedback">Password is required</div>
+                  </div>
 
-              <div className="mb-3">
-                <div className="mb-2 w-100">
-                  <label className="text-muted" htmlFor="password">
-                    Confirm Password
-                  </label>
-                </div>
-                <input
-                  type="password"
-                  className="form-control"
-                  name="confirm-password"
-                  value={confirmPassword}
-                  onChange={onChange}
-                  required
-                  autoComplete="on"
-                ></input>
-                <div className="invalid-feedback">Password is required</div>
-              </div>
+                  <div className="mb-3">
+                    <div className="mb-2 w-100">
+                      <label className="text-muted" htmlFor="password">
+                        Confirm Password
+                      </label>
+                    </div>
+                    <input
+                      type="password"
+                      className="form-control"
+                      name="confirm-password"
+                      value={confirmPassword}
+                      onChange={onChange}
+                      required
+                      autoComplete="on"
+                    ></input>
+                    <div className="invalid-feedback">Password is required</div>
+                  </div>
 
-              <div className="d-flex justify-content-between align-items-center">
-                <button type="submit" className="btn btn-primary ms-auto">
-                  Save Changes
-                </button>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <button type="submit" className="btn btn-primary ms-auto">
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </div>

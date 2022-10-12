@@ -54,10 +54,16 @@ export default function CourseDetail() {
       return (
         <h5 style={{ textAlign: "right" }}>
           Average Point:{" "}
-          {assessments.reduce(
-            (avg, ass) => avg + parseInt(ass.score * ass.weight) / 100 / 2,
-            0
-          )}
+          {(
+            assessments.reduce(
+              (avg, ass) => avg + parseInt(ass.score * ass.weight),
+              0
+            ) /
+            assessments.reduce(
+              (totalWeight, ass) => totalWeight + parseInt(ass.weight),
+              0
+            )
+          ).toFixed(2)}
         </h5>
       );
   };

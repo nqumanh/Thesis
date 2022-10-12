@@ -731,7 +731,30 @@ class GetStudentName(Resource):
                 WHERE username = \'{}\';
             """.format(username))
             name = cursor.fetchone()[0]
-            print(name)
+            return jsonify(name=name)
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetNameByUsername(Resource):
+    def get(self, username):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute(
+                """SELECT id FROM user_account
+                WHERE username = \'{}\';
+            """.format(username))
+            id_system = cursor.fetchone()[0]
+            table = 'parents' if username[0] == '2' else 'student_info' if username[0] == '1' else 'educator'
+            cursor.execute(
+                """SELECT name FROM {}
+                WHERE id_system = \'{}\';
+            """.format(table, id_system))
+            name = cursor.fetchone()[0]
             return jsonify(name=name)
         except Exception as e:
             return {'error': str(e)}
@@ -755,10 +778,12 @@ api.add_resource(Predict, '/predict')
 
 # all users
 api.add_resource(Login, '/login')
+api.add_resource(GetNameByUsername, '/get-name-by-username/<username>')
 api.add_resource(EditUserPassword, '/edit-user-password')
 api.add_resource(GetAllMessages,
                  '/message/<username>')
 api.add_resource(GetContacts, '/get-contacts')
+
 
 # student
 api.add_resource(GetStudentName, '/get-student-name/<username>')
