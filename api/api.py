@@ -228,31 +228,47 @@ class Predict(Resource):
             X = np.array(students)
             y = np.array(list(map(lambda x: 0 if x < 40 else 1, exams)))
             # # 2094
-            # y = np.array(
-            #     list(map(lambda x: 1 if float(x['score']) >= 40 else 0, results)))
+
             X_train, X_test, y_train, y_test = train_test_split(
                 X, y, test_size=0.2, random_state=0)
 
-            classifier = svm.SVC()
+            # classifier = svm.SVC() #all-92%
+
             # classifier = svm.LinearSVC()
             # classifier = RandomForestClassifier()
             # classifier = LogisticRegression()
-            classifier.fit(X, y)
-            # classifier.fit(X_train, y_train)
-            # predicted = classifier.predict(np.array(X).reshape(-1, 1))
 
-            predicted = classifier.predict(np.array(X))
+            # classifier.fit(X, y)
+            classifier.fit(X_train, y_train)
+
+            # predicted = classifier.predict(np.array(X))
+            predicted = classifier.predict(np.array(X_test))
+            
+            # y_test = y
+            
             # print(len(list(filter(lambda x: x == 0, predicted))))
             # print(len(list(filter(lambda x: x == 1, predicted))))
             # print(len(list(filter(lambda x: x == 0, y))))
             # print(len(list(filter(lambda x: x == 1, y))))
 
-            Score = classifier.score(X, y)
-            Accuracy = metrics.accuracy_score(y, predicted)
-            Precision = metrics.precision_score(y, predicted)
-            Sensitivity_recall = metrics.recall_score(y, predicted)
-            Specificity = metrics.recall_score(y, predicted, pos_label=0)
-            F1_score = metrics.f1_score(y, predicted)
+            # (True Positive + True Negative) / Total Predictions
+            # Score = classifier.score(X, y)
+            Score = classifier.score(X_test, y_test)
+            
+            # (True Positive + True Negative) / Total Predictions
+            Accuracy = metrics.accuracy_score(y_test, predicted)
+            
+            # True Positive / (True Positive + False Positive)
+            Precision = metrics.precision_score(y_test, predicted)
+            
+            # True Positive / (True Positive + False Negative)
+            Sensitivity_recall = metrics.recall_score(y_test, predicted)
+            
+            # True Negative / (True Negative + False Positive)
+            Specificity = metrics.recall_score(y_test, predicted, pos_label=0)
+            
+            # 2 * ((Precision * Sensitivity) / (Precision + Sensitivity))   HAMONIC mean of precision and recall
+            F1_score = metrics.f1_score(y_test, predicted)
 
             print({"Score": Score, "Accuracy": Accuracy, "Precision": Precision, "Sensitivity_recall":
                   Sensitivity_recall, "Specificity": Specificity, "F1_score": F1_score})
