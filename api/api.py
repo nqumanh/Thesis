@@ -1,3 +1,4 @@
+from re import X
 from flask import Flask, make_response, request, jsonify
 from flask_restful import Resource, Api
 from flaskext.mysql import MySQL
@@ -16,6 +17,11 @@ from sklearn.model_selection import cross_val_score
 from sklearn.metrics import mean_squared_error
 from flask_jwt_extended import create_access_token, jwt_required, JWTManager
 from sklearn import metrics
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn import svm
+from sklearn.svm import LinearSVC
 # from flask_jwt_extended import get_jwt_identity
 
 
@@ -198,13 +204,165 @@ class PredictExamResult(Resource):
             con.close()
 
 
+class DynamicPredict(Resource):
+    def get(self, code_module, code_presentation):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+
+            test_set = []
+            # get assessment format of target course
+            cursor.execute("""
+            SELECT assessment_type, weight, number, id_assessment FROM assessments
+            WHERE code_module = "{}" AND code_presentation = "{}";
+            """.format(code_module, code_presentation))
+            data = cursor.fetchall()
+            currentAssessmentFormat = []
+            for row in data:
+                currentAssessmentFormat.append(
+                    {"type": row[0], "weight": row[1], "number": row[2], "id": row[3]})
+
+            # get test_set
+            students = []
+            cursor.execute("""
+                SELECT id_student, final_result FROM student_register
+                WHERE code_module = "{}" AND code_presentation = "{}";
+            """.format(code_module, code_presentation))
+            data = cursor.fetchall()
+            for row in data:
+                students.append(
+                    {"id": row[0], "result": 1 if row[1] == "Pass" else 0})
+            for student in students:
+                result = []
+                for assessment in currentAssessmentFormat:
+                    cursor.execute("""
+                            SELECT score FROM student_assessments
+                            WHERE id_student="{}" AND id_assessment="{}";
+                        """.format(student["id"], assessment["id"]))
+                    data = cursor.fetchone()
+                    score = 0
+                    if data is None:
+                        score = 0
+                    else:
+                        score = 0 if data[0] == '?' else (int)(data[0])
+                    typ = 0
+                    if assessment["type"] == "TMA":
+                        typ = 1
+                    elif assessment["type"] == "CMA":
+                        typ = 2
+                    else:
+                        typ = 3
+                    result.extend([typ, assessment["weight"], score])
+                result.append(student["result"])
+                test_set.append(result)
+
+            # get other courses with same code_module
+            cursor.execute("""
+            SELECT code_presentation FROM courses
+            WHERE code_module = "{}" AND code_presentation <> "{}";
+            """.format(code_module, code_presentation))
+            courses = cursor.fetchall()
+
+            train_set = []
+            for course in courses:
+                # get all students registered in each course
+                students = []
+                cursor.execute("""
+                    SELECT id_student, final_result FROM student_register
+                    WHERE code_module = "{}" AND code_presentation = "{}";
+                """.format(code_module, course[0]))
+                data = cursor.fetchall()
+                for row in data:
+                    students.append(
+                        {"id": row[0], "result": 1 if row[1] == "Pass" else 0})
+
+                # get assessments which fit with assessment format of target course
+                assessments = []
+                for assessment in currentAssessmentFormat:
+                    cursor.execute("""
+                        SELECT id_assessment FROM assessments
+                        WHERE code_module = "{}" 
+                            AND code_presentation = "{}" 
+                            AND assessment_type="{}" 
+                            AND weight="{}"
+                            AND number="{}";
+                    """.format(code_module, course[0], assessment["type"], assessment["weight"], assessment["number"]))
+                    idAssessment = cursor.fetchone()
+                    if idAssessment is not None:
+                        assessments.append(
+                            {"id": idAssessment[0], "type": assessment["type"], "weight": assessment["weight"]})
+
+                # get student assessment for train set
+                for student in students:
+                    result = []
+                    for assessment in assessments:
+                        cursor.execute("""
+                            SELECT score FROM student_assessments
+                            WHERE id_student="{}" AND id_assessment="{}";
+                        """.format(student["id"], assessment["id"]))
+                        data = cursor.fetchone()
+                        score = 0
+                        if data is None:
+                            score = 0
+                        else:
+                            score = 0 if data[0] == '?' else (int)(data[0])
+                        typ = 0
+                        if assessment["type"] == "TMA":
+                            typ = 1
+                        elif assessment["type"] == "CMA":
+                            typ = 2
+                        else:
+                            typ = 3
+                        result.extend([typ, assessment["weight"], score])
+                    result.append(student["result"])
+                    train_set.append(result)
+
+            X_train = np.array(train_set)[:, :-1]
+            y_train = np.array(train_set)[:, -1]
+            X_test = np.array(test_set)[:, :-1]
+            y_test = np.array(test_set)[:, -1]
+
+            # clf = LogisticRegression(max_iter=1000).fit(X_train, y_train)
+            # clf = RandomForestClassifier().fit(X_train, y_train)
+            # clf = svm.SVC().fit(X_train, y_train)
+            clf = make_pipeline(StandardScaler(),LinearSVC()).fit(X_train, y_train)
+            # clf = make_pipeline(StandardScaler(), SVC(
+            #     gamma='auto')).fit(X_train, y_train)
+
+            predicted = clf.predict(X_test)
+
+            # (True Positive + True Negative) / Total Predictions
+            Accuracy = metrics.accuracy_score(y_test, predicted)
+            # True Positive / (True Positive + False Positive)
+            Precision = metrics.precision_score(y_test, predicted)
+            # True Positive / (True Positive + False Negative)
+            Sensitivity_recall = metrics.recall_score(y_test, predicted)
+            # True Negative / (True Negative + False Positive)
+            Specificity = metrics.recall_score(y_test, predicted, pos_label=0)
+            # 2 * ((Precision * Sensitivity) / (Precision + Sensitivity))   HAMONIC mean of precision and recall
+            F1_score = metrics.f1_score(y_test, predicted)
+
+            print("Accuracy:          ", Accuracy)
+            print("Precision:         ", Precision)
+            print("Sensitivity_recall:", Sensitivity_recall)
+            print("Specificity:       ", Specificity)
+            print("F1_score:          ", F1_score)
+
+            return 1
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
 class Predict(Resource):
     def get(self):
         try:
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""
-                SELECT weight1, score1,
+            cursor.execute(
+                """SELECT weight1, score1,
                 weight2, score2,
                 weight3, score3,
                 weight4, score4,
@@ -213,9 +371,9 @@ class Predict(Resource):
                 weight7, score7,
                 weight8, score8,
                 weight9, score9
-                FROM prediction_scores;
+                FROM prediction_scores_and_interaction;
                             """
-                           )
+            )
             data = cursor.fetchall()
             students = []
             exams = []
@@ -230,11 +388,11 @@ class Predict(Resource):
             # # 2094
 
             X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=0)
+                X, y, test_size=0., random_state=0)
 
             # classifier = svm.SVC() #all-92%
 
-            # classifier = svm.LinearSVC()
+            classifier = svm.LinearSVC()
             # classifier = RandomForestClassifier()
             # classifier = LogisticRegression()
 
@@ -243,9 +401,9 @@ class Predict(Resource):
 
             # predicted = classifier.predict(np.array(X))
             predicted = classifier.predict(np.array(X_test))
-            
+
             # y_test = y
-            
+
             # print(len(list(filter(lambda x: x == 0, predicted))))
             # print(len(list(filter(lambda x: x == 1, predicted))))
             # print(len(list(filter(lambda x: x == 0, y))))
@@ -253,25 +411,31 @@ class Predict(Resource):
 
             # (True Positive + True Negative) / Total Predictions
             # Score = classifier.score(X, y)
-            Score = classifier.score(X_test, y_test)
-            
+            # Score = classifier.score(X_test, y_test)
+
             # (True Positive + True Negative) / Total Predictions
             Accuracy = metrics.accuracy_score(y_test, predicted)
-            
+
             # True Positive / (True Positive + False Positive)
             Precision = metrics.precision_score(y_test, predicted)
-            
+
             # True Positive / (True Positive + False Negative)
             Sensitivity_recall = metrics.recall_score(y_test, predicted)
-            
+
             # True Negative / (True Negative + False Positive)
             Specificity = metrics.recall_score(y_test, predicted, pos_label=0)
-            
+
             # 2 * ((Precision * Sensitivity) / (Precision + Sensitivity))   HAMONIC mean of precision and recall
             F1_score = metrics.f1_score(y_test, predicted)
 
-            print({"Score": Score, "Accuracy": Accuracy, "Precision": Precision, "Sensitivity_recall":
-                  Sensitivity_recall, "Specificity": Specificity, "F1_score": F1_score})
+            # print({"Score": Score, "Accuracy": Accuracy, "Precision": Precision, "Sensitivity_recall":
+            #       Sensitivity_recall, "Specificity": Specificity, "F1_score": F1_score})
+            # print("Score:             ", Score)
+            print("Accuracy:          ", Accuracy)
+            print("Precision:         ", Precision)
+            print("Sensitivity_recall:", Sensitivity_recall)
+            print("Specificity:       ", Specificity)
+            print("F1_score:          ", F1_score)
 
             # print(len(list(filter(lambda x: x == 0, predicted))))
 
@@ -791,6 +955,7 @@ api.add_resource(GetAssessmentsEachCourse,
 api.add_resource(PredictByInteractions,
                  '/predict-by-interactions/<code_module>/<code_presentation>')
 api.add_resource(Predict, '/predict')
+api.add_resource(DynamicPredict, '/dynamic-predict/<code_module>/<code_presentation>')
 
 # all users
 api.add_resource(Login, '/login')
