@@ -23,6 +23,7 @@ from sklearn.svm import SVC
 from sklearn import svm
 from sklearn.svm import LinearSVC
 # from flask_jwt_extended import get_jwt_identity
+from datetime import timedelta
 
 
 mysql = MySQL()
@@ -36,7 +37,9 @@ app.config['MYSQL_DATABASE_PASSWORD'] = 'qm187606595'
 app.config['MYSQL_DATABASE_DB'] = 'warningsystem'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 
-app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
+app.config["JWT_SECRET_KEY"] = "super-super-secret"  # Change this!
+
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 jwt = JWTManager(app)
 
 mysql.init_app(app)
@@ -231,7 +234,7 @@ class DynamicPredict(Resource):
             data = cursor.fetchall()
             for row in data:
                 students.append(
-                    {"id": row[0], "result": 1 if row[1] == "Pass" else 0})
+                    {"id": row[0], "result": 1 if row[1] in ["Pass", "Distinction"] else 0})
             for student in students:
                 result = []
                 for assessment in currentAssessmentFormat:
@@ -252,6 +255,8 @@ class DynamicPredict(Resource):
                         typ = 2
                     else:
                         typ = 3
+                    if typ == 3:
+                        continue
                     result.extend([typ, assessment["weight"], score])
                 result.append(student["result"])
                 test_set.append(result)
@@ -274,7 +279,7 @@ class DynamicPredict(Resource):
                 data = cursor.fetchall()
                 for row in data:
                     students.append(
-                        {"id": row[0], "result": 1 if row[1] == "Pass" else 0})
+                        {"id": row[0], "result": 1 if row[1] in ["Pass", "Distinction"] else 0})
 
                 # get assessments which fit with assessment format of target course
                 assessments = []
@@ -313,6 +318,8 @@ class DynamicPredict(Resource):
                             typ = 2
                         else:
                             typ = 3
+                        if typ == 3:
+                            continue
                         result.extend([typ, assessment["weight"], score])
                     result.append(student["result"])
                     train_set.append(result)
@@ -322,14 +329,17 @@ class DynamicPredict(Resource):
             X_test = np.array(test_set)[:, :-1]
             y_test = np.array(test_set)[:, -1]
 
-            # clf = LogisticRegression(max_iter=1000).fit(X_train, y_train)
-            # clf = RandomForestClassifier().fit(X_train, y_train)
+            # clf = LogisticRegression(max_iter=100).fit(X_train, y_train)
+            clf = RandomForestClassifier().fit(X_train, y_train)
             # clf = svm.SVC().fit(X_train, y_train)
-            clf = make_pipeline(StandardScaler(),LinearSVC()).fit(X_train, y_train)
+            # clf = make_pipeline(StandardScaler(), LinearSVC()
+            #                     ).fit(X_train, y_train)
             # clf = make_pipeline(StandardScaler(), SVC(
             #     gamma='auto')).fit(X_train, y_train)
 
             predicted = clf.predict(X_test)
+
+            prob_predicted = clf.predict_proba(X_test)
 
             # (True Positive + True Negative) / Total Predictions
             Accuracy = metrics.accuracy_score(y_test, predicted)
@@ -348,6 +358,23 @@ class DynamicPredict(Resource):
             print("Specificity:       ", Specificity)
             print("F1_score:          ", F1_score)
 
+            predictions = []
+            for i in range(len(students)):
+                prediction = {
+                    'id_student': student["id"],
+                    'created_date': 100,
+                    'is_risk': predicted[i],
+                    'probability': prob_predicted[i]
+                }
+                print(prediction)
+
+            # for prediction in predictions:
+            #     cursor.execute("""
+            #                 INSERT INTO predictions (id_student, code_module, code_presentation, created_date, is_risk, probability)
+            #                 VALUES (\'{}\', \'{}\',\'{}\', {}, {}, {});
+            #             """.format(prediction["id_student"], code_module, code_presentation, prediction["created_date"], prediction["is_risk"], prediction["probability"]))
+
+            # cursor.commit()
             return 1
         except Exception as e:
             return {'error': str(e)}
@@ -487,7 +514,7 @@ class EditUserPassword(Resource):
 class Login(Resource):
     def post(self):
         try:
-            data = request.form
+            data = request.json
             username, password = data.get('username'), data.get('password')
             con = mysql.connect()
             cursor = con.cursor()
@@ -500,7 +527,6 @@ class Login(Resource):
                 return make_response("Account does not exist", 404)
             id, username, password_hash, role = data[0]
             auth_state = check_password_hash(password_hash, password)
-            # return {'id': id, 'username': username, 'role': role}
             if auth_state:
                 access_token = create_access_token(identity=username)
                 return jsonify(access_token=access_token, id=id, username=username, role=role)
@@ -527,10 +553,11 @@ class GetAllCourses(Resource):
                 ON courses.code_module = course_info.code_module""")
             data = cursor.fetchall()
             courses = []
-            for row in data:
+            for idx, row in enumerate(data):
                 year = row[2][0:4]
                 monthStart = "February" if (row[2][4] == "B") else "October"
                 item = {
+                    "id": idx,
                     "name": row[0],
                     "codeModule": row[1],
                     "codePresentation": row[2],
@@ -616,7 +643,7 @@ class GetParentsById(Resource):
 
 
 class GetAllCoursesOfStudent(Resource):
-    @jwt_required()
+    # @jwt_required()
     def get(self, id):
         try:
             con = mysql.connect()
@@ -633,10 +660,11 @@ class GetAllCoursesOfStudent(Resource):
             data = cursor.fetchall()
             cursor.close()
             courses = []
-            for row in data:
+            for idx, row in enumerate(data):
                 year = row[2][0:4]
                 monthStart = "February" if (row[2][4] == "B") else "October"
                 item = {
+                    "id": idx,
                     "name": row[0],
                     "codeModule": row[1],
                     "codePresentation": row[2],
@@ -668,7 +696,7 @@ class GetAllMaterialInCourse(Resource):
             data = cursor.fetchall()
             for row in data:
                 material = {
-                    "id_site": row[0],
+                    "id": row[0],
                     "activity_type": row[1],
                     "week_from": row[2],
                     "week_to": row[3],
@@ -703,6 +731,42 @@ class GetAllAssessmentInCourse(Resource):
                 }
                 assessments.append(assessment)
             return assessments
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetAllStudents(Resource):
+    @jwt_required()
+    def get(self, code_module, code_presentation):
+        try:
+            students = []
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""SELECT i.id_student, name, gender, highest_education, imd_band, age_band, disability, num_of_prev_attempts 
+                FROM student_register r
+                JOIN student_info i
+                ON r.id_student = i.id_student
+                WHERE code_module =\"{}\" AND code_presentation=\"{}\";
+                """.format(code_module, code_presentation)
+                           )
+            data = cursor.fetchall()
+            for row in data:
+                student = {
+                    "id": row[0],
+                    "name": row[1],
+                    "gender": row[2],
+                    "highest_education": row[3],
+                    "imd_band": row[4],
+                    "age_band": row[5],
+                    "disability": row[6],
+                    "num_of_prev_attempts": row[7]
+                }
+                students.append(student)
+            return students
 
         except Exception as e:
             return {'error': str(e)}
@@ -805,9 +869,11 @@ class GetCoursesOfEducator(Resource):
                     WHERE courses.id_educator = \"{}\";
                 """.format(id))
             data = cursor.fetchall()
+            print(data)
             courses = []
-            for row in data:
+            for idx, row in enumerate(data):
                 item = {
+                    "id": idx,
                     "name": row[0],
                     "codeModule": row[1],
                     "codePresentation": row[2],
@@ -817,6 +883,7 @@ class GetCoursesOfEducator(Resource):
                     "length": row[4],
                 }
                 courses.append(item)
+
             return courses
 
         except Exception as e:
@@ -847,7 +914,7 @@ class GetContacts(Resource):
 
 
 class GetStudentAssessment(Resource):
-    @jwt_required()
+    # @jwt_required()
     def get(self, id, code_module, code_presentation):
         try:
             con = mysql.connect()
@@ -955,7 +1022,8 @@ api.add_resource(GetAssessmentsEachCourse,
 api.add_resource(PredictByInteractions,
                  '/predict-by-interactions/<code_module>/<code_presentation>')
 api.add_resource(Predict, '/predict')
-api.add_resource(DynamicPredict, '/dynamic-predict/<code_module>/<code_presentation>')
+api.add_resource(
+    DynamicPredict, '/dynamic-predict/<code_module>/<code_presentation>')
 
 # all users
 api.add_resource(Login, '/login')
@@ -983,6 +1051,8 @@ api.add_resource(GetAllMaterialInCourse,
                  '/materials/<code_module>/<code_presentation>')
 api.add_resource(GetAllAssessmentInCourse,
                  '/assessments/<code_module>/<code_presentation>')
+api.add_resource(GetAllStudents,
+                 '/view-all-students/<code_module>/<code_presentation>')
 
 # parents
 api.add_resource(GetParentsById, '/parents/<id>')
