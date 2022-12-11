@@ -49,40 +49,27 @@ export default function CourseDetail() {
     </tr>
   ));
 
-  const displayAvgPoint = () => {
-    if (role === "student")
-      return (
-        <h5 style={{ textAlign: "right" }}>
-          Average Point:{" "}
-          {(
-            assessments.reduce(
-              (avg, ass) => avg + parseInt(ass.score * ass.weight),
-              0
-            ) /
-            assessments.reduce(
-              (totalWeight, ass) => totalWeight + parseInt(ass.weight),
-              0
-            )
-          ).toFixed(2)}
-        </h5>
-      );
-  };
-
   return (
     <div className="card m-4">
       <div className="card-body">
-        <h3 className="card-title">Course Information</h3>
-        <div>Course Name: {course.name}</div>
-        <div>Major: {course.major}</div>
-        <div>Year: {course.year}</div>
-        <div>The month the course start: {course.monthStart}</div>
-        <div>The length of the course (day): {course.length}</div>
-        <div>Number of students: {course.studentCount}</div>
+        <a className="card-title" data-bs-toggle="collapse" href="#courseInfomation" role="button" aria-expanded="false" aria-controls="courseInfomation" style={{ textDecoration: "none", color: "#000", fontSize: "40px" }}>
+          Course Information
+        </a>
+        <div className="collapse ps-3 show" id="courseInfomation">
+          <div>Course Name: {course.name}</div>
+          <div>Major: {course.major}</div>
+          <div>Year: {course.year}</div>
+          <div>Starting Month: {course.monthStart}</div>
+          <div>Course Length (day): {course.length}</div>
+          <div>Number of students: {course.studentCount}</div>
+        </div>
 
         <hr></hr>
 
-        <h3>Material</h3>
-        <table className="table table-bordered">
+        <a data-bs-toggle="collapse" href="#materialTable" role="button" aria-expanded="false" aria-controls="materialTable" style={{ textDecoration: "none", color: "#000", fontSize: "40px" }}>
+          Material
+        </a>
+        <table className="table table-bordered collapse show" id="materialTable">
           <thead>
             <tr>
               <th>ID</th>
@@ -94,8 +81,10 @@ export default function CourseDetail() {
           <tbody>{eleMaterial}</tbody>
         </table>
 
-        <h3>Assessment</h3>
-        <table className="table table-bordered">
+        <a data-bs-toggle="collapse" href="#assessmentTable" role="button" aria-expanded="false" aria-controls="assessmentTable" style={{ textDecoration: "none", color: "#000", fontSize: "40px" }}>
+          Assessment
+        </a>
+        <table className="table table-bordered collapse show" id="assessmentTable">
           <thead>
             <tr>
               <th>Assessment Type</th>
@@ -106,8 +95,7 @@ export default function CourseDetail() {
           </thead>
           <tbody>{eleAssessment}</tbody>
         </table>
-        {displayAvgPoint()}
       </div>
-    </div>
+    </div >
   );
 }
