@@ -24,7 +24,12 @@ from sklearn import svm
 from sklearn.svm import LinearSVC
 # from flask_jwt_extended import get_jwt_identity
 from datetime import timedelta
-
+from imblearn.over_sampling import SMOTE
+from sklearn.model_selection import cross_validate
+from imblearn.ensemble import BalancedBaggingClassifier
+from sklearn.ensemble import BaggingClassifier
+from sklearn.tree import DecisionTreeClassifier
+from imblearn.ensemble import BalancedRandomForestClassifier
 
 mysql = MySQL()
 app = Flask(__name__)
@@ -271,14 +276,14 @@ class DynamicPredict(Resource):
             train_set = []
             for course in courses:
                 # get all students registered in each course
-                students = []
+                preStudents = []
                 cursor.execute("""
                     SELECT id_student, final_result FROM student_register
                     WHERE code_module = "{}" AND code_presentation = "{}";
                 """.format(code_module, course[0]))
                 data = cursor.fetchall()
                 for row in data:
-                    students.append(
+                    preStudents.append(
                         {"id": row[0], "result": 1 if row[1] in ["Pass", "Distinction"] else 0})
 
                 # get assessments which fit with assessment format of target course
@@ -286,9 +291,9 @@ class DynamicPredict(Resource):
                 for assessment in currentAssessmentFormat:
                     cursor.execute("""
                         SELECT id_assessment FROM assessments
-                        WHERE code_module = "{}" 
-                            AND code_presentation = "{}" 
-                            AND assessment_type="{}" 
+                        WHERE code_module = "{}"
+                            AND code_presentation = "{}"
+                            AND assessment_type="{}"
                             AND weight="{}"
                             AND number="{}";
                     """.format(code_module, course[0], assessment["type"], assessment["weight"], assessment["number"]))
@@ -298,7 +303,7 @@ class DynamicPredict(Resource):
                             {"id": idAssessment[0], "type": assessment["type"], "weight": assessment["weight"]})
 
                 # get student assessment for train set
-                for student in students:
+                for student in preStudents:
                     result = []
                     for assessment in assessments:
                         cursor.execute("""
@@ -329,7 +334,18 @@ class DynamicPredict(Resource):
             X_test = np.array(test_set)[:, :-1]
             y_test = np.array(test_set)[:, -1]
 
+            
+
+
+            # SMOTE-Bagging
+            # smote_bagging = BalancedBaggingClassifier(sampler=SMOTE())
+            # cv_results = cross_validate(smote_bagging, X_train, y_train, scoring="balanced_accuracy")
+            # print(cv_results)
+
+            smote_bagging = BalancedRandomForestClassifier(max_depth=2, random_state=0).fit(X_train, y_train)
             # clf = LogisticRegression(max_iter=100).fit(X_train, y_train)
+            # clf = BaggingClassifier(
+            #             n_estimators=10, random_state=0).fit(X_train, y_train)
             clf = RandomForestClassifier().fit(X_train, y_train)
             # clf = svm.SVC().fit(X_train, y_train)
             # clf = make_pipeline(StandardScaler(), LinearSVC()
@@ -338,7 +354,8 @@ class DynamicPredict(Resource):
             #     gamma='auto')).fit(X_train, y_train)
 
             predicted = clf.predict(X_test)
-
+            predicted1 = smote_bagging.predict(X_test)
+            
             prob_predicted = clf.predict_proba(X_test)
 
             # (True Positive + True Negative) / Total Predictions
@@ -351,30 +368,53 @@ class DynamicPredict(Resource):
             Specificity = metrics.recall_score(y_test, predicted, pos_label=0)
             # 2 * ((Precision * Sensitivity) / (Precision + Sensitivity))   HAMONIC mean of precision and recall
             F1_score = metrics.f1_score(y_test, predicted)
+            # (True Positive + True Negative) / Total Predictions
+            Accuracy1 = metrics.accuracy_score(y_test, predicted1)
+            # True Positive / (True Positive + False Positive)
+            Precision1 = metrics.precision_score(y_test, predicted1)
+            # True Positive / (True Positive + False Negative)
+            Sensitivity_recall1 = metrics.recall_score(y_test, predicted1)
+            # True Negative / (True Negative + False Positive)
+            Specificity1 = metrics.recall_score(y_test, predicted1, pos_label=0)
+            # 2 * ((Precision * Sensitivity) / (Precision + Sensitivity))   HAMONIC mean of precision and recall
+            F1_score1 = metrics.f1_score(y_test, predicted1)
 
             print("Accuracy:          ", Accuracy)
             print("Precision:         ", Precision)
             print("Sensitivity_recall:", Sensitivity_recall)
             print("Specificity:       ", Specificity)
             print("F1_score:          ", F1_score)
+            print("Accuracy:          ", Accuracy1)
+            print("Precision:         ", Precision1)
+            print("Sensitivity_recall:", Sensitivity_recall1)
+            print("Specificity:       ", Specificity1)
+            print("F1_score:          ", F1_score1)
 
+            print(metrics.confusion_matrix(y_test, predicted))
+            # print(len(prob_predicted))
+            # print(len(students))
             predictions = []
+            count = 0
             for i in range(len(students)):
                 prediction = {
                     'id_student': student["id"],
                     'created_date': 100,
                     'is_risk': predicted[i],
-                    'probability': prob_predicted[i]
+                    'probability': prob_predicted[i][predicted[i]]
                 }
-                print(prediction)
+                predictions.append(prediction)
+                if prediction['is_risk'] == 0:
+                    count += 1
 
-            # for prediction in predictions:
-            #     cursor.execute("""
-            #                 INSERT INTO predictions (id_student, code_module, code_presentation, created_date, is_risk, probability)
-            #                 VALUES (\'{}\', \'{}\',\'{}\', {}, {}, {});
-            #             """.format(prediction["id_student"], code_module, code_presentation, prediction["created_date"], prediction["is_risk"], prediction["probability"]))
+            print(len(prob_predicted), count)
 
-            # cursor.commit()
+            for prediction in predictions:
+                cursor.execute("""
+                            INSERT INTO predictions (id_student, code_module, code_presentation, created_date, is_risk, probability)
+                            VALUES (\'{}\', \'{}\',\'{}\', {}, {}, {});
+                        """.format(prediction["id_student"], code_module, code_presentation, prediction["created_date"], prediction["is_risk"], prediction["probability"]))
+
+            con.commit()
             return 1
         except Exception as e:
             return {'error': str(e)}
