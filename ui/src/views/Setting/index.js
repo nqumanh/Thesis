@@ -1,4 +1,4 @@
-import { Box, Button, Grid, TextField } from "@mui/material";
+import { Box, Button, Card, Container, Grid, TextField, Typography } from "@mui/material";
 import axios from "axios";
 import ChooseTheme from "components/ChooseTheme";
 import React, { useState } from "react";
@@ -53,72 +53,102 @@ const Setting = () => {
     };
 
     return (
-        <div>
-            <h2>Change Password</h2>
-            <Box sx={{
-                display: 'flex',
-                justifyContent: 'center'
-            }}>
-                <Box component="form" onSubmit={handleSubmit} noValidate sx={{
-                    width: '40%',
+        <Container maxWidth={false}>
+            <Box
+                sx={{
                     alignItems: 'center',
-                }}>
-                    <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        name="password"
-                        label="Password"
-                        type="password"
-                        id="password"
-                        autoComplete="current-password"
-                        onChange={onChange}
-                    />
-                    <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        name="new-password"
-                        label="New Password"
-                        type="password"
-                        id="password"
-                        autoComplete="new-password"
-                        onChange={onChange}
-                    />
-                    <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        name="confirm-password"
-                        label=" Confirm Password"
-                        type="password"
-                        id="password"
-                        autoComplete="confirm-password"
-                        onChange={onChange}
-                    />
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        sx={{ mt: 3, mb: 2 }}
-                    >
-                        Save Changes
-                    </Button>
-                    <Grid container>
-                        <Grid item xs>
-                            {/* <Link href="#" variant="body2">
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    m: -1
+                }}
+            >
+                <Typography
+                    sx={{ m: 1 }}
+                    variant="h4"
+                >
+                    Settings
+                </Typography>
+            </Box>
+
+            <Box sx={{ mt: 3 }}>
+                <Card sx={{ p: 3 }}>
+                    <Typography gutterBottom variant="h5" component="div">
+                        Change Password
+                    </Typography>
+                    <Box sx={{
+                        display: 'flex',
+                        justifyContent: 'center'
+                    }}>
+                        <Box component="form" onSubmit={handleSubmit} noValidate sx={{
+                            width: '40%',
+                            alignItems: 'center',
+                        }}>
+                            <TextField
+                                margin="normal"
+                                required
+                                fullWidth
+                                name="password"
+                                label="Password"
+                                type="password"
+                                id="password"
+                                autoComplete="current-password"
+                                onChange={onChange}
+                            />
+                            <TextField
+                                margin="normal"
+                                required
+                                fullWidth
+                                name="new-password"
+                                label="New Password"
+                                type="password"
+                                id="password"
+                                autoComplete="new-password"
+                                onChange={onChange}
+                            />
+                            <TextField
+                                margin="normal"
+                                required
+                                fullWidth
+                                name="confirm-password"
+                                label=" Confirm Password"
+                                type="password"
+                                id="password"
+                                autoComplete="confirm-password"
+                                onChange={onChange}
+                            />
+                            <Button
+                                type="submit"
+                                fullWidth
+                                variant="contained"
+                                sx={{ mt: 3, mb: 2 }}
+                            >
+                                Save Changes
+                            </Button>
+                            <Grid container>
+                                <Grid item xs>
+                                    {/* <Link href="#" variant="body2">
                                     Forgot password?
                                 </Link> */}
-                        </Grid>
-                        <Grid item>
+                                </Grid>
+                                <Grid item>
 
-                        </Grid>
-                    </Grid>
-                </Box>
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    </Box>
+                </Card>
             </Box>
-            <h2>Change Theme Color</h2>
-            <ChooseTheme />
-        </div >
+
+            <Box sx={{ mt: 3 }}>
+                <Card sx={{ p: 3 }}>
+                    <Typography gutterBottom variant="h5" component="div">
+                        Theme
+                    </Typography>
+                    <ChooseTheme />
+                </Card>
+            </Box>
+        </Container>
     );
 }
 

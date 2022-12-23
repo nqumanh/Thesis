@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import DataGridTable from "components/DataGridTable"
+import { Box, Card, Container, Typography } from "@mui/material";
 
 export default function CourseDetailStudent() {
     const location = useLocation();
@@ -84,12 +85,29 @@ export default function CourseDetailStudent() {
     ];
 
     return (
-        <div className="card m-4">
-            <div className="card-body">
-                <h1>
+        <Container maxWidth={false}>
+            <Box
+                sx={{
+                    alignItems: 'center',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    m: -1
+                }}
+            >
+                <Typography
+                    sx={{ m: 1 }}
+                    variant="h4"
+                >
                     Course Information
-                </h1>
-                <div className="collapse ps-3 show" id="courseInfomation">
+                </Typography>
+            </Box>
+
+            <Box sx={{ mt: 3 }}>
+                <Card sx={{ p: 3 }}>
+                    <Typography gutterBottom variant="h5" component="div">
+                        General Information
+                    </Typography>
                     <div>Course Name: {course.name}</div>
                     <div>Course Module: {course.codeModule}</div>
                     <div>Course Presentation: {course.codePresentation}</div>
@@ -98,21 +116,27 @@ export default function CourseDetailStudent() {
                     <div>Starting Month: {course.monthStart}</div>
                     <div>Course Length (day): {course.length}</div>
                     <div>Number of students: {course.studentCount}</div>
-                </div>
+                </Card>
+            </Box>
 
-                <hr />
-                <h1>
-                    Material
-                </h1>
-                <DataGridTable rows={materials} columns={materialColumns} />
+            <Box sx={{ mt: 3 }}>
+                <Card sx={{ p: 3 }}>
+                    <Typography gutterBottom variant="h5" component="div">
+                        Material List
+                    </Typography>
+                    <DataGridTable rows={materials} columns={materialColumns} />
+                </Card>
+            </Box>
 
-                <br />
-                <h1>
-                    Assessment
-                </h1>
-                <DataGridTable rows={assessments} columns={assessmentColumns} />
+            <Box sx={{ mt: 3 }}>
+                <Card sx={{ p: 3 }}>
+                    <Typography gutterBottom variant="h5" component="div">
+                        Assessment List
+                    </Typography>
+                    <DataGridTable rows={assessments} columns={assessmentColumns} />
 
-            </div>
-        </div >
+                </Card>
+            </Box>
+        </Container>
     );
 }

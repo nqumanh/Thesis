@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./Message.css";
+import { Box, Button, Card, Container, Grid, Stack, TextField, Typography } from "@mui/material";
 
 export default function Message() {
     const [typingMessage, setTypingMessage] = useState("");
@@ -67,8 +68,65 @@ export default function Message() {
     };
 
     return (
-        <div>
-            <div className="card m-4">
+        <Container maxWidth={false}>
+            <Box
+                sx={{
+                    alignItems: 'center',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    m: -1
+                }}
+            >
+                <Typography
+                    sx={{ m: 1 }}
+                    variant="h4"
+                >
+                    Conversation
+                </Typography>
+            </Box>
+            <Grid container spacing={2}>
+                <Grid item xs={3}>
+                    <Card>
+                        <ul>
+                            {contacts.map((contact, index) => (
+                                <li className="list-group-item" key={index}>
+                                    <div>
+                                        <strong>{contact.name}</strong>
+                                    </div>
+                                    <p>
+                                        {contact.sender}
+                                        {contact.message}
+                                    </p>
+                                </li>
+                            ))}
+                        </ul>
+                    </Card>
+                </Grid>
+                <Grid item xs={9}>
+                    <Card sx={{ p: 3 }}>
+                        {displayedMessages.map((message, index) => (
+                            <div className={`${message.display}`} key={index}>
+                                {message.message}
+                            </div>
+                        ))}
+                        <form className="d-flex mt-5" onSubmit={onSubmit}>
+                            <Stack direction="row" spacing={2} justifyContent="space-around">
+                                <TextField
+                                    sx={{ minWidth: "80%" }}
+                                    placeholder="Type your message here"
+                                    value={typingMessage}
+                                    onChange={handleTypingMessageChange}
+                                />
+                                <Button type="submit" variant="contained" color="primary">
+                                    Send
+                                </Button>
+                            </Stack>
+                        </form>
+                    </Card>
+                </Grid>
+            </Grid>
+            {/* <div className="card m-4">
                 <div className="container mt-4 mb-4">
                     <div className="row">
                         <div className="col-3">
@@ -127,7 +185,7 @@ export default function Message() {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div> */}
+        </Container>
     );
 }

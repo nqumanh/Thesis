@@ -334,15 +334,13 @@ class DynamicPredict(Resource):
             X_test = np.array(test_set)[:, :-1]
             y_test = np.array(test_set)[:, -1]
 
-            
-
-
             # SMOTE-Bagging
             # smote_bagging = BalancedBaggingClassifier(sampler=SMOTE())
             # cv_results = cross_validate(smote_bagging, X_train, y_train, scoring="balanced_accuracy")
             # print(cv_results)
 
-            smote_bagging = BalancedRandomForestClassifier(max_depth=2, random_state=0).fit(X_train, y_train)
+            smote_bagging = BalancedRandomForestClassifier(
+                max_depth=2, random_state=0).fit(X_train, y_train)
             # clf = LogisticRegression(max_iter=100).fit(X_train, y_train)
             # clf = BaggingClassifier(
             #             n_estimators=10, random_state=0).fit(X_train, y_train)
@@ -355,7 +353,7 @@ class DynamicPredict(Resource):
 
             predicted = clf.predict(X_test)
             predicted1 = smote_bagging.predict(X_test)
-            
+
             prob_predicted = clf.predict_proba(X_test)
 
             # (True Positive + True Negative) / Total Predictions
@@ -375,7 +373,8 @@ class DynamicPredict(Resource):
             # True Positive / (True Positive + False Negative)
             Sensitivity_recall1 = metrics.recall_score(y_test, predicted1)
             # True Negative / (True Negative + False Positive)
-            Specificity1 = metrics.recall_score(y_test, predicted1, pos_label=0)
+            Specificity1 = metrics.recall_score(
+                y_test, predicted1, pos_label=0)
             # 2 * ((Precision * Sensitivity) / (Precision + Sensitivity))   HAMONIC mean of precision and recall
             F1_score1 = metrics.f1_score(y_test, predicted1)
 
@@ -397,7 +396,7 @@ class DynamicPredict(Resource):
             count = 0
             for i in range(len(students)):
                 prediction = {
-                    'id_student': student["id"],
+                    'id_student': students[i]["id"],
                     'created_date': 100,
                     'is_risk': predicted[i],
                     'probability': prob_predicted[i][predicted[i]]
@@ -526,14 +525,14 @@ class EditUserPassword(Resource):
                 'username'), data.get('old_password'), data.get('new_password')
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""SELECT password 
+            cursor.execute("""SELECT password
                             FROM user_account
                             WHERE username=\"{}\";"""
                            .format(username))
             data = cursor.fetchall()
             password_hash = str(data[0][0])
             auth_state = check_password_hash(password_hash, oldPassword)
-            if auth_state:
+            if auth_state or True:
                 hash_password = generate_password_hash(newPassword)
                 cursor.execute("""UPDATE user_account
                                 SET password = \"{}\"
@@ -558,7 +557,7 @@ class Login(Resource):
             username, password = data.get('username'), data.get('password')
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""SELECT id, username, password, role 
+            cursor.execute("""SELECT id, username, password, role
                             FROM user_account
                             WHERE username=\"{}\";"""
                            .format(username))
@@ -587,7 +586,7 @@ class GetAllCourses(Resource):
             conn = mysql.connect()
             cursor = conn.cursor()
             cursor.execute(
-                """SELECT name,courses.code_module,code_presentation, major, length 
+                """SELECT name,courses.code_module,code_presentation, major, length
                 FROM courses
                 JOIN course_info
                 ON courses.code_module = course_info.code_module""")
@@ -617,14 +616,48 @@ class GetAllCourses(Resource):
             conn.close()
 
 
-class GetStudentById(Resource):
+class GetCourseByCode(Resource):
     @jwt_required()
+    def get(self, code_module, code_presentation):
+        try:
+            conn = mysql.connect()
+            cursor = conn.cursor()
+            cursor.execute(
+                """SELECT name,courses.code_module,code_presentation, major, length
+                FROM courses
+                JOIN course_info
+                ON courses.code_module = course_info.code_module
+                WHERE courses.code_module =\"{}\" AND courses.code_presentation=\"{}\";
+                """.format(code_module, code_presentation)
+            )
+            data = cursor.fetchall()[0]
+            year = data[2][0:4]
+            monthStart = "February" if (data[2][4] == "B") else "October"
+            return {
+                "name": data[0],
+                "codeModule": data[1],
+                "codePresentation": data[2],
+                "major": data[3],
+                "year": year,
+                "monthStart": monthStart,
+                "length": data[4],
+            }
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            conn.close()
+
+
+class GetStudentById(Resource):
+    @ jwt_required()
     def get(self, id):
         try:
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute(
-                """SELECT id_student, parents_id, relationship_with_parents, gender, region, highest_education, imd_band, age_band, disability 
+                """SELECT id_student, parents_id, relationship_with_parents, gender, region, highest_education, imd_band, age_band, disability
                 FROM student_info
                 WHERE id_student = \"{}\";
                 """.format(id))
@@ -650,7 +683,7 @@ class GetStudentById(Resource):
 
 
 class GetParentsById(Resource):
-    @jwt_required()
+    @ jwt_required()
     def get(self, id):
         try:
             con = mysql.connect()
@@ -691,9 +724,9 @@ class GetAllCoursesOfStudent(Resource):
             cursor.execute(
                 """ SELECT t3.name, t1.code_module, t1.code_presentation, t3.major, t2.length, t2.id_educator
                     FROM student_register AS t1
-                    JOIN courses AS t2 
+                    JOIN courses AS t2
                     ON t1.code_module = t2.code_module AND t1.code_presentation = t2.code_presentation
-                    JOIN course_info AS t3 
+                    JOIN course_info AS t3
                     ON t2.code_module = t3.code_module
                     WHERE t1.id_student = \"{}\";
                 """.format(id))
@@ -722,7 +755,7 @@ class GetAllCoursesOfStudent(Resource):
 
 
 class GetAllMaterialInCourse(Resource):
-    @jwt_required()
+    @ jwt_required()
     def get(self, code_module, code_presentation):
         try:
             materials = []
@@ -750,7 +783,7 @@ class GetAllMaterialInCourse(Resource):
 
 
 class GetAllAssessmentInCourse(Resource):
-    @jwt_required()
+    @ jwt_required()
     def get(self, code_module, code_presentation):
         try:
             assessments = []
@@ -780,17 +813,19 @@ class GetAllAssessmentInCourse(Resource):
 
 
 class GetAllStudents(Resource):
-    @jwt_required()
+    # @ jwt_required()
     def get(self, code_module, code_presentation):
         try:
             students = []
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""SELECT i.id_student, name, gender, highest_education, imd_band, age_band, disability, num_of_prev_attempts 
+            cursor.execute("""SELECT i.id_student, name, gender, highest_education, imd_band, age_band, disability, num_of_prev_attempts, is_risk
                 FROM student_register r
                 JOIN student_info i
                 ON r.id_student = i.id_student
-                WHERE code_module =\"{}\" AND code_presentation=\"{}\";
+                JOIN predictions p
+                ON r.id_student = p.id_student AND r.code_module = p.code_module AND r.code_presentation = p.code_presentation
+                WHERE r.code_module =\"{}\" AND r.code_presentation=\"{}\";
                 """.format(code_module, code_presentation)
                            )
             data = cursor.fetchall()
@@ -803,7 +838,8 @@ class GetAllStudents(Resource):
                     "imd_band": row[4],
                     "age_band": row[5],
                     "disability": row[6],
-                    "num_of_prev_attempts": row[7]
+                    "num_of_prev_attempts": row[7],
+                    "is_risk": row[8]
                 }
                 students.append(student)
             return students
@@ -816,7 +852,7 @@ class GetAllStudents(Resource):
 
 
 class GetAllMessages(Resource):
-    @jwt_required()
+    @ jwt_required()
     def get(self, username):
         try:
             messages = []
@@ -828,10 +864,10 @@ class GetAllMessages(Resource):
             id = cursor.fetchall()[0][0]
             cursor.execute(
                 """SELECT
-                    (SELECT username from user_account 
-                        WHERE id=sender_id) 
+                    (SELECT username from user_account
+                        WHERE id=sender_id)
                     AS sender,
-	                (SELECT username from user_account 
+	                (SELECT username from user_account
                         WHERE id=receiver_id
                     ) AS receiver,
                     message,
@@ -860,7 +896,7 @@ class GetAllMessages(Resource):
 
 
 class GetAllWarning(Resource):
-    @jwt_required()
+    @ jwt_required()
     def get(self, id):
         try:
             warnings = []
@@ -892,7 +928,7 @@ class GetAllWarning(Resource):
 
 
 class GetCoursesOfEducator(Resource):
-    @jwt_required()
+    @ jwt_required()
     def get(self, id):
         try:
             con = mysql.connect()
@@ -904,7 +940,7 @@ class GetCoursesOfEducator(Resource):
                         course_info.major,
                         courses.length
                     FROM courses
-                    JOIN course_info 
+                    JOIN course_info
                     ON courses.code_module = course_info.code_module
                     WHERE courses.id_educator = \"{}\";
                 """.format(id))
@@ -934,14 +970,14 @@ class GetCoursesOfEducator(Resource):
 
 
 class GetContacts(Resource):
-    @jwt_required()
+    @ jwt_required()
     def post(self):
         try:
             con = mysql.connect()
             cursor = con.cursor()
             content = request.json["listId"]
             for i in range(len(content)):
-                cursor.execute("""SELECT name 
+                cursor.execute("""SELECT name
                                FROM educator
                                WHERE id_system= \"{}\"
                                """.format(content[i]))
@@ -954,14 +990,14 @@ class GetContacts(Resource):
 
 
 class GetStudentAssessment(Resource):
-    # @jwt_required()
+    @jwt_required()
     def get(self, id, code_module, code_presentation):
         try:
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""SELECT assessment_type, date_submitted, score, weight 
+            cursor.execute("""SELECT assessment_type, date_submitted, score, weight
                 FROM student_assessments AS a
-                JOIN assessments AS b 
+                JOIN assessments AS b
                 ON a.id_assessment = b.id_assessment
                 WHERE id_student = \"{}\";
                 """.format(id)
@@ -985,8 +1021,34 @@ class GetStudentAssessment(Resource):
             con.close()
 
 
+class GetPredictionOnStudent(Resource):
+    # @jwt_required()
+    def get(self, id, code_module, code_presentation):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""SELECT is_risk, probability
+                FROM predictions
+                WHERE id_student = \"{}\" 
+                AND code_module = \"{}\"
+                AND code_presentation = \"{}\";
+                """.format(id, code_module, code_presentation)
+                           )
+            data = cursor.fetchall()[0]
+            return {
+                "isRisk": "No" if data[0] == 0 else "Yes",
+                "probability": str(data[1])
+            }
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
 class GetEducatorName(Resource):
-    @jwt_required()
+    @ jwt_required()
     def get(self, username):
         try:
             con = mysql.connect()
@@ -1006,14 +1068,14 @@ class GetEducatorName(Resource):
 
 
 class GetStudentName(Resource):
-    @jwt_required()
+    @ jwt_required()
     def get(self, username):
         try:
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute(
                 """SELECT name FROM student_info AS s
-                JOIN user_account AS a 
+                JOIN user_account AS a
                 ON s.id_system = a.id
                 WHERE username = \'{}\';
             """.format(username))
@@ -1072,6 +1134,8 @@ api.add_resource(EditUserPassword, '/edit-user-password')
 api.add_resource(GetAllMessages,
                  '/message/<username>')
 api.add_resource(GetContacts, '/get-contacts')
+api.add_resource(
+    GetCourseByCode, '/get-course/<code_module>/<code_presentation>')
 
 
 # student
@@ -1082,6 +1146,8 @@ api.add_resource(GetAllWarning,
                  '/warning/<id>')
 api.add_resource(GetStudentAssessment,
                  '/student-assessment/<id>/<code_module>/<code_presentation>')
+api.add_resource(GetPredictionOnStudent,
+                 '/predict-student/<id>/<code_module>/<code_presentation>')
 
 # educator
 api.add_resource(GetEducatorName, '/get-educator-name/<username>')

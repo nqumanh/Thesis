@@ -2,7 +2,43 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import DataGridTable from "components/DataGridTable"
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { DataGrid, GridToolbar, gridClasses } from "@mui/x-data-grid";
+import { alpha, Box, Button, Card, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Stack, styled, Typography } from "@mui/material";
+
+const ODD_OPACITY = 0.2;
+
+const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
+    [`& .${gridClasses.row}.even`]: {
+        backgroundColor: theme.palette.grey[200],
+        '&:hover, &.Mui-hovered': {
+            backgroundColor: alpha(theme.palette.primary.main, ODD_OPACITY),
+            '@media (hover: none)': {
+                backgroundColor: 'transparent',
+            },
+        },
+        '&.Mui-selected': {
+            backgroundColor: alpha(
+                theme.palette.primary.main,
+                ODD_OPACITY + theme.palette.action.selectedOpacity,
+            ),
+            '&:hover, &.Mui-hovered': {
+                backgroundColor: alpha(
+                    theme.palette.primary.main,
+                    ODD_OPACITY +
+                    theme.palette.action.selectedOpacity +
+                    theme.palette.action.hoverOpacity,
+                ),
+                // Reset on touch devices, it doesn't add specificity
+                '@media (hover: none)': {
+                    backgroundColor: alpha(
+                        theme.palette.primary.main,
+                        ODD_OPACITY + theme.palette.action.selectedOpacity,
+                    ),
+                },
+            },
+        },
+    },
+}));
 
 export default function CourseDetailEducator() {
     const location = useLocation();
@@ -11,6 +47,7 @@ export default function CourseDetailEducator() {
     const id = parseInt(localStorage.getItem("username").substring(1));
     const token = localStorage.getItem("token");
 
+    const [presentation, setPresentation] = useState({})
     const [materials, setMaterials] = useState([]);
     const [assessments, setAssessments] = useState([]);
     const [students, setStudents] = useState([]);
@@ -21,7 +58,19 @@ export default function CourseDetailEducator() {
                 `http://127.0.0.1:5000/materials/${course.codeModule}/${course.codePresentation}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             )
-            .then((response) => setMaterials(response.data))
+            .then((response) => {
+                setMaterials(response.data)
+            })
+            .catch((error) => console.log(error));
+
+        axios
+            .get(
+                `http://127.0.0.1:5000/get-course/${course.codeModule}/${course.codePresentation}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+            .then((response) => {
+                setPresentation(response.data)
+            })
             .catch((error) => console.log(error));
     }, [course, token]);
 
@@ -136,6 +185,14 @@ export default function CourseDetailEducator() {
             headerName: 'Previous attempts',
             width: 150,
         },
+        {
+            field: 'is_risk',
+            headerName: 'Is Risk',
+            width: 150,
+            renderCell: (params) => {
+                return (params.value === 1) ? <Chip label="Yes" color="success" variant="outlined" /> : <Chip label="No" color="error" variant="outlined" />
+            }
+        },
     ];
 
     const [pageSize, setPageSize] = useState(5);
@@ -154,48 +211,144 @@ export default function CourseDetailEducator() {
         })
     };
 
+    const [open, setOpen] = useState(false);
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+    const handlePredict = () => {
+        setLoading(true)
+        axios.get(
+            `http://127.0.0.1:5000/dynamic-predict/${course.codeModule}/${course.codePresentation}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        )
+            .then((res) => setLoading(false))
+            .catch((error) => {
+                console.log(error)
+                setLoading(false)
+            });
+    }
+
+    const [loading, setLoading] = useState(false)
+
     return (
-        <div className="card m-4">
-            <div className="card-body">
-                <a className="card-title" data-bs-toggle="collapse" href="#courseInfomation" role="button" aria-expanded="false" aria-controls="courseInfomation" style={{ textDecoration: "none", color: "#000", fontSize: "40px" }}>
+        <Container maxWidth={false}>
+            <Box
+                sx={{
+                    alignItems: 'center',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    m: -1
+                }}
+            >
+                <Typography
+                    sx={{ m: 1 }}
+                    variant="h4"
+                >
                     Course Information
-                </a>
-                <div className="collapse ps-3 show" id="courseInfomation">
-                    <div>Course Name: {course.name}</div>
-                    <div>Course Module: {course.codeModule}</div>
-                    <div>Course Presentation: {course.codePresentation}</div>
-                    <div>Major: {course.major}</div>
-                    <div>Year: {course.year}</div>
-                    <div>Starting Month: {course.monthStart}</div>
-                    <div>Course Length (day): {course.length}</div>
-                    <div>Number of students: {course.studentCount}</div>
-                </div>
+                </Typography>
+            </Box>
 
-                <hr />
+            <Box sx={{ mt: 3 }}>
+                <Card sx={{ p: 3 }}>
+                    <Typography gutterBottom variant="h5" component="div">
+                        General Information
+                    </Typography>
 
-                <DataGrid
-                    rows={students}
-                    columns={studentColumns}
-                    pageSize={pageSize}
-                    onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
-                    rowsPerPageOptions={[5, 10, 20, 100]}
-                    pagination
-                    autoHeight
-                    onRowClick={handleRowClick}
-                    components={{
-                        Toolbar: GridToolbar,
-                    }}
-                />
+                    <Typography>Course Name: {presentation.name}</Typography>
+                    <Typography>Course Module: {presentation.codeModule}</Typography>
+                    <Typography>Course Presentation: {presentation.codePresentation}</Typography>
+                    <Typography>Major: {presentation.major}</Typography>
+                    <Typography>Year: {presentation.year}</Typography>
+                    <Typography>Starting Month: {presentation.monthStart}</Typography>
+                    <Typography>Course Length (day): {presentation.length}</Typography>
+                    <Typography>Number of students: {students.length}</Typography>
+                </Card>
+            </Box>
 
-                <br />
 
-                <DataGridTable rows={materials} columns={materialColumns} />
+            <Box sx={{ mt: 3 }}>
+                {loading ?
+                    <Box sx={{ display: 'flex' }}>
+                        <CircularProgress color="secondary" />
+                    </Box>
+                    :
+                    <Card sx={{ p: 3 }}>
+                        <Stack direction="row" justifyContent="space-between">
+                            <Typography gutterBottom variant="h5" component="div">
+                                Student List
+                            </Typography>
 
-                <br />
+                            <Stack direction="row" spacing={2}>
+                                <Button variant="contained" color="success" onClick={() => handlePredict()}>Predict</Button>
+                                <Button variant="contained" color="warning" onClick={handleClickOpen}>Warn All At-risk Student</Button>
+                            </Stack>
+                        </Stack>
+                        <Dialog
+                            open={open}
+                            onClose={handleClose}
+                            aria-labelledby="alert-dialog-title"
+                            aria-describedby="alert-dialog-description"
+                        >
+                            <DialogTitle id="alert-dialog-title">
+                                {"Warn all at-risk students"}
+                            </DialogTitle>
+                            <DialogContent>
+                                <DialogContentText id="alert-dialog-description">
+                                    Do you want to send messages to all at-risk student?
+                                </DialogContentText>
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handleClose}>No</Button>
+                                <Button onClick={handleClose} autoFocus>
+                                    Yes
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                        <StripedDataGrid
+                            rows={students}
+                            columns={studentColumns}
+                            pageSize={pageSize}
+                            onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
+                            rowsPerPageOptions={[5, 10, 20, 100]}
+                            pagination
+                            autoHeight
+                            onRowClick={handleRowClick}
+                            components={{
+                                Toolbar: GridToolbar,
+                            }}
+                            getRowClassName={(params) =>
+                                params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'
+                            }
+                        />
+                    </Card>
+                }
+            </Box>
 
-                <DataGridTable rows={assessments} columns={assessmentColumns} />
+            <Box sx={{ mt: 3 }}>
+                <Card sx={{ p: 3 }}>
+                    <Typography gutterBottom variant="h5" component="div">
+                        Material List
+                    </Typography>
+                    <DataGridTable rows={materials} columns={materialColumns} />
+                </Card>
+            </Box>
 
-            </div>
-        </div >
+            <Box sx={{ mt: 3 }}>
+                <Card sx={{ p: 3 }}>
+                    <Typography gutterBottom variant="h5" component="div">
+                        Assessment List
+                    </Typography>
+                    <DataGridTable rows={assessments} columns={assessmentColumns} />
+
+                </Card>
+            </Box>
+        </Container>
     );
 }

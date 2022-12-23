@@ -1,39 +1,58 @@
+import { CssBaseline, styled } from '@mui/material';
+import { Box } from '@mui/system';
 import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
+import { Navigate, Outlet } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
-import Content from './Content';
 
-const darkTheme = createTheme({
-    palette: {
-        // mode: 'dark',
-        mode: 'light',
-    },
-});
+const DashboardLayoutRoot = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flex: '1 1 auto',
+  maxWidth: '100%',
+}));
 
-const Layout = () => {
-    const [open, setOpen] = useState(false);
+const Dashboard = () => {
 
-    const handleDrawerOpen = () => {
-        setOpen(true);
-    };
+  const drawerWidth = 240;
 
-    const handleDrawerClose = () => {
-        setOpen(false);
-    };
+  const [mobileOpen, setMobileOpen] = useState(false);
 
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  let token = localStorage.getItem("token")
+
+  if (token == null) {
+    return <Navigate to="/login" replace />;
+  } else
     return (
-        <Box sx={{ display: 'flex' }}>
-            <ThemeProvider theme={darkTheme}>
-                <CssBaseline />
-                <Header handleDrawerOpen={handleDrawerOpen} open={open} />
-                <Sidebar open={open} handleDrawerClose={handleDrawerClose} />
-                <Content />
-            </ThemeProvider>
-        </Box>
+      <Box sx={{ display: 'flex' }}>
+        <CssBaseline />
+
+        <Header handleDrawerToggle={handleDrawerToggle} mobileOpen={mobileOpen} />
+
+        <Sidebar handleDrawerToggle={handleDrawerToggle} mobileOpen={mobileOpen} />
+
+        <DashboardLayoutRoot>
+          <Box
+            component="main"
+            sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
+          >
+            <Box
+              component="main"
+              sx={{
+                flexGrow: 1,
+                py: 8
+              }}
+            >
+              <Outlet />
+            </Box>
+          </Box>
+        </DashboardLayoutRoot>
+      </Box>
     );
+
 }
 
-export default Layout;
+export default Dashboard;
