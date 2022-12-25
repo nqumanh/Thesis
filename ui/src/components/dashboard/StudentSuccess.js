@@ -43,6 +43,9 @@ export const TasksProgress = (props) => (
         <LinearProgress
           value={75}
           variant="determinate"
+          aria-busy="true"
+          role="progressbar"
+          aria-label="Success Percentage"
         />
       </Box>
     </CardContent>

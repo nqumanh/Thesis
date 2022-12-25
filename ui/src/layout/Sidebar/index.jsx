@@ -1,6 +1,6 @@
 import { Box, Divider, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { AccountCircle, LineAxis, Logout, Mail, School, Settings, UnfoldMore, Warning } from '@mui/icons-material';
 import { capitalizeFirstLetter } from 'utils';
 
@@ -16,6 +16,8 @@ let inactiveStyle = {
 
 function Sidebar(props) {
     const { handleDrawerToggle, mobileOpen } = props
+
+    const navigate = useNavigate()
 
     const drawerWidth = 250;
 
@@ -90,19 +92,19 @@ function Sidebar(props) {
             }} />
             <List sx={{ flexGrow: 1, color: "#fff" }}>
                 {items.map((item) => (
-                    <NavLink key={item.name} to={item.to} style={({ isActive }) =>
-                        isActive ? activeStyle : inactiveStyle
-                    }
-                    >
-                        <ListItem disablePadding>
+                    <ListItem disablePadding key={item.name}>
+                        <NavLink to={item.to} style={({ isActive }) =>
+                            isActive ? activeStyle : inactiveStyle
+                        }
+                        >
                             <ListItemButton>
                                 <ListItemIcon>
                                     {item.icon}
                                 </ListItemIcon>
                                 <ListItemText primary={item.name} />
                             </ListItemButton>
-                        </ListItem>
-                    </NavLink>
+                        </NavLink>
+                    </ListItem>
                 ))}
             </List>
             <Divider sx={{
@@ -110,26 +112,29 @@ function Sidebar(props) {
             }} />
             <List>
                 {otherItems.map((item) => (
-                    <NavLink key={item.name} to={item.to} style={({ isActive }) =>
-                        isActive ? activeStyle : inactiveStyle
-                    }
-                    >
-                        <ListItem disablePadding>
+                    <ListItem disablePadding key={item.name}>
+                        <NavLink to={item.to} style={({ isActive }) =>
+                            isActive ? activeStyle : inactiveStyle
+                        }
+                        >
                             <ListItemButton>
                                 <ListItemIcon>
                                     {item.icon}
                                 </ListItemIcon>
                                 <ListItemText primary={item.name} />
                             </ListItemButton>
-                        </ListItem>
-                    </NavLink>
+                        </NavLink>
+                    </ListItem>
                 ))}
                 <ListItem disablePadding sx={{
                     textDecoration: "none",
                     color: "#c5d5db"
                 }}>
                     <ListItemButton
-                    // onClick={()=>logOut()}
+                        onClick={() => {
+                            localStorage.clear()
+                            navigate('/login')
+                        }}
                     >
                         <ListItemIcon>
                             <Logout />

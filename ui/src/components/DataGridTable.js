@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DataGrid, gridClasses, GridToolbar } from '@mui/x-data-grid';
+import { DataGrid, gridClasses, GridToolbarColumnsButton, GridToolbarContainer, GridToolbarExport, GridToolbarFilterButton } from '@mui/x-data-grid';
 import { alpha, styled } from '@mui/system';
 
 const ODD_OPACITY = 0.2;
@@ -37,6 +37,16 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
     },
 }));
 
+function CustomToolbar() {
+    return (
+        <GridToolbarContainer>
+            <GridToolbarColumnsButton />
+            <GridToolbarFilterButton />
+            <GridToolbarExport />
+        </GridToolbarContainer>
+    );
+}
+
 export default function DataGridTable(props) {
     const [pageSize, setPageSize] = useState(5);
     const { rows, columns } = props;
@@ -51,7 +61,7 @@ export default function DataGridTable(props) {
             pagination
             autoHeight
             components={{
-                Toolbar: GridToolbar,
+                Toolbar: CustomToolbar,
             }}
             getRowClassName={(params) =>
                 params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'

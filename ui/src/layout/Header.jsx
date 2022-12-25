@@ -32,7 +32,7 @@ function Header(props) {
                     <Menu />
                 </IconButton>
                 <Box justifyContent="end" sx={{ width: "100%", display: "flex" }}>
-                    <IconButton onClick={() => logout()}>
+                    <IconButton aria-label="logout" onClick={() => logout()}>
                         <Logout />
                     </IconButton>
                 </Box>

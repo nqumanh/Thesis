@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, useEffect, useState } from 'react';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -50,6 +50,11 @@ const Login = () => {
 
         setOpen(false);
     };
+
+    useEffect(() => {
+        if (localStorage.getItem('token'))
+            navigate('/')
+    }, [navigate])
 
     return (
         <ThemeProvider theme={theme}>

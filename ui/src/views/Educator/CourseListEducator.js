@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from 'axios'
 import { Box, Card, Container, styled, Typography, alpha } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { DataGrid, GridToolbar, gridClasses } from "@mui/x-data-grid";
+import { DataGrid, gridClasses, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarFilterButton, GridToolbarExport } from "@mui/x-data-grid";
 
 const ODD_OPACITY = 0.2;
 
@@ -38,6 +38,16 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
         },
     },
 }));
+
+function CustomToolbar() {
+    return (
+        <GridToolbarContainer>
+            <GridToolbarColumnsButton />
+            <GridToolbarFilterButton />
+            <GridToolbarExport />
+        </GridToolbarContainer>
+    );
+}
 
 const DashboardEducator = () => {
     const navigate = useNavigate()
@@ -140,7 +150,7 @@ const DashboardEducator = () => {
                         autoHeight
                         onRowClick={handleRowClick}
                         components={{
-                            Toolbar: GridToolbar,
+                            Toolbar: CustomToolbar,
                         }}
                         getRowClassName={(params) =>
                             params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'

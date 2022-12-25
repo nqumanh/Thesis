@@ -1,4 +1,4 @@
-import { Box, Button, Card, Container, Grid, TextField, Typography } from "@mui/material";
+import { Box, Button, Card, Container, TextField, Typography } from "@mui/material";
 import axios from "axios";
 import ChooseTheme from "components/ChooseTheme";
 import React, { useState } from "react";
@@ -102,7 +102,7 @@ const Setting = () => {
                                 name="new-password"
                                 label="New Password"
                                 type="password"
-                                id="password"
+                                id="new-password"
                                 autoComplete="new-password"
                                 onChange={onChange}
                             />
@@ -113,7 +113,7 @@ const Setting = () => {
                                 name="confirm-password"
                                 label=" Confirm Password"
                                 type="password"
-                                id="password"
+                                id="confirm-password"
                                 autoComplete="confirm-password"
                                 onChange={onChange}
                             />
@@ -125,16 +125,6 @@ const Setting = () => {
                             >
                                 Save Changes
                             </Button>
-                            <Grid container>
-                                <Grid item xs>
-                                    {/* <Link href="#" variant="body2">
-                                    Forgot password?
-                                </Link> */}
-                                </Grid>
-                                <Grid item>
-
-                                </Grid>
-                            </Grid>
                         </Box>
                     </Box>
                 </Card>

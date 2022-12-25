@@ -23,7 +23,7 @@ const ChooseTheme = () => {
         >
             {theme.palette.mode} mode
             {/* onClick={colorMode.toggleColorMode} */}
-            <IconButton sx={{ ml: 1 }} color="inherit">
+            <IconButton aria-label="logout" sx={{ ml: 1 }} color="inherit">
                 {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
             </IconButton>
         </Box>
