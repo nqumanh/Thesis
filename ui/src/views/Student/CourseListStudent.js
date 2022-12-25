@@ -57,8 +57,12 @@ const Dashboard = () => {
             .then((response) => {
                 setCourses(response.data);
             })
-            .catch((error) => console.log(error));
-    }, [role, token]);
+            .catch((error) => {
+                localStorage.clear()
+                navigate('/login')
+                console.log(error)
+            });
+    }, [role, token, navigate]);
 
     const courseColumns = [
         {

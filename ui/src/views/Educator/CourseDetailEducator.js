@@ -42,6 +42,8 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
 
 export default function CourseDetailEducator() {
     const location = useLocation();
+    const navigate = useNavigate()
+
     const course = location.state.presentation;
     const role = localStorage.getItem("role");
     const id = parseInt(localStorage.getItem("username").substring(1));
@@ -51,6 +53,7 @@ export default function CourseDetailEducator() {
     const [materials, setMaterials] = useState([]);
     const [assessments, setAssessments] = useState([]);
     const [students, setStudents] = useState([]);
+    const [studentListLoading, setStudentListLoading] = useState(false)
 
     useEffect(() => {
         axios
@@ -61,7 +64,11 @@ export default function CourseDetailEducator() {
             .then((response) => {
                 setMaterials(response.data)
             })
-            .catch((error) => console.log(error));
+            .catch((error) => {
+                localStorage.clear()
+                navigate('/login')
+                console.log(error)
+            });
 
         axios
             .get(
@@ -71,8 +78,31 @@ export default function CourseDetailEducator() {
             .then((response) => {
                 setPresentation(response.data)
             })
-            .catch((error) => console.log(error));
-    }, [course, token]);
+            .catch((error) => {
+                localStorage.clear()
+                navigate('/login')
+                console.log(error)
+            });
+    }, [course, token, navigate]);
+
+    const [afterPredict, setAfterPredict] = useState(false)
+
+    const handlePredict = () => {
+        setStudentListLoading(true)
+        axios.get(
+            `http://127.0.0.1:5000/dynamic-predict/${course.codeModule}/${course.codePresentation}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        )
+            .then((res) => {
+                setStudentListLoading(false)
+                setAfterPredict(true)
+            })
+            .catch((error) => {
+                console.log(error)
+                setStudentListLoading(false)
+                navigate('/login')
+            });
+    }
 
     useEffect(() => {
         let url = `http://127.0.0.1:5000/assessments/${course.codeModule}/${course.codePresentation}`;
@@ -82,18 +112,33 @@ export default function CourseDetailEducator() {
                 let assessments = response.data.map((row, index) => ({ id: index, ...row }))
                 setAssessments(assessments)
             })
-            .catch((error) => console.log(error));
-    }, [id, role, course, token]);
+            .catch((error) => {
+                localStorage.clear()
+                navigate('/login')
+                console.log(error)
+            });
+    }, [id, role, course, token, navigate]);
 
     useEffect(() => {
+        setStudentListLoading(true)
         axios
             .get(
                 `http://127.0.0.1:5000/view-all-students/${course.codeModule}/${course.codePresentation}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             )
-            .then((response) => setStudents(response.data))
-            .catch((error) => console.log(error));
-    }, [course, token]);
+            .then((res) => {
+                setStudents(res.data)
+                setStudentListLoading(false)
+                setAfterPredict(false)
+            })
+            .catch((error) => {
+                setAfterPredict(false)
+                setStudentListLoading(false)
+                console.log(error)
+                localStorage.clear()
+                navigate('/login')
+            });
+    }, [course, token, navigate, afterPredict]);
 
     const assessmentColumns = [
         {
@@ -153,17 +198,17 @@ export default function CourseDetailEducator() {
         {
             field: 'name',
             headerName: 'Name',
-            width: 300,
+            width: 200,
         },
         {
             field: 'gender',
             headerName: 'Gender',
-            width: 150,
+            width: 75,
         },
         {
             field: 'highest_education',
             headerName: 'Highest Education',
-            width: 300,
+            width: 200,
         },
         {
             field: 'imd_band',
@@ -190,21 +235,17 @@ export default function CourseDetailEducator() {
             headerName: 'Is Risk',
             width: 150,
             renderCell: (params) => {
-                return (params.value === 1) ? <Chip label="Yes" color="success" variant="outlined" /> : <Chip label="No" color="error" variant="outlined" />
+                return (params.value === "Yes") ? <Chip label="Yes" color="error" variant="outlined" /> : <Chip label="No" color="success" variant="outlined" />
             }
         },
     ];
 
     const [pageSize, setPageSize] = useState(5);
 
-    const navigate = useNavigate()
-
     const handleRowClick = (params) => {
-        let id = params.row.id
-        console.log(id)
         navigate(`student`, {
             state: {
-                id: id,
+                id: params.row.id,
                 codeModule: course.codeModule,
                 codePresentation: course.codePresentation,
             }
@@ -220,21 +261,6 @@ export default function CourseDetailEducator() {
     const handleClose = () => {
         setOpen(false);
     };
-
-    const handlePredict = () => {
-        setLoading(true)
-        axios.get(
-            `http://127.0.0.1:5000/dynamic-predict/${course.codeModule}/${course.codePresentation}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-        )
-            .then((res) => setLoading(false))
-            .catch((error) => {
-                console.log(error)
-                setLoading(false)
-            });
-    }
-
-    const [loading, setLoading] = useState(false)
 
     return (
         <Container maxWidth={false}>
@@ -274,7 +300,7 @@ export default function CourseDetailEducator() {
 
 
             <Box sx={{ mt: 3 }}>
-                {loading ?
+                {studentListLoading ?
                     <Box sx={{ display: 'flex' }}>
                         <CircularProgress color="secondary" />
                     </Box>

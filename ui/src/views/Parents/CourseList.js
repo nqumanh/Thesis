@@ -39,7 +39,7 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
     },
 }));
 
-const DashboardEducator = () => {
+const ChildCourseList = () => {
     const navigate = useNavigate()
     const [pageSize, setPageSize] = useState(5);
 
@@ -49,8 +49,8 @@ const DashboardEducator = () => {
 
     useEffect(() => {
         const username = localStorage.getItem('username');
-        const id = parseInt(username?.substring(1));
-        let url = `http://localhost:5000/get-courses-of-educator/${id}`;
+        const id = parseInt(username.substring(1));
+        let url = `http://127.0.0.1:5000/student-register/${id}`;
         axios
             .get(url, { headers: { Authorization: `Bearer ${token}` } })
             .then((response) => {
@@ -152,4 +152,4 @@ const DashboardEducator = () => {
     )
 }
 
-export default DashboardEducator;
+export default ChildCourseList;

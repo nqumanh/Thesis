@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./Message.css";
 import { Box, Button, Card, Container, Grid, Stack, TextField, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 export default function Message() {
     const [typingMessage, setTypingMessage] = useState("");
     const [messages, setMessages] = useState([]);
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username");
+    const navigate = useNavigate()
 
     useEffect(() => {
         axios
@@ -15,8 +17,12 @@ export default function Message() {
                 headers: { Authorization: `Bearer ${token}` },
             })
             .then((response) => setMessages(response.data))
-            .catch((error) => console.log(error));
-    }, [username, token]);
+            .catch((error) => {
+                localStorage.clear()
+                navigate('/login')
+                console.log(error)
+            });
+    }, [username, token, navigate]);
 
     let displayedMessages = messages.map((message) => {
         let justify =

@@ -2,6 +2,7 @@ import { Box, Divider, Drawer, List, ListItem, ListItemButton, ListItemIcon, Lis
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { AccountCircle, LineAxis, Logout, Mail, School, Settings, UnfoldMore, Warning } from '@mui/icons-material';
+import { capitalizeFirstLetter } from 'utils';
 
 let activeStyle = {
     color: "#10b981",
@@ -29,6 +30,14 @@ function Sidebar(props) {
             { name: "Dashboard", icon: <LineAxis />, to: '/dashboard' },
             { name: "Message", icon: <Mail />, to: '/message' },
         ]
+    } else if (role === 'parents') {
+        items = [
+            { name: "Course", icon: <School />, to: '/' },
+            { name: "Profile", icon: <AccountCircle />, to: '/profile' },
+            { name: "Warning", icon: <Warning />, to: '/warning' },
+            { name: "Dashboard", icon: <LineAxis />, to: '/dashboard' },
+            { name: "Message", icon: <Mail />, to: '/message' },
+        ]
     } else if (role === 'educator') {
         items = [
             { name: "Course", icon: <School />, to: '/' },
@@ -48,7 +57,6 @@ function Sidebar(props) {
                     mx: 1,
                     my: 3,
                     alignItems: 'center',
-                    backgroundColor: 'rgba(255, 255, 255, 0.04)',
                     cursor: 'pointer',
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -68,7 +76,7 @@ function Sidebar(props) {
                         color="neutral.400"
                         variant="body2"
                     >
-                        {role}
+                        {capitalizeFirstLetter(role)}
                     </Typography>
                 </div>
                 <UnfoldMore sx={{
@@ -76,9 +84,6 @@ function Sidebar(props) {
                     width: 20,
                     height: 20
                 }} />
-                {/* <Selector
-                
-              /> */}
             </Box>
             <Divider sx={{
                 borderColor: '#2D3748',

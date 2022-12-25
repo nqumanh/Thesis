@@ -8,7 +8,7 @@ import { ArrowBack } from "@mui/icons-material";
 export default function StudentResult() {
     const location = useLocation();
     const navigate = useNavigate()
-    console.log(location.state)
+
     const role = localStorage.getItem("role");
     const token = localStorage.getItem("token");
     const [assessments, setAssessments] = useState([]);
@@ -25,17 +25,24 @@ export default function StudentResult() {
                 let assessments = response.data.map((row, index) => ({ id: index, ...row }))
                 setAssessments(assessments)
             })
-            .catch((error) => console.log(error));
+            .catch((error) => {
+                localStorage.clear()
+                navigate('/login')
+                console.log(error)
+            });
 
         url = `http://127.0.0.1:5000/predict-student/${id}/${codeModule}/${codePresentation}`;
         axios
             .get(url, { headers: { Authorization: `Bearer ${token}` } })
             .then((res) => {
-                console.log(res.data)
                 setPrediction(res.data)
             })
-            .catch((error) => console.log(error));
-    }, [location.state, role, token]);
+            .catch((error) => {
+                localStorage.clear()
+                navigate('/login')
+                console.log(error)
+            });
+    }, [location.state, role, token, navigate]);
 
     const assessmentColumns = [
         {
@@ -96,14 +103,21 @@ export default function StudentResult() {
             <Box sx={{ mt: 3 }}>
                 <Card>
                     <CardContent>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
-                            <Stack spacing={3} direction="row">
-                                <Typography>Predicted as at risk: {prediction.isRisk}</Typography>
-                                <Typography>Probability: {prediction.probability}</Typography>
-                            </Stack>
-                            <Box sx={{ maxWidth: 500 }}>
+                        <Stack direction="row" justifyContent="space-between">
+                            <Typography gutterBottom variant="h5" component="div">
+                                Student Status
+                            </Typography>
+
+                            <Stack direction="row" spacing={2}>
                                 <Button variant='contained' color="error">Warn</Button>
-                            </Box>
+                            </Stack>
+                        </Stack>
+
+                        <Stack spacing={3} direction="column" sx={{ m: 3 }}>
+                            <Typography>Student Name: {prediction.name}</Typography>
+                            <Typography>Student ID: {prediction.id}</Typography>
+                            <Typography>Predicted as at risk: {prediction.isRisk}</Typography>
+                            <Typography>Probability: {prediction.probability}</Typography>
                         </Stack>
                     </CardContent>
                 </Card>

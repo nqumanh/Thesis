@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import DataGridTable from "components/DataGridTable"
 import { Box, Card, Container, Typography } from "@mui/material";
@@ -11,6 +11,8 @@ export default function CourseDetailStudent() {
     const id = parseInt(localStorage.getItem("username").substring(1));
     const token = localStorage.getItem("token");
 
+    const navigate = useNavigate()
+
     const [materials, setMaterials] = useState([]);
     const [assessments, setAssessments] = useState([]);
 
@@ -21,8 +23,12 @@ export default function CourseDetailStudent() {
                 { headers: { Authorization: `Bearer ${token}` } }
             )
             .then((response) => setMaterials(response.data))
-            .catch((error) => console.log(error));
-    }, [course, token]);
+            .catch((error) => {
+                localStorage.clear()
+                navigate('/login')
+                console.log(error)
+            });
+    }, [course, token, navigate]);
 
     useEffect(() => {
         let url = `http://127.0.0.1:5000/assessments/${course.codeModule}/${course.codePresentation}`;
@@ -34,8 +40,12 @@ export default function CourseDetailStudent() {
                 let assessments = response.data.map((row, index) => ({ id: index, ...row }))
                 setAssessments(assessments)
             })
-            .catch((error) => console.log(error));
-    }, [id, role, course, token]);
+            .catch((error) => {
+                localStorage.clear()
+                navigate('/login')
+                console.log(error)
+            });
+    }, [id, role, course, token, navigate]);
 
     const assessmentColumns = [
         {

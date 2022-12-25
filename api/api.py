@@ -29,6 +29,8 @@ from sklearn.model_selection import cross_validate
 from imblearn.ensemble import BalancedBaggingClassifier
 from sklearn.ensemble import BaggingClassifier
 from sklearn.tree import DecisionTreeClassifier
+from imblearn.pipeline import make_pipeline as make_pipeline_with_sampler
+from imblearn.under_sampling import RandomUnderSampler
 from imblearn.ensemble import BalancedRandomForestClassifier
 
 mysql = MySQL()
@@ -339,8 +341,14 @@ class DynamicPredict(Resource):
             # cv_results = cross_validate(smote_bagging, X_train, y_train, scoring="balanced_accuracy")
             # print(cv_results)
 
+            # lr_clf = make_pipeline_with_sampler(
+            #     preprocessor_linear,
+            #     RandomUnderSampler(random_state=42),
+            #     LogisticRegression(max_iter=1000),
+            # )
             smote_bagging = BalancedRandomForestClassifier(
                 max_depth=2, random_state=0).fit(X_train, y_train)
+
             # clf = LogisticRegression(max_iter=100).fit(X_train, y_train)
             # clf = BaggingClassifier(
             #             n_estimators=10, random_state=0).fit(X_train, y_train)
@@ -366,28 +374,12 @@ class DynamicPredict(Resource):
             Specificity = metrics.recall_score(y_test, predicted, pos_label=0)
             # 2 * ((Precision * Sensitivity) / (Precision + Sensitivity))   HAMONIC mean of precision and recall
             F1_score = metrics.f1_score(y_test, predicted)
-            # (True Positive + True Negative) / Total Predictions
-            Accuracy1 = metrics.accuracy_score(y_test, predicted1)
-            # True Positive / (True Positive + False Positive)
-            Precision1 = metrics.precision_score(y_test, predicted1)
-            # True Positive / (True Positive + False Negative)
-            Sensitivity_recall1 = metrics.recall_score(y_test, predicted1)
-            # True Negative / (True Negative + False Positive)
-            Specificity1 = metrics.recall_score(
-                y_test, predicted1, pos_label=0)
-            # 2 * ((Precision * Sensitivity) / (Precision + Sensitivity))   HAMONIC mean of precision and recall
-            F1_score1 = metrics.f1_score(y_test, predicted1)
 
             print("Accuracy:          ", Accuracy)
             print("Precision:         ", Precision)
             print("Sensitivity_recall:", Sensitivity_recall)
             print("Specificity:       ", Specificity)
             print("F1_score:          ", F1_score)
-            print("Accuracy:          ", Accuracy1)
-            print("Precision:         ", Precision1)
-            print("Sensitivity_recall:", Sensitivity_recall1)
-            print("Specificity:       ", Specificity1)
-            print("F1_score:          ", F1_score1)
 
             print(metrics.confusion_matrix(y_test, predicted))
             # print(len(prob_predicted))
@@ -406,6 +398,13 @@ class DynamicPredict(Resource):
                     count += 1
 
             print(len(prob_predicted), count)
+
+            cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
+            cursor.execute("""
+                            DELETE FROM predictions
+                            WHERE code_module = \'{}\' AND code_presentation = \'{}\';
+            """.format(code_module, code_presentation))
+            cursor.execute("SET FOREIGN_KEY_CHECKS=1;")
 
             for prediction in predictions:
                 cursor.execute("""
@@ -532,7 +531,7 @@ class EditUserPassword(Resource):
             data = cursor.fetchall()
             password_hash = str(data[0][0])
             auth_state = check_password_hash(password_hash, oldPassword)
-            if auth_state or True:
+            if auth_state:
                 hash_password = generate_password_hash(newPassword)
                 cursor.execute("""UPDATE user_account
                                 SET password = \"{}\"
@@ -657,7 +656,7 @@ class GetStudentById(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute(
-                """SELECT id_student, parents_id, relationship_with_parents, gender, region, highest_education, imd_band, age_band, disability
+                """SELECT id_student, parents_id, relationship_with_parents, gender, region, highest_education, imd_band, age_band, disability, name
                 FROM student_info
                 WHERE id_student = \"{}\";
                 """.format(id))
@@ -672,6 +671,7 @@ class GetStudentById(Resource):
                 "imd_band": info[6],
                 "age_band": info[7],
                 "disability": info[8],
+                "name": info[9]
             }
             return profile
 
@@ -693,9 +693,11 @@ class GetParentsById(Resource):
                 FROM parents
                 WHERE personal_id = {};
                 """.format(id))
-            info = cursor.fetchall()[0]
+            info = cursor.fetchall()
+            print(info)
+            info = info[0]
             profile = {
-                "personal_id": info[0],
+                "id": info[0],
                 "email": info[1],
                 "phone_number": info[2],
                 "name": info[3],
@@ -823,12 +825,13 @@ class GetAllStudents(Resource):
                 FROM student_register r
                 JOIN student_info i
                 ON r.id_student = i.id_student
-                JOIN predictions p
+                LEFT JOIN predictions p
                 ON r.id_student = p.id_student AND r.code_module = p.code_module AND r.code_presentation = p.code_presentation
                 WHERE r.code_module =\"{}\" AND r.code_presentation=\"{}\";
                 """.format(code_module, code_presentation)
                            )
             data = cursor.fetchall()
+            print(data)
             for row in data:
                 student = {
                     "id": row[0],
@@ -839,7 +842,7 @@ class GetAllStudents(Resource):
                     "age_band": row[5],
                     "disability": row[6],
                     "num_of_prev_attempts": row[7],
-                    "is_risk": row[8]
+                    "is_risk": "Yes" if row[8] == 0 else "No"
                 }
                 students.append(student)
             return students
@@ -1027,17 +1030,21 @@ class GetPredictionOnStudent(Resource):
         try:
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""SELECT is_risk, probability
-                FROM predictions
-                WHERE id_student = \"{}\" 
+            cursor.execute("""SELECT s.id_student, s.name, is_risk, probability
+                FROM predictions p
+                JOIN student_info s
+                ON p.id_student = s.id_student
+                WHERE p.id_student = \"{}\" 
                 AND code_module = \"{}\"
                 AND code_presentation = \"{}\";
                 """.format(id, code_module, code_presentation)
                            )
             data = cursor.fetchall()[0]
             return {
-                "isRisk": "No" if data[0] == 0 else "Yes",
-                "probability": str(data[1])
+                "id": data[0],
+                "name": data[1],
+                "isRisk": "Yes" if data[2] == 0 else "No",
+                "probability": str(data[3])
             }
 
         except Exception as e:
