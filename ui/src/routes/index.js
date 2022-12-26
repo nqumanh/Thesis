@@ -14,6 +14,7 @@ import NotFound from "views/NotFound";
 import Dashboard from "views/Dashboard";
 import ChildCourseList from "views/Parents/CourseList";
 import ParentsProfile from "views/Parents/Profile";
+import EducatorDashboard from "views/Educator/EducatorDashboard";
 
 const Routes = () => {
     const role = localStorage.getItem('role');
@@ -28,7 +29,7 @@ const Routes = () => {
             element: <Layout />,
             children: [
                 { path: "", element: (role === "student") ? <CourseList /> : (role === "educator") ? <CourseListEducator /> : <ChildCourseList /> },
-                { path: "dashboard", element: <Dashboard /> },
+                { path: "dashboard", element: (role === "educator") ? <EducatorDashboard /> : <Dashboard /> },
                 { path: "profile", element: (role === "student") ? <StudentProfile /> : <ParentsProfile /> },
                 { path: "warning", element: <Warning /> },
                 { path: "message", element: <Message /> },

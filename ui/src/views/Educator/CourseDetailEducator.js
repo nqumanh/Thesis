@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import DataGridTable from "components/DataGridTable"
-import { DataGrid, GridToolbar, gridClasses } from "@mui/x-data-grid";
+import { DataGrid, gridClasses, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarFilterButton, GridToolbarExport } from "@mui/x-data-grid";
 import { alpha, Box, Button, Card, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Stack, styled, Typography } from "@mui/material";
+import DoneIcon from '@mui/icons-material/Done';
+import { Close } from "@mui/icons-material";
 
 const ODD_OPACITY = 0.2;
 
@@ -38,7 +40,133 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
             },
         },
     },
+    [`& .${gridClasses.row}.odd`]: {
+        '&:hover, &.Mui-hovered': {
+            backgroundColor: alpha(theme.palette.primary.main, ODD_OPACITY),
+            '@media (hover: none)': {
+                backgroundColor: 'transparent',
+            },
+        },
+    },
 }));
+
+function CustomToolbar() {
+    return (
+        <GridToolbarContainer>
+            <GridToolbarColumnsButton />
+            <GridToolbarFilterButton />
+            <GridToolbarExport />
+        </GridToolbarContainer>
+    );
+}
+
+const assessmentColumns = [
+    {
+        field: 'id',
+        headerName: 'ID',
+        width: 300,
+        hideable: false
+    },
+    {
+        field: 'assessment_type',
+        headerName: 'Assessment Type',
+        width: 300,
+    },
+    {
+        field: 'weight',
+        headerName: 'Weight',
+        width: 300,
+    },
+    {
+        field: 'date',
+        headerName: 'Date',
+        width: 300,
+    },
+];
+
+const materialColumns = [
+    {
+        field: 'id',
+        headerName: 'ID',
+        width: 300,
+        hideable: false
+    },
+    {
+        field: 'activity_type',
+        headerName: 'Activity Type',
+        width: 300,
+    },
+    {
+        field: 'week_from',
+        headerName: 'From',
+        width: 300,
+    },
+    {
+        field: 'week_to',
+        headerName: 'To',
+        width: 300,
+    },
+];
+
+const studentColumns = [
+    {
+        field: 'id',
+        headerName: 'ID',
+        width: 100,
+        hideable: false
+    },
+    {
+        field: 'name',
+        headerName: 'Name',
+        width: 200,
+    },
+    {
+        field: 'gender',
+        headerName: 'Gender',
+        width: 75,
+    },
+    {
+        field: 'highest_education',
+        headerName: 'Highest Education',
+        width: 200,
+    },
+    {
+        field: 'imd_band',
+        headerName: 'IMD band',
+        width: 100,
+    },
+    {
+        field: 'age_band',
+        headerName: 'Age band',
+        width: 100,
+    },
+    {
+        field: 'disability',
+        headerName: 'Disability',
+        width: 100,
+    },
+    {
+        field: 'num_of_prev_attempts',
+        headerName: 'Previous attempts',
+        width: 150,
+    },
+    {
+        field: 'is_risk',
+        headerName: 'Is Risk',
+        width: 100,
+        renderCell: (params) => {
+            return (params.value === "Yes") ? <Chip label="Yes" color="error" variant="outlined" /> : <Chip label="No" color="success" variant="outlined" />
+        }
+    },
+    {
+        field: 'is_warned',
+        headerName: 'Is Warned',
+        width: 100,
+        renderCell: (params) => {
+            return (params.value === 1) ? <DoneIcon color="success" /> : <Close color="error" />
+        }
+    }
+];
 
 export default function CourseDetailEducator() {
     const location = useLocation();
@@ -87,8 +215,29 @@ export default function CourseDetailEducator() {
 
     const [afterPredict, setAfterPredict] = useState(false)
 
+    const [openWarnDialog, setOpenWarnDialog] = useState(false);
+
+    const handleClickOpenWarnDialog = () => {
+        setOpenWarnDialog(true);
+    };
+
+    const handleCloseWarnDialog = () => {
+        setOpenWarnDialog(false);
+    };
+
+    const [openPredictDialog, setOpenPredictDialog] = useState(false);
+
+    const handleClickOpenPredictDialog = () => {
+        setOpenPredictDialog(true);
+    };
+
+    const handleClosePredictDialog = () => {
+        setOpenPredictDialog(false);
+    };
+
     const handlePredict = () => {
         setStudentListLoading(true)
+        setOpenPredictDialog(false);
         axios.get(
             `http://127.0.0.1:5000/dynamic-predict/${course.codeModule}/${course.codePresentation}`,
             { headers: { Authorization: `Bearer ${token}` } }
@@ -140,106 +289,6 @@ export default function CourseDetailEducator() {
             });
     }, [course, token, navigate, afterPredict]);
 
-    const assessmentColumns = [
-        {
-            field: 'id',
-            headerName: 'ID',
-            width: 300,
-            hideable: false
-        },
-        {
-            field: 'assessment_type',
-            headerName: 'Assessment Type',
-            width: 300,
-        },
-        {
-            field: 'weight',
-            headerName: 'Weight',
-            width: 300,
-        },
-        {
-            field: 'date',
-            headerName: 'Date',
-            width: 300,
-        },
-    ];
-
-    const materialColumns = [
-        {
-            field: 'id',
-            headerName: 'ID',
-            width: 300,
-            hideable: false
-        },
-        {
-            field: 'activity_type',
-            headerName: 'Activity Type',
-            width: 300,
-        },
-        {
-            field: 'week_from',
-            headerName: 'From',
-            width: 300,
-        },
-        {
-            field: 'week_to',
-            headerName: 'To',
-            width: 300,
-        },
-    ];
-
-    const studentColumns = [
-        {
-            field: 'id',
-            headerName: 'ID',
-            width: 150,
-            hideable: false
-        },
-        {
-            field: 'name',
-            headerName: 'Name',
-            width: 200,
-        },
-        {
-            field: 'gender',
-            headerName: 'Gender',
-            width: 75,
-        },
-        {
-            field: 'highest_education',
-            headerName: 'Highest Education',
-            width: 200,
-        },
-        {
-            field: 'imd_band',
-            headerName: 'IMD band',
-            width: 150,
-        },
-        {
-            field: 'age_band',
-            headerName: 'Age band',
-            width: 150,
-        },
-        {
-            field: 'disability',
-            headerName: 'Disability',
-            width: 150,
-        },
-        {
-            field: 'num_of_prev_attempts',
-            headerName: 'Previous attempts',
-            width: 150,
-        },
-        {
-            field: 'is_risk',
-            headerName: 'Is Risk',
-            width: 150,
-            renderCell: (params) => {
-                return (params.value === "Yes") ? <Chip label="Yes" color="error" variant="outlined" /> : <Chip label="No" color="success" variant="outlined" />
-            }
-        },
-    ];
-
     const [pageSize, setPageSize] = useState(5);
 
     const handleRowClick = (params) => {
@@ -252,15 +301,20 @@ export default function CourseDetailEducator() {
         })
     };
 
-    const [open, setOpen] = useState(false);
+    const handleWarn = () => {
+        setStudentListLoading(true)
 
-    const handleClickOpen = () => {
-        setOpen(true);
-    };
-
-    const handleClose = () => {
-        setOpen(false);
-    };
+        axios.put(`http://127.0.0.1:5000/warn-all-students`,
+            { codeModule: course.codeModule, codePresentation: course.codePresentation },
+            { headers: { Authorization: `Bearer ${token}` } }
+        ).then((res) => {
+            setStudents(res.data)
+            setStudentListLoading(false)
+        }).catch((err) => {
+            console.log(err)
+        })
+        setOpenWarnDialog(false);
+    }
 
     return (
         <Container maxWidth={false}>
@@ -312,28 +366,51 @@ export default function CourseDetailEducator() {
                             </Typography>
 
                             <Stack direction="row" spacing={2}>
-                                <Button variant="contained" color="success" onClick={() => handlePredict()}>Predict</Button>
-                                <Button variant="contained" color="warning" onClick={handleClickOpen}>Warn All At-risk Student</Button>
+                                <Button variant="contained" color="success" onClick={handleClickOpenPredictDialog}>Predict</Button>
+                                <Button variant="contained" color="warning" onClick={handleClickOpenWarnDialog}>Warn All At-risk Students</Button>
                             </Stack>
                         </Stack>
+
                         <Dialog
-                            open={open}
-                            onClose={handleClose}
-                            aria-labelledby="alert-dialog-title"
-                            aria-describedby="alert-dialog-description"
+                            open={openPredictDialog}
+                            onClose={handleClosePredictDialog}
+                            aria-labelledby="predict-dialog"
+                            aria-describedby="confirm-predict-dialog"
                         >
-                            <DialogTitle id="alert-dialog-title">
-                                {"Warn all at-risk students"}
+                            <DialogTitle id="predict-dialog">
+                                {"Generate predictions for all students"}
                             </DialogTitle>
                             <DialogContent>
-                                <DialogContentText id="alert-dialog-description">
-                                    Do you want to send messages to all at-risk student?
+                                <DialogContentText id="confirm-predict-dialog">
+                                    Do you want to predict the performance of all students?
                                 </DialogContentText>
                             </DialogContent>
                             <DialogActions>
-                                <Button onClick={handleClose}>No</Button>
-                                <Button onClick={handleClose} autoFocus>
+                                <Button onClick={handleClosePredictDialog}>No</Button>
+                                <Button onClick={() => handlePredict()} autoFocus>
                                     Yes
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+
+                        <Dialog
+                            open={openWarnDialog}
+                            onClose={handleCloseWarnDialog}
+                            aria-labelledby="send-warning-dialog"
+                            aria-describedby="confirm-warn-all-at-risk-students"
+                        >
+                            <DialogTitle id="send-warning-dialog">
+                                {"Warn all at-risk students"}
+                            </DialogTitle>
+                            <DialogContent>
+                                <DialogContentText id="confirm-warn-all-at-risk-students">
+                                    Do you want to send messages to all at-risk students?
+                                </DialogContentText>
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handleCloseWarnDialog}>Cancel</Button>
+                                <Button onClick={() => handleWarn()} autoFocus>
+                                    Submit
                                 </Button>
                             </DialogActions>
                         </Dialog>
@@ -347,7 +424,7 @@ export default function CourseDetailEducator() {
                             autoHeight
                             onRowClick={handleRowClick}
                             components={{
-                                Toolbar: GridToolbar,
+                                Toolbar: CustomToolbar,
                             }}
                             getRowClassName={(params) =>
                                 params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'
@@ -375,6 +452,6 @@ export default function CourseDetailEducator() {
 
                 </Card>
             </Box>
-        </Container>
+        </Container >
     );
 }

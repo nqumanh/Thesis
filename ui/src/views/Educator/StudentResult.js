@@ -5,6 +5,29 @@ import DataGridTable from "components/DataGridTable"
 import { Box, Button, Card, CardContent, Container, Stack, Typography } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 
+const assessmentColumns = [
+    {
+        field: 'assessment_type',
+        headerName: 'Assessment Type',
+        width: 300,
+    },
+    {
+        field: 'date_submitted',
+        headerName: 'Date Submitted',
+        width: 300,
+    },
+    {
+        field: 'score',
+        headerName: 'Score',
+        width: 300,
+    },
+    {
+        field: 'weight',
+        headerName: 'Weight',
+        width: 300,
+    },
+];
+
 export default function StudentResult() {
     const location = useLocation();
     const navigate = useNavigate()
@@ -44,28 +67,16 @@ export default function StudentResult() {
             });
     }, [location.state, role, token, navigate]);
 
-    const assessmentColumns = [
-        {
-            field: 'assessment_type',
-            headerName: 'Assessment Type',
-            width: 300,
-        },
-        {
-            field: 'date_submitted',
-            headerName: 'Date Submitted',
-            width: 300,
-        },
-        {
-            field: 'score',
-            headerName: 'Score',
-            width: 300,
-        },
-        {
-            field: 'weight',
-            headerName: 'Weight',
-            width: 300,
-        },
-    ];
+    const handleWarn = () => {
+        axios.put(`http://127.0.0.1:5000/warn-student`,
+            { id: prediction.id, codeModule: location.state.codeModule, codePresentation: location.state.codePresentation },
+            { headers: { Authorization: `Bearer ${token}` } }
+        ).then((res) => {
+            setPrediction(res.data)
+        }).catch((err) => {
+            console.log(err)
+        })
+    }
 
     return (
         <Container maxWidth={false}>
@@ -108,9 +119,12 @@ export default function StudentResult() {
                                 Student Status
                             </Typography>
 
-                            <Stack direction="row" spacing={2}>
-                                <Button variant='contained' color="error">Warn</Button>
-                            </Stack>
+                            {
+                                prediction.isRisk !== "No" &&
+                                <Stack direction="row" spacing={2}>
+                                    <Button variant='contained' color="error" onClick={() => handleWarn()} disabled={prediction.isWarned === 1}>Warn</Button>
+                                </Stack>
+                            }
                         </Stack>
 
                         <Stack spacing={3} direction="column" sx={{ m: 3 }}>

@@ -408,8 +408,8 @@ class DynamicPredict(Resource):
 
             for prediction in predictions:
                 cursor.execute("""
-                            INSERT INTO predictions (id_student, code_module, code_presentation, created_date, is_risk, probability)
-                            VALUES (\'{}\', \'{}\',\'{}\', {}, {}, {});
+                            INSERT INTO predictions (id_student, code_module, code_presentation, created_date, is_risk, probability, is_warned)
+                            VALUES (\'{}\', \'{}\',\'{}\', {}, {}, {}, 0);
                         """.format(prediction["id_student"], code_module, code_presentation, prediction["created_date"], prediction["is_risk"], prediction["probability"]))
 
             con.commit()
@@ -815,13 +815,13 @@ class GetAllAssessmentInCourse(Resource):
 
 
 class GetAllStudents(Resource):
-    # @ jwt_required()
+    @ jwt_required()
     def get(self, code_module, code_presentation):
         try:
-            students = []
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""SELECT i.id_student, name, gender, highest_education, imd_band, age_band, disability, num_of_prev_attempts, is_risk
+            students = []
+            cursor.execute("""SELECT i.id_student, name, gender, highest_education, imd_band, age_band, disability, num_of_prev_attempts, is_risk, is_warned
                 FROM student_register r
                 JOIN student_info i
                 ON r.id_student = i.id_student
@@ -831,7 +831,6 @@ class GetAllStudents(Resource):
                 """.format(code_module, code_presentation)
                            )
             data = cursor.fetchall()
-            print(data)
             for row in data:
                 student = {
                     "id": row[0],
@@ -842,10 +841,107 @@ class GetAllStudents(Resource):
                     "age_band": row[5],
                     "disability": row[6],
                     "num_of_prev_attempts": row[7],
-                    "is_risk": "Yes" if row[8] == 0 else "No"
+                    "is_risk": "Yes" if row[8] == 0 else "No",
+                    "is_warned": row[9]
                 }
                 students.append(student)
             return students
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
+class WarnAllStudents(Resource):
+    @ jwt_required()
+    def put(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            data = request.json
+            code_module, code_presentation = data.get(
+                'codeModule'), data.get('codePresentation')
+            cursor.execute("""UPDATE predictions
+                SET is_warned = 1
+                WHERE is_risk = 0 AND code_module =\"{}\" AND code_presentation=\"{}\"  AND is_warned <> 1;
+                """.format(code_module, code_presentation)
+                           )
+
+            students = []
+            cursor.execute("""SELECT i.id_student, name, gender, highest_education, imd_band, age_band, disability, num_of_prev_attempts, is_risk, is_warned
+                FROM student_register r
+                JOIN student_info i
+                ON r.id_student = i.id_student
+                LEFT JOIN predictions p
+                ON r.id_student = p.id_student AND r.code_module = p.code_module AND r.code_presentation = p.code_presentation
+                WHERE r.code_module =\"{}\" AND r.code_presentation=\"{}\";
+                """.format(code_module, code_presentation)
+                           )
+            data = cursor.fetchall()
+            for row in data:
+                student = {
+                    "id": row[0],
+                    "name": row[1],
+                    "gender": row[2],
+                    "highest_education": row[3],
+                    "imd_band": row[4],
+                    "age_band": row[5],
+                    "disability": row[6],
+                    "num_of_prev_attempts": row[7],
+                    "is_risk": "Yes" if row[8] == 0 else "No",
+                    "is_warned": row[9]
+                }
+                students.append(student)
+
+            con.commit()
+            return students
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
+class WarnStudent(Resource):
+    @ jwt_required()
+    def put(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            data = request.json
+            code_module, code_presentation, id = data.get(
+                'codeModule'), data.get('codePresentation'), data.get('id')
+            cursor.execute("""UPDATE predictions
+                SET is_warned = 1
+                WHERE is_risk = 0 
+                AND id_student = \"{}\" 
+                AND code_module = \"{}\"
+                AND code_presentation = \"{}\";
+                """.format(id, code_module, code_presentation)
+                           )
+
+            cursor.execute("""SELECT s.id_student, s.name, is_risk, probability, is_warned
+                FROM predictions p
+                JOIN student_info s
+                ON p.id_student = s.id_student
+                WHERE p.id_student = \"{}\" 
+                AND code_module = \"{}\"
+                AND code_presentation = \"{}\";
+                """.format(id, code_module, code_presentation)
+                           )
+            data = cursor.fetchall()[0]
+
+            con.commit()
+            return {
+                "id": data[0],
+                "name": data[1],
+                "isRisk": "Yes" if data[2] == 0 else "No",
+                "probability": str(data[3]),
+                "isWarned": data[4]
+            }
 
         except Exception as e:
             return {'error': str(e)}
@@ -1025,12 +1121,12 @@ class GetStudentAssessment(Resource):
 
 
 class GetPredictionOnStudent(Resource):
-    # @jwt_required()
+    @jwt_required()
     def get(self, id, code_module, code_presentation):
         try:
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""SELECT s.id_student, s.name, is_risk, probability
+            cursor.execute("""SELECT s.id_student, s.name, is_risk, probability, is_warned
                 FROM predictions p
                 JOIN student_info s
                 ON p.id_student = s.id_student
@@ -1044,7 +1140,8 @@ class GetPredictionOnStudent(Resource):
                 "id": data[0],
                 "name": data[1],
                 "isRisk": "Yes" if data[2] == 0 else "No",
-                "probability": str(data[3])
+                "probability": str(data[3]),
+                "isWarned": data[4]
             }
 
         except Exception as e:
@@ -1096,6 +1193,7 @@ class GetStudentName(Resource):
 
 
 class GetNameByUsername(Resource):
+    @ jwt_required()
     def get(self, username):
         try:
             con = mysql.connect()
@@ -1166,6 +1264,10 @@ api.add_resource(GetAllAssessmentInCourse,
                  '/assessments/<code_module>/<code_presentation>')
 api.add_resource(GetAllStudents,
                  '/view-all-students/<code_module>/<code_presentation>')
+api.add_resource(WarnAllStudents,
+                 '/warn-all-students')
+api.add_resource(WarnStudent,
+                 '/warn-student')
 
 # parents
 api.add_resource(GetParentsById, '/parents/<id>')

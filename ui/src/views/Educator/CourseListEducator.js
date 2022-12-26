@@ -37,6 +37,14 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
             },
         },
     },
+    [`& .${gridClasses.row}.odd`]: {
+        '&:hover, &.Mui-hovered': {
+            backgroundColor: alpha(theme.palette.primary.main, ODD_OPACITY),
+            '@media (hover: none)': {
+                backgroundColor: 'transparent',
+            },
+        },
+    },
 }));
 
 function CustomToolbar() {
