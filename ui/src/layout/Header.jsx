@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 function Header(props) {
     const { handleDrawerToggle } = props
-    const drawerWidth = 240;
+    const drawerWidth = 300;
     const navigate = useNavigate()
 
     const logout = () => {

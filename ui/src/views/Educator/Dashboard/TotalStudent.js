@@ -1,12 +1,12 @@
-import { Avatar, Card, CardContent, Grid, Typography } from '@mui/material';
+import { Avatar, Box, Card, CardContent, CircularProgress, Grid, Typography } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/PeopleOutlined';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
 export const TotalCustomers = () => {
   const [totalStudent, setTotalStudent] = useState(0)
-  const role = localStorage.getItem('role');
   const token = localStorage.getItem('token');
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const username = localStorage.getItem('username');
@@ -16,11 +16,12 @@ export const TotalCustomers = () => {
       .get(url, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => {
         setTotalStudent(res.data);
+        setLoading(false)
       })
       .catch((error) => {
         console.log(error)
       });
-  }, [role, token]);
+  }, [token]);
 
   return (
     <Card
@@ -40,12 +41,18 @@ export const TotalCustomers = () => {
             >
               TOTAL STUDENTS
             </Typography>
-            <Typography
-              color="textPrimary"
-              variant="h4"
-            >
-              {totalStudent}
-            </Typography>
+            {loading ?
+              <Box sx={{ display: 'flex' }}>
+                <CircularProgress />
+              </Box>
+              :
+              <Typography
+                color="textPrimary"
+                variant="h4"
+              >
+                {totalStudent}
+              </Typography>
+            }
           </Grid>
           <Grid item>
             <Avatar

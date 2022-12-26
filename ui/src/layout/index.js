@@ -13,7 +13,7 @@ const DashboardLayoutRoot = styled('div')(({ theme }) => ({
 
 const Dashboard = () => {
 
-  const drawerWidth = 240;
+  const drawerWidth = 300;
 
   const [mobileOpen, setMobileOpen] = useState(false);
 

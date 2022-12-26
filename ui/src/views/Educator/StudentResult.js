@@ -7,24 +7,29 @@ import { ArrowBack } from "@mui/icons-material";
 
 const assessmentColumns = [
     {
+        field: 'id_assessment',
+        headerName: 'Assessment ID',
+        width: 250,
+    },
+    {
         field: 'assessment_type',
         headerName: 'Assessment Type',
-        width: 300,
+        width: 250,
     },
     {
         field: 'date_submitted',
         headerName: 'Date Submitted',
-        width: 300,
+        width: 250,
     },
     {
         field: 'score',
         headerName: 'Score',
-        width: 300,
+        width: 250,
     },
     {
         field: 'weight',
         headerName: 'Weight',
-        width: 300,
+        width: 250,
     },
 ];
 
@@ -44,13 +49,10 @@ export default function StudentResult() {
         let url = `http://127.0.0.1:5000/student-assessment/${id}/${codeModule}/${codePresentation}`;
         axios
             .get(url, { headers: { Authorization: `Bearer ${token}` } })
-            .then((response) => {
-                let assessments = response.data.map((row, index) => ({ id: index, ...row }))
-                setAssessments(assessments)
+            .then((res) => {
+                setAssessments(res.data)
             })
             .catch((error) => {
-                localStorage.clear()
-                navigate('/login')
                 console.log(error)
             });
 

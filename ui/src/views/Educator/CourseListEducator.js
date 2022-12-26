@@ -62,8 +62,8 @@ const DashboardEducator = () => {
     const [pageSize, setPageSize] = useState(5);
 
     const role = localStorage.getItem('role');
-    const [courses, setCourses] = useState([]);
     const token = localStorage.getItem('token');
+    const [courses, setCourses] = useState([]);
 
     useEffect(() => {
         const username = localStorage.getItem('username');

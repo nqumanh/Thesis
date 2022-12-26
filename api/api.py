@@ -1,3 +1,11 @@
+from email.message import EmailMessage
+import base64
+from googleapiclient.errors import HttpError
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+import os.path
 from re import X
 from flask import Flask, make_response, request, jsonify
 from flask_restful import Resource, Api
@@ -52,6 +60,28 @@ jwt = JWTManager(app)
 mysql.init_app(app)
 
 api = Api(app)
+
+
+# If modifying these scopes, delete the file token.json.
+SCOPES = ['https://mail.google.com/']
+
+creds = None
+# The file token.json stores the user's access and refresh tokens, and is
+# created automatically when the authorization flow completes for the first
+# time.
+if os.path.exists('token.json'):
+    creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+# If there are no (valid) credentials available, let the user log in.
+if not creds or not creds.valid:
+    if creds and creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+    else:
+        flow = InstalledAppFlow.from_client_secrets_file(
+            'credentials.json', SCOPES)
+        creds = flow.run_local_server(port=0)
+    # Save the credentials for the next run
+    with open('token.json', 'w') as token:
+        token.write(creds.to_json())
 
 
 class GetAssessmentsEachCourse(Resource):
@@ -923,6 +953,25 @@ class WarnStudent(Resource):
                 """.format(id, code_module, code_presentation)
                            )
 
+            service = build('gmail', 'v1', credentials=creds)
+
+            message = EmailMessage()
+
+            message.set_content('This is the content of the warning!')
+
+            message['To'] = 'quangmanh1998@gmail.com'
+            message['From'] = 'nqumanh@gmail.com'
+            message['Subject'] = 'WARNING FROM PRINCIPLE OF PROGRAMMING LANGUAGE (CCC) - SEMESTER 2014B'
+
+            # encoded message
+            encoded_message = base64.urlsafe_b64encode(message.as_bytes()) \
+                .decode()
+
+            create_message = {
+                'raw': encoded_message
+            }
+            service.users().messages().send(userId="me", body=create_message).execute()
+
             cursor.execute("""SELECT s.id_student, s.name, is_risk, probability, is_warned
                 FROM predictions p
                 JOIN student_info s
@@ -1027,7 +1076,7 @@ class GetAllWarning(Resource):
 
 
 class GetCoursesOfEducator(Resource):
-    @ jwt_required()
+    @jwt_required()
     def get(self, id):
         try:
             con = mysql.connect()
@@ -1068,8 +1117,138 @@ class GetCoursesOfEducator(Resource):
             con.close()
 
 
+class GetNumberOfCoursesOfEducator(Resource):
+    @jwt_required()
+    def get(self, id):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute(
+                """SELECT COUNT(*) FROM courses
+                    WHERE courses.id_educator = \"{}\";
+                """.format(id))
+            data = cursor.fetchone()
+            return data
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetNumberOfStudentsOfEducator(Resource):
+    @jwt_required()
+    def get(self, id):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute(
+                """SELECT COUNT(*) FROM student_register s 
+                JOIN courses c
+                ON c.code_module = s.code_module AND c.code_presentation = s.code_presentation
+                WHERE id_educator = \'{}\'
+                """.format(id))
+            data = cursor.fetchone()
+            return data
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetNumberOfAtRiskStudentsOfEducator(Resource):
+    @jwt_required()
+    def get(self, id):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute(
+                """SELECT COUNT(*) FROM student_register s 
+                JOIN courses c
+                ON c.code_module = s.code_module AND c.code_presentation = s.code_presentation
+                LEFT JOIN predictions p 
+                ON s.id_student = p.id_student AND s.code_module = p.code_module AND s.code_presentation = p.code_presentation
+                WHERE id_educator = \'{}\' AND is_risk = 0
+                """.format(id))
+            data = cursor.fetchone()
+            return data
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetNumberOfAssessmentsOfEducator(Resource):
+    @jwt_required()
+    def get(self, id):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute(
+                """SELECT COUNT(*) FROM assessments a
+                JOIN courses c
+                ON c.code_module = a.code_module AND c.code_presentation = a.code_presentation
+                WHERE id_educator = \'{}\'
+                """.format(id))
+            data = cursor.fetchone()
+            return data
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetNumberOfAssessmentTypesOfEducator(Resource):
+    # @jwt_required()
+    def get(self, id):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute(
+                """SELECT COUNT(*) FROM assessments a
+                JOIN courses c
+                ON c.code_module = a.code_module AND c.code_presentation = a.code_presentation
+                WHERE id_educator = \'{}\' AND assessment_type = \'TMA\'
+                """.format(id))
+            tma = cursor.fetchone()[0]
+            cursor.execute(
+                """SELECT COUNT(*) FROM assessments a
+                JOIN courses c
+                ON c.code_module = a.code_module AND c.code_presentation = a.code_presentation
+                WHERE id_educator = \'{}\' AND assessment_type = \'CMA\'
+                """.format(id))
+            cma = cursor.fetchone()[0]
+            cursor.execute(
+                """SELECT COUNT(*) FROM assessments a
+                JOIN courses c
+                ON c.code_module = a.code_module AND c.code_presentation = a.code_presentation
+                WHERE id_educator = \'{}\' AND assessment_type = \'Exam\'
+                """.format(id))
+            exm = cursor.fetchone()[0]
+            sum = tma + cma + exm
+            print(round(4/9*100, 2))
+            return {
+                'tma': round(tma/sum*100),
+                'cma': round(cma/sum*100),
+                'exam': 100 - round(tma/sum*100) - round(cma/sum*100),
+            }
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
 class GetContacts(Resource):
-    @ jwt_required()
+    @jwt_required()
     def post(self):
         try:
             con = mysql.connect()
@@ -1094,23 +1273,70 @@ class GetStudentAssessment(Resource):
         try:
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""SELECT assessment_type, date_submitted, score, weight
-                FROM student_assessments AS a
-                JOIN assessments AS b
-                ON a.id_assessment = b.id_assessment
-                WHERE id_student = \"{}\";
-                """.format(id)
+            cursor.execute("""SELECT a.id_assessment, assessment_type, date_submitted, score, weight
+                FROM student_assessments AS s
+                JOIN assessments AS a
+                ON a.id_assessment = s.id_assessment
+                WHERE id_student = \'{}\' AND a.code_module = \'{}\' AND a.code_presentation = \'{}\';
+                """.format(id, code_module, code_presentation)
                            )
             assessments = []
             data = cursor.fetchall()
-            for row in data:
+            for idx, row in enumerate(data):
                 assessment = {
-                    'assessment_type': row[0],
-                    'date_submitted': row[1],
-                    'score': row[2],
-                    'weight': row[3]
+                    'id': idx,
+                    'id_assessment': row[0],
+                    'assessment_type': row[1],
+                    'date_submitted': row[2],
+                    'score': row[3],
+                    'weight': row[4]
                 }
                 assessments.append(assessment)
+            return assessments
+
+        except Exception as e:
+            return {'error': str(e)}
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetAssessmentStatisticsInCourse(Resource):
+    @jwt_required()
+    def get(self, code_module, code_presentation):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            cursor.execute("""SELECT id_assessment, assessment_type, date
+                FROM assessments
+                WHERE code_module = \'{}\' AND code_presentation = \'{}\' AND assessment_type <> 'Exam'
+                ORDER BY 0+date;
+                """.format(code_module, code_presentation)
+                           )
+            data = cursor.fetchall()
+
+            cursor.execute("""SELECT COUNT(*) FROM student_register
+                WHERE code_module = \'{}\' AND code_presentation = \'{}\';
+                """.format(code_module, code_presentation)
+                           )
+            total = cursor.fetchone()[0]
+
+            assessments = []
+            for row in data:
+                cursor.execute("""SELECT COUNT(*) FROM student_assessments
+                    WHERE id_assessment = \'{}\' AND score >= 40;
+                """.format(row[0])
+                )
+                good = cursor.fetchone()[0]
+
+                assessment = {
+                    'assessment_type': row[1],
+                    'date': row[2],
+                    'good': good,
+                    'bad': total-good,
+                }
+                assessments.append(assessment)
+
             return assessments
 
         except Exception as e:
@@ -1258,10 +1484,22 @@ api.add_resource(GetPredictionOnStudent,
 api.add_resource(GetEducatorName, '/get-educator-name/<username>')
 api.add_resource(GetCoursesOfEducator,
                  '/get-courses-of-educator/<id>')
+api.add_resource(GetNumberOfCoursesOfEducator,
+                 '/get-number-of-courses-of-educator/<id>')
+api.add_resource(GetNumberOfStudentsOfEducator,
+                 '/get-number-of-students-of-educator/<id>')
+api.add_resource(GetNumberOfAtRiskStudentsOfEducator,
+                 '/get-number-of-at-risk-students-of-educator/<id>')
+api.add_resource(GetNumberOfAssessmentsOfEducator,
+                 '/get-number-of-assessments-of-educator/<id>')
+api.add_resource(GetNumberOfAssessmentTypesOfEducator,
+                 '/get-number-of-assessment-types-of-educator/<id>')
 api.add_resource(GetAllMaterialInCourse,
                  '/materials/<code_module>/<code_presentation>')
 api.add_resource(GetAllAssessmentInCourse,
                  '/assessments/<code_module>/<code_presentation>')
+api.add_resource(GetAssessmentStatisticsInCourse,
+                 '/get-assessment-statistics-in-course/<code_module>/<code_presentation>')
 api.add_resource(GetAllStudents,
                  '/view-all-students/<code_module>/<code_presentation>')
 api.add_resource(WarnAllStudents,

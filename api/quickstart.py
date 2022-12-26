@@ -12,7 +12,7 @@ import base64
 from email.message import EmailMessage
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+SCOPES = ['https://mail.google.com/']
 
 
 def main():

@@ -1,30 +1,32 @@
-import { Avatar, Card, CardContent, Grid, Typography } from '@mui/material';
-import PeopleIcon from '@mui/icons-material/PeopleOutlined';
-import axios from 'axios';
+import { Avatar, Box, Card, CardContent, CircularProgress, Grid, Typography } from '@mui/material';
+import { School } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
+import axios from 'axios';
 
-export const TotalCustomers = () => {
-  const [totalStudent, setTotalStudent] = useState(0)
-  const role = localStorage.getItem('role');
+export const TotalCourse = (props) => {
+  const [totalCourse, setTotalCourse] = useState(0)
   const token = localStorage.getItem('token');
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const username = localStorage.getItem('username');
     const id = parseInt(username?.substring(1));
-    let url = `http://localhost:5000/get-number-of-students-of-educator/${id}`;
+    let url = `http://localhost:5000/get-number-of-courses-of-educator/${id}`;
     axios
       .get(url, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => {
-        setTotalStudent(res.data);
+        setTotalCourse(res.data);
+        setLoading(false)
       })
       .catch((error) => {
         console.log(error)
       });
-  }, [role, token]);
+  }, [token]);
 
   return (
     <Card
       sx={{ height: '100%' }}
+      {...props}
     >
       <CardContent>
         <Grid
@@ -38,24 +40,30 @@ export const TotalCustomers = () => {
               gutterBottom
               variant="overline"
             >
-              TOTAL STUDENTS
+              TOTAL COURSE
             </Typography>
-            <Typography
-              color="textPrimary"
-              variant="h4"
-            >
-              {totalStudent}
-            </Typography>
+            {loading ?
+              <Box sx={{ display: 'flex' }}>
+                <CircularProgress />
+              </Box>
+              :
+              <Typography
+                color="textPrimary"
+                variant="h4"
+              >
+                {totalCourse}
+              </Typography>
+            }
           </Grid>
           <Grid item>
             <Avatar
               sx={{
-                backgroundColor: 'success.main',
+                backgroundColor: 'warning.main',
                 height: 56,
                 width: 56
               }}
             >
-              <PeopleIcon />
+              <School />
             </Avatar>
           </Grid>
         </Grid>

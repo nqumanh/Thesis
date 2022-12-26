@@ -1,31 +1,31 @@
-import { Avatar, Card, CardContent, Grid, Typography } from '@mui/material';
-import PeopleIcon from '@mui/icons-material/PeopleOutlined';
-import axios from 'axios';
+import { Avatar, Card, CardContent, CircularProgress, Grid, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { Assessment } from '@mui/icons-material';
+import { Box } from '@mui/system';
 
-export const TotalCustomers = () => {
-  const [totalStudent, setTotalStudent] = useState(0)
-  const role = localStorage.getItem('role');
+export const TotalAssessment = (props) => {
+  const [totalAssessment, setTotalAssessment] = useState(0)
   const token = localStorage.getItem('token');
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const username = localStorage.getItem('username');
     const id = parseInt(username?.substring(1));
-    let url = `http://localhost:5000/get-number-of-students-of-educator/${id}`;
+    let url = `http://localhost:5000/get-number-of-assessments-of-educator/${id}`;
     axios
       .get(url, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => {
-        setTotalStudent(res.data);
+        setTotalAssessment(res.data);
+        setLoading(false)
       })
       .catch((error) => {
         console.log(error)
       });
-  }, [role, token]);
+  }, [token]);
 
   return (
-    <Card
-      sx={{ height: '100%' }}
-    >
+    <Card {...props}>
       <CardContent>
         <Grid
           container
@@ -38,24 +38,30 @@ export const TotalCustomers = () => {
               gutterBottom
               variant="overline"
             >
-              TOTAL STUDENTS
+              Total Assessment
             </Typography>
-            <Typography
-              color="textPrimary"
-              variant="h4"
-            >
-              {totalStudent}
-            </Typography>
+            {loading ?
+              <Box sx={{ display: 'flex' }}>
+                <CircularProgress />
+              </Box>
+              :
+              <Typography
+                color="textPrimary"
+                variant="h4"
+              >
+                {totalAssessment}
+              </Typography>
+            }
           </Grid>
           <Grid item>
             <Avatar
               sx={{
-                backgroundColor: 'success.main',
+                backgroundColor: 'primary.main',
                 height: 56,
                 width: 56
               }}
             >
-              <PeopleIcon />
+              <Assessment />
             </Avatar>
           </Grid>
         </Grid>

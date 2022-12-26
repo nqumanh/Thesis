@@ -19,7 +19,7 @@ function Sidebar(props) {
 
     const navigate = useNavigate()
 
-    const drawerWidth = 250;
+    const drawerWidth = 300;
 
     const role = localStorage.getItem('role');
 
@@ -70,7 +70,7 @@ function Sidebar(props) {
                 <div>
                     <Typography
                         color="white"
-                        variant="subtitle1"
+                        variant="h5"
                     >
                         Warning System
                     </Typography>
@@ -110,7 +110,7 @@ function Sidebar(props) {
             <Divider sx={{
                 borderColor: '#2D3748',
             }} />
-            <List>
+            <List sx={{my: 3}}>
                 {otherItems.map((item) => (
                     <ListItem disablePadding key={item.name}>
                         <NavLink to={item.to} style={({ isActive }) =>

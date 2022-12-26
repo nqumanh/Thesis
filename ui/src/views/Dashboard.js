@@ -1,10 +1,10 @@
 import { Box, Container, Grid } from '@mui/material';
-import { Budget } from '../components/dashboard/TotalCourse';
-// import { Sales } from '../components/dashboard/sales';
-// import { TrafficByDevice } from '../components/dashboard/traffic-by-device';
-import { TasksProgress } from '../components/dashboard/StudentSuccess';
-import { TotalCustomers } from '../components/dashboard/TotalStudent';
-import { TotalProfit } from '../components/dashboard/StudentImprovement';
+import { TotalCourse } from 'components/dashboard/TotalCourse';
+// import { Sales } from 'components/dashboard/sales';
+// import { TrafficByDevice } from 'components/dashboard/traffic-by-device';
+import { TasksProgress } from 'components/dashboard/AtRiskPercentage';
+import { TotalCustomers } from 'components/dashboard/TotalStudent';
+import { TotalAssessment } from 'components/dashboard/TotalAssessment';
 
 const Dashboard = () => (
     <>
@@ -27,7 +27,7 @@ const Dashboard = () => (
                         xl={3}
                         xs={12}
                     >
-                        <Budget />
+                        <TotalCourse />
                     </Grid>
                     <Grid
                         item
@@ -54,7 +54,7 @@ const Dashboard = () => (
                         sm={6}
                         xs={12}
                     >
-                        <TotalProfit sx={{ height: '100%' }} />
+                        <TotalAssessment sx={{ height: '100%' }} />
                     </Grid>
                     <Grid
                         item

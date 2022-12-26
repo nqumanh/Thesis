@@ -355,7 +355,7 @@ export default function CourseDetailEducator() {
 
             <Box sx={{ mt: 3 }}>
                 {studentListLoading ?
-                    <Box sx={{ display: 'flex' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                         <CircularProgress color="secondary" />
                     </Box>
                     :

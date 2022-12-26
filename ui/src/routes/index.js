@@ -1,26 +1,27 @@
 import { useRoutes } from "react-router-dom";
-import Login from "views/Login";
 import Layout from "layout";
+import Login from "views/Login";
+import Message from "views/Message";
+
 import CourseList from "views/Student/CourseListStudent";
 import CourseDetailStudent from "views/CourseDetailStudent";
-import Setting from "views/Setting";
 import StudentProfile from "views/Student/Profile";
-import Message from "views/Message";
 import Warning from "views/Student/Warning";
-import CourseListEducator from "views/Educator/CourseListEducator";
-import CourseDetailEducator from "views/Educator/CourseDetailEducator";
-import StudentResult from "views/Educator/StudentResult";
-import NotFound from "views/NotFound";
 import Dashboard from "views/Dashboard";
+
 import ChildCourseList from "views/Parents/CourseList";
 import ParentsProfile from "views/Parents/Profile";
-import EducatorDashboard from "views/Educator/EducatorDashboard";
+
+import CourseListEducator from "views/Educator/CourseListEducator";
+import CourseDetailEducator from "views/Educator/CourseDetailEducator";
+import EducatorDashboard from "views/Educator/Dashboard";
+import StudentResult from "views/Educator/StudentResult";
+
+import Setting from "views/Setting";
+import NotFound from "views/NotFound";
 
 const Routes = () => {
     const role = localStorage.getItem('role');
-    // if (role === "student")
-    // if (role === "educator")
-    // if (role === "parents")
 
     return useRoutes([
         { path: "login", element: <Login /> },
