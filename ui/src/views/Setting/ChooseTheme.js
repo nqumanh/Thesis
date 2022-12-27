@@ -46,7 +46,7 @@ const ChooseTheme = () => {
             }}
         >
             <Typography sx={{ mb: 3 }}>
-                Default mode
+                {themeName} mode
             </Typography>
             <RadioGroup
                 aria-labelledby="demo-row-radio-buttons-group-label"

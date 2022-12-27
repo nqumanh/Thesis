@@ -3,9 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import DataGridTable from "components/DataGridTable"
 import { DataGrid, gridClasses, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarFilterButton, GridToolbarExport } from "@mui/x-data-grid";
-import { alpha, Box, Button, Card, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Stack, styled, Typography } from "@mui/material";
+import { alpha, Box, Button, Card, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Stack, styled, Typography } from "@mui/material";
 import DoneIcon from '@mui/icons-material/Done';
-import { Close } from "@mui/icons-material";
+import { Close, Telegram } from "@mui/icons-material";
+import { useDispatch, useSelector } from "react-redux";
+import { addChannel, setCurrentChannel } from "features/message/messageSlice";
+import { v4 } from "uuid";
 
 const ODD_OPACITY = 0.2;
 
@@ -108,69 +111,11 @@ const materialColumns = [
     },
 ];
 
-const studentColumns = [
-    {
-        field: 'id',
-        headerName: 'ID',
-        width: 100,
-        hideable: false
-    },
-    {
-        field: 'name',
-        headerName: 'Name',
-        width: 200,
-    },
-    {
-        field: 'gender',
-        headerName: 'Gender',
-        width: 75,
-    },
-    {
-        field: 'highest_education',
-        headerName: 'Highest Education',
-        width: 200,
-    },
-    {
-        field: 'imd_band',
-        headerName: 'IMD band',
-        width: 100,
-    },
-    {
-        field: 'age_band',
-        headerName: 'Age band',
-        width: 100,
-    },
-    {
-        field: 'disability',
-        headerName: 'Disability',
-        width: 100,
-    },
-    {
-        field: 'num_of_prev_attempts',
-        headerName: 'Previous attempts',
-        width: 150,
-    },
-    {
-        field: 'is_risk',
-        headerName: 'Is Risk',
-        width: 100,
-        renderCell: (params) => {
-            return (params.value === "Yes") ? <Chip label="Yes" color="error" variant="outlined" /> : <Chip label="No" color="success" variant="outlined" />
-        }
-    },
-    {
-        field: 'is_warned',
-        headerName: 'Is Warned',
-        width: 100,
-        renderCell: (params) => {
-            return (params.value === 1) ? <DoneIcon color="success" /> : <Close color="error" />
-        }
-    }
-];
-
 export default function CourseDetailEducator() {
     const location = useLocation();
     const navigate = useNavigate()
+    const channels = useSelector(state => state.message.channels)
+    const dispatch = useDispatch()
 
     const course = location.state.presentation;
     const role = localStorage.getItem("role");
@@ -182,6 +127,89 @@ export default function CourseDetailEducator() {
     const [assessments, setAssessments] = useState([]);
     const [students, setStudents] = useState([]);
     const [studentListLoading, setStudentListLoading] = useState(false)
+
+    const handleSendMessage = (e, id) => {
+        e.stopPropagation();
+        let channelId = channels.findIndex(channel => channel.userId === id)
+        // console.log(0, channels)
+        if (channelId === -1) {
+            let newChannel = { id: v4(), userId: id, name: students.find(x => x.systemId === id).name }
+            dispatch(addChannel(newChannel))
+            dispatch(setCurrentChannel(newChannel.id))
+        } else {
+            dispatch(setCurrentChannel(channels[channelId].id))
+        }
+        navigate('/message')
+    }
+
+    const studentColumns = [
+        {
+            field: 'id',
+            headerName: 'ID',
+            width: 100,
+            hideable: false
+        },
+        {
+            field: 'name',
+            headerName: 'Name',
+            width: 200,
+        },
+        {
+            field: 'gender',
+            headerName: 'Gender',
+            width: 75,
+        },
+        {
+            field: 'highest_education',
+            headerName: 'Highest Education',
+            width: 200,
+        },
+        {
+            field: 'imd_band',
+            headerName: 'IMD band',
+            width: 100,
+        },
+        {
+            field: 'age_band',
+            headerName: 'Age band',
+            width: 100,
+        },
+        {
+            field: 'disability',
+            headerName: 'Disability',
+            width: 100,
+        },
+        {
+            field: 'num_of_prev_attempts',
+            headerName: 'Previous attempts',
+            width: 150,
+        },
+        {
+            field: 'is_risk',
+            headerName: 'Is Risk',
+            width: 100,
+            renderCell: (params) => {
+                return (params.value === "Yes") ? <Chip label="Yes" color="error" variant="outlined" /> : <Chip label="No" color="success" variant="outlined" />
+            }
+        },
+        {
+            field: 'is_warned',
+            headerName: 'Is Warned',
+            width: 100,
+            renderCell: (params) => {
+                return (params.value === 1) ? <DoneIcon color="success" /> : <Close color="error" />
+            }
+        },
+        {
+            field: 'systemId',
+            headerName: 'Send Message',
+            width: 120,
+            renderCell: (params) =>
+                <IconButton aria-label="send message" onClick={(e) => handleSendMessage(e, params.value)}>
+                    <Telegram color="primary" />
+                </IconButton>
+        },
+    ];
 
     useEffect(() => {
         axios

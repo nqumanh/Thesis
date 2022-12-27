@@ -121,12 +121,12 @@ export default function StudentResult() {
                                 Student Status
                             </Typography>
 
-                            {
-                                prediction.isRisk !== "No" &&
-                                <Stack direction="row" spacing={2}>
+                            <Stack direction="row" spacing={2}>
+                                {
+                                    prediction.isRisk !== "No" &&
                                     <Button variant='contained' color="error" onClick={() => handleWarn()} disabled={prediction.isWarned === 1}>Warn</Button>
-                                </Stack>
-                            }
+                                }
+                            </Stack>
                         </Stack>
 
                         <Stack spacing={3} direction="column" sx={{ m: 3 }}>

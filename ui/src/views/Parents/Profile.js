@@ -22,7 +22,7 @@ export default function Profile() {
             .catch((error) => {
                 localStorage.clear()
                 navigate('/login')
-                console.log(11111111, error)
+                console.log(error)
             });
 
         let childId = parseInt(id.substring(1));

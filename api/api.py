@@ -851,7 +851,7 @@ class GetAllStudents(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             students = []
-            cursor.execute("""SELECT i.id_student, name, gender, highest_education, imd_band, age_band, disability, num_of_prev_attempts, is_risk, is_warned
+            cursor.execute("""SELECT i.id_student, name, gender, highest_education, imd_band, age_band, disability, num_of_prev_attempts, is_risk, is_warned, id_system
                 FROM student_register r
                 JOIN student_info i
                 ON r.id_student = i.id_student
@@ -872,7 +872,8 @@ class GetAllStudents(Resource):
                     "disability": row[6],
                     "num_of_prev_attempts": row[7],
                     "is_risk": "Yes" if row[8] == 0 else "No",
-                    "is_warned": row[9]
+                    "is_warned": row[9],
+                    "systemId": row[10]
                 }
                 students.append(student)
             return students
@@ -1355,10 +1356,10 @@ class GetPredictionOnStudent(Resource):
             cursor.execute("""SELECT s.id_student, s.name, is_risk, probability, is_warned
                 FROM predictions p
                 JOIN student_info s
-                ON p.id_student = s.id_student
+                    ON p.id_student = s.id_student
                 WHERE p.id_student = \"{}\" 
-                AND code_module = \"{}\"
-                AND code_presentation = \"{}\";
+                    AND code_module = \"{}\"
+                    AND code_presentation = \"{}\";
                 """.format(id, code_module, code_presentation)
                            )
             data = cursor.fetchall()[0]
@@ -1367,7 +1368,7 @@ class GetPredictionOnStudent(Resource):
                 "name": data[1],
                 "isRisk": "Yes" if data[2] == 0 else "No",
                 "probability": str(data[3]),
-                "isWarned": data[4]
+                "isWarned": data[4],
             }
 
         except Exception as e:
@@ -1443,6 +1444,49 @@ class GetNameByUsername(Resource):
             con.close()
 
 
+class GetAllChannelsByUserId(Resource):
+    # @ jwt_required()
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            args = request.args
+            id = args.get("id")
+            cursor.execute("""SELECT ChannelId FROM message_participants
+                           WHERE UserId = \"{}\";
+                           """.format(id))
+            data = cursor.fetchall()
+            channels = []
+            for row in data:
+                # cursor.execute("""SELECT SenderId, Message, CreatedTime, AdminId, Name
+                #             FROM message_participants p
+                #             JOIN message_channel c
+                #             ON p.ChannelId = c.ChannelId
+                #             WHERE p.ChannelId = \"{}\"
+                #             ORDER BY CreatedTime
+                #             """.format(row[0]))
+                # # LIMIT 1;
+                # lastMessage = cursor.fetchall()[0]
+                lastMessage = ['']*5
+                # lastSender = lastMessage[0][0]
+                channel = {
+                    "id": row[0],
+                    "name": lastMessage[4],
+                    "userId": id,
+                    "lastSender": id,
+                    "message": lastMessage[1],
+                    "createdTime": lastMessage[2],
+                }
+                channels.append(channel)
+            return channels
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
 # __________________________________________________________________
 
 
@@ -1467,6 +1511,7 @@ api.add_resource(GetAllMessages,
 api.add_resource(GetContacts, '/get-contacts')
 api.add_resource(
     GetCourseByCode, '/get-course/<code_module>/<code_presentation>')
+api.add_resource(GetAllChannelsByUserId, '/get-channels')
 
 
 # student
