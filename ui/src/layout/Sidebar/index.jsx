@@ -5,11 +5,13 @@ import { AccountCircle, LineAxis, Logout, Mail, School, Settings, UnfoldMore, Wa
 import { capitalizeFirstLetter } from 'utils';
 
 let activeStyle = {
+    width: '100%',
     color: "#10b981",
     textDecoration: "none",
 };
 
 let inactiveStyle = {
+    width: '100%',
     textDecoration: "none",
     color: "#c5d5db"
 };
@@ -110,7 +112,7 @@ function Sidebar(props) {
             <Divider sx={{
                 borderColor: '#2D3748',
             }} />
-            <List sx={{my: 3}}>
+            <List sx={{ my: 3 }}>
                 {otherItems.map((item) => (
                     <ListItem disablePadding key={item.name}>
                         <NavLink to={item.to} style={({ isActive }) =>

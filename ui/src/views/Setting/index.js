@@ -1,6 +1,6 @@
 import { Box, Button, Card, Container, TextField, Typography } from "@mui/material";
 import axios from "axios";
-import ChooseTheme from "components/ChooseTheme";
+import ChooseTheme from "views/Setting/ChooseTheme";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
