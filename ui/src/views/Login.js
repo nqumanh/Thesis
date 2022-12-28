@@ -32,11 +32,12 @@ const Login = () => {
             username: data.get('username'),
             password: data.get('password'),
         };
-        login(loginForm).then((response) => {
+        login(loginForm).then(async (response) => {
             localStorage.setItem("username", response.data.username);
             localStorage.setItem("role", response.data.role);
             localStorage.setItem("id", response.data.id);
-            localStorage.setItem("token", response.data.access_token);
+            await localStorage.setItem("token", response.data.access_token);
+            window.location.reload();
             navigate('/')
         }).catch((err) => setOpen(true))
     };

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import DataGridTable from "components/DataGridTable"
-import { Box, Card, Container, Typography } from "@mui/material";
+import { Box, Button, Card, Container, Stack, Typography } from "@mui/material";
 
 export default function CourseDetailStudent() {
     const location = useLocation();
@@ -115,9 +115,12 @@ export default function CourseDetailStudent() {
 
             <Box sx={{ mt: 3 }}>
                 <Card sx={{ p: 3 }}>
-                    <Typography gutterBottom variant="h5" component="div">
-                        General Information
-                    </Typography>
+                    <Stack direction="row" justifyContent="space-between">
+                        <Typography gutterBottom variant="h5" component="div">
+                            General Information
+                        </Typography>
+                        <Button variant='contained' color="secondary">Contact Educator</Button>
+                    </Stack>
                     <div>Course Name: {course.name}</div>
                     <div>Course Module: {course.codeModule}</div>
                     <div>Course Presentation: {course.codePresentation}</div>

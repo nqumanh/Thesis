@@ -33,7 +33,7 @@ const assessmentColumns = [
     },
 ];
 
-export default function StudentResult() {
+export default function StudentDetail() {
     const location = useLocation();
     const navigate = useNavigate()
 

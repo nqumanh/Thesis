@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Message.css";
-import { alpha, Box, Card, Container, Divider, Grid, IconButton, List, ListItemButton, ListItemText, styled, TextField, Typography } from "@mui/material";
+import { alpha, Box, Button, Card, Container, Divider, Grid, IconButton, List, ListItemButton, ListItemText, styled, TextField, Typography } from "@mui/material";
 import { Send } from "@mui/icons-material";
 import MessageLeft from "./MessageLeft";
 import MessageRight from "./MessageRight";
@@ -8,6 +8,7 @@ import MessageRight from "./MessageRight";
 import EmptyConversation from "./EmptyConversation";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchChannels, setCurrentChannel } from "features/message/messageSlice";
+import { createNewChannel, getMesseges, sendMessage } from "api";
 
 const ODD_OPACITY = 0.2;
 
@@ -29,33 +30,48 @@ export default function Message() {
 
     const [typingMessage, setTypingMessage] = useState('')
     const [messages, setMessages] = useState([]);
+    const [onChatChannel, setOnChatChannel] = useState(null)
+
     const channels = useSelector(state => state.message.channels)
     const currentChannelId = useSelector(state => state.message.currentChannelId)
 
     useEffect(() => {
-        if (channels.length === 0)
+        // if (channels.length === 0)
             dispatch(fetchChannels(id))
     }, [dispatch, id, channels.length])
 
     useEffect(() => {
-        // 👇️ scroll to bottom every time messages change
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    const handleSubmit = (e) => {
+    useEffect(() => {
+        getMesseges(currentChannelId).then((res) => {
+            setMessages(res.data)
+        }).catch((err) => { console.log(err) })
+
+        setOnChatChannel(channels.find(x => x.id === currentChannelId))
+    }, [currentChannelId, channels])
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(11, typingMessage)
         if (typingMessage === "") return;
-        let time = new Date()
-        setMessages(messages => [
-            ...messages,
-            {
-                channelId: currentChannelId,
-                senderId: id,
-                message: typingMessage,
-                createdTime: time
-            },
-        ]);
+        if (messages.length === 0) {
+            let participants = [id, channels.find(x => x.id === currentChannelId).userId].join(" ")
+            await createNewChannel(currentChannelId, '', '', participants).then((res) => {
+                console.log(res)
+            }).catch((err) => {
+                console.log(err)
+            })
+        }
+        let newMessage = {
+            channelId: currentChannelId,
+            senderId: id,
+            message: typingMessage,
+        }
+        await sendMessage(newMessage).then((res) => {
+            console.log(res.data)
+            setMessages(messages => [...messages, res.data]);
+        }).catch((err) => { console.log(err) })
         setTypingMessage("");
     };
 
@@ -138,12 +154,9 @@ export default function Message() {
                                     m: -1,
                                     p: 2,
                                 }}>
-                                    <Typography
-                                        sx={{ m: 1 }}
-                                        variant="h5"
-                                    >
-                                        {channels.find(channel => channel.id === currentChannelId).name}
-                                    </Typography>
+                                    <Button>
+                                        {onChatChannel?.name}
+                                    </Button>
                                 </Box>
                                 <Divider />
                                 <Box
@@ -156,11 +169,11 @@ export default function Message() {
                                     }}
                                 >
                                     <Box overflow="auto" id="scroll" bgcolor="white" mb={2}>
-                                        {messages.map((message, index) =>
+                                        {messages.map((message) =>
                                             message.senderId === id ?
-                                                <MessageRight message={message.message} />
+                                                <MessageRight key={message.id} message={message.message} createdTime={message.createdTime} />
                                                 :
-                                                <MessageLeft message={message.message} />
+                                                <MessageLeft key={message.id} message={message.message} createdTime={message.createdTime} />
                                         )}
                                         <div ref={bottomRef} />
                                     </Box>

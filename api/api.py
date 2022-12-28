@@ -40,6 +40,7 @@ from sklearn.tree import DecisionTreeClassifier
 from imblearn.pipeline import make_pipeline as make_pipeline_with_sampler
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.ensemble import BalancedRandomForestClassifier
+from datetime import datetime
 
 mysql = MySQL()
 app = Flask(__name__)
@@ -376,13 +377,14 @@ class DynamicPredict(Resource):
             #     RandomUnderSampler(random_state=42),
             #     LogisticRegression(max_iter=1000),
             # )
-            smote_bagging = BalancedRandomForestClassifier(
+            # smote_bagging
+            clf = BalancedRandomForestClassifier(
                 max_depth=2, random_state=0).fit(X_train, y_train)
 
             # clf = LogisticRegression(max_iter=100).fit(X_train, y_train)
             # clf = BaggingClassifier(
             #             n_estimators=10, random_state=0).fit(X_train, y_train)
-            clf = RandomForestClassifier().fit(X_train, y_train)
+            # clf = RandomForestClassifier().fit(X_train, y_train)
             # clf = svm.SVC().fit(X_train, y_train)
             # clf = make_pipeline(StandardScaler(), LinearSVC()
             #                     ).fit(X_train, y_train)
@@ -390,7 +392,7 @@ class DynamicPredict(Resource):
             #     gamma='auto')).fit(X_train, y_train)
 
             predicted = clf.predict(X_test)
-            predicted1 = smote_bagging.predict(X_test)
+            # predicted1 = smote_bagging.predict(X_test)
 
             prob_predicted = clf.predict_proba(X_test)
 
@@ -563,6 +565,7 @@ class EditUserPassword(Resource):
             auth_state = check_password_hash(password_hash, oldPassword)
             if auth_state:
                 hash_password = generate_password_hash(newPassword)
+                print(hash_password)
                 cursor.execute("""UPDATE user_account
                                 SET password = \"{}\"
                                 WHERE username=\"{}\";
@@ -604,6 +607,77 @@ class Login(Resource):
         except Exception as e:
             return make_response(str(e), 400)
         finally:
+            cursor.close()
+            con.close()
+
+
+class CreateChannel(Resource):
+    # @jwt_required()
+    def post(self):
+        try:
+            data = request.json
+            Id, AdminId, Name, participantsStr = data.get('id'), data.get(
+                'adminId'), data.get('name'), data.get('participants')
+            con = mysql.connect()
+            cursor = con.cursor()
+            participants = participantsStr.split(" ")
+            print(participants)
+            cursor.execute("""INSERT INTO message_channel (Id, AdminId, Name)
+            VALUES (\'{}\',{},{});"""
+                           .format(
+                               Id,
+                               'NULL' if AdminId == '' else "\'{}\'".format(
+                                   AdminId),
+                               'NULL' if Name == '' else "\'{}\'".format(Name),
+                           ))
+            for participant in participants:
+                cursor.execute("""INSERT INTO message_participants (ChannelId, UserId)
+                VALUES (\'{}\',\'{}\');"""
+                               .format(Id, participant))
+            con.commit()
+            return make_response('Create a new channel successfully!', 200)
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
+class CreateMessage(Resource):
+    # @jwt_required()
+    def post(self):
+        try:
+            data = request.json
+            print(data)
+            ChannelId, SenderId, Message = data.get('channelId'), data.get(
+                'senderId'), data.get('message')
+            con = mysql.connect()
+            cursor = con.cursor()
+            CreatedTime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(CreatedTime)
+            cursor.execute("""INSERT INTO messages (ChannelId, SenderId, Message, CreatedTime)
+            VALUES (\'{}\',\'{}\',\'{}\',\'{}\');"""
+                           .format(ChannelId, SenderId, Message, CreatedTime))
+
+            cursor.execute(
+                """SELECT Id, ChannelId, SenderId, Message, CreatedTime 
+                FROM messages
+                WHERE ChannelId=\'{}\' AND CreatedTime=\'{}\';"""
+                .format(ChannelId, CreatedTime))
+            mes = cursor.fetchone()
+            return make_response({
+                'id': mes[0],
+                'channelId': mes[1],
+                'senderId': mes[2],
+                'message': mes[3],
+                'createdTime': mes[4],
+            }, 200)
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            con.commit()
             cursor.close()
             con.close()
 
@@ -984,6 +1058,16 @@ class WarnStudent(Resource):
                            )
             data = cursor.fetchall()[0]
 
+            cursor.execute("""SELECT s.id_student, s.name, is_risk, probability, is_warned
+                FROM predictions p
+                JOIN student_info s
+                ON p.id_student = s.id_student
+                WHERE p.id_student = \"{}\" 
+                AND code_module = \"{}\"
+                AND code_presentation = \"{}\";
+                """.format(id, code_module, code_presentation)
+                           )
+
             con.commit()
             return {
                 "id": data[0],
@@ -1051,7 +1135,7 @@ class GetAllWarning(Resource):
             warnings = []
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""SELECT code_module, code_presentation, content, status, description, created_time
+            cursor.execute("""SELECT code_module, code_presentation, content, StudentResponse, description, created_time
                             FROM warning
                             WHERE id_student = \"{}\"
                             ORDER BY created_time DESC;
@@ -1455,9 +1539,10 @@ class GetAllChannelsByUserId(Resource):
             cursor.execute("""SELECT ChannelId FROM message_participants
                            WHERE UserId = \"{}\";
                            """.format(id))
-            data = cursor.fetchall()
+            channelList = cursor.fetchall()
             channels = []
-            for row in data:
+            for row in channelList:
+                print(row)
                 # cursor.execute("""SELECT SenderId, Message, CreatedTime, AdminId, Name
                 #             FROM message_participants p
                 #             JOIN message_channel c
@@ -1467,18 +1552,69 @@ class GetAllChannelsByUserId(Resource):
                 #             """.format(row[0]))
                 # # LIMIT 1;
                 # lastMessage = cursor.fetchall()[0]
-                lastMessage = ['']*5
+                # lastMessage = ['']*5
                 # lastSender = lastMessage[0][0]
+                cursor.execute("""SELECT UserId, role 
+                                FROM message_participants p
+                                JOIN user_account a
+                                    ON p.UserId = a.id
+                                WHERE ChannelId = \"{}\" AND UserId <> \"{}\";
+                           """.format(row[0], id))
+                account = cursor.fetchone()
+                user = {'id': account[0], 'name': ''}
+                if account[1] == "student":
+                    cursor.execute("""SELECT name 
+                                FROM student_info
+                                WHERE id_system = \"{}\";
+                           """.format(user["id"]))
+                    user["name"] = cursor.fetchone()[0]
+                elif account[1] == "educator":
+                    cursor.execute("""SELECT name 
+                                FROM educator
+                                WHERE id_system = \"{}\";
+                           """.format(user["id"]))
+                    user["name"] = cursor.fetchone()[0]
                 channel = {
                     "id": row[0],
-                    "name": lastMessage[4],
-                    "userId": id,
+                    "name": user["name"],
+                    "userId": user["id"],
                     "lastSender": id,
-                    "message": lastMessage[1],
-                    "createdTime": lastMessage[2],
+                    "message": '',
+                    "createdTime": '',
                 }
                 channels.append(channel)
-            return channels
+            return make_response(channels, 200)
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetAllMessagesByChannelId(Resource):
+    # @ jwt_required()
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            args = request.args
+            id = args.get("id")
+            cursor.execute("""SELECT Id, SenderId, Message, CreatedTime FROM messages
+                           WHERE ChannelId = \"{}\";
+                           """.format(id))
+            data = cursor.fetchall()
+            messages = []
+            for row in data:
+                message = {
+                    "id": row[0],
+                    "senderId": row[1],
+                    "message": row[2],
+                    "createdTime": row[3],
+                }
+                messages.append(message)
+
+            return make_response(messages, 200)
 
         except Exception as e:
             return make_response(str(e), 400)
@@ -1504,6 +1640,8 @@ api.add_resource(
 
 # all users
 api.add_resource(Login, '/login')
+api.add_resource(CreateChannel, '/create-channel')
+api.add_resource(CreateMessage, '/create-message')
 api.add_resource(GetNameByUsername, '/get-name-by-username/<username>')
 api.add_resource(EditUserPassword, '/edit-user-password')
 api.add_resource(GetAllMessages,
@@ -1512,6 +1650,7 @@ api.add_resource(GetContacts, '/get-contacts')
 api.add_resource(
     GetCourseByCode, '/get-course/<code_module>/<code_presentation>')
 api.add_resource(GetAllChannelsByUserId, '/get-channels')
+api.add_resource(GetAllMessagesByChannelId, '/get-messages')
 
 
 # student

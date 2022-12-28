@@ -202,7 +202,7 @@ export default function CourseDetailEducator() {
         },
         {
             field: 'systemId',
-            headerName: 'Send Message',
+            headerName: 'Contact Student',
             width: 120,
             renderCell: (params) =>
                 <IconButton aria-label="send message" onClick={(e) => handleSendMessage(e, params.value)}>

@@ -20,8 +20,8 @@ const Warning = () => {
                 setWarnings(warnings)
             })
             .catch((error) => {
-                localStorage.clear()
-                navigate('/login')
+                // localStorage.clear()
+                // navigate('/login')
                 console.log(error)
             });
     }, [token, navigate]);
@@ -41,12 +41,17 @@ const Warning = () => {
         },
         {
             field: 'content',
-            headerName: 'Content',
+            headerName: 'Educator\'s Comment',
             width: 300,
         },
         {
             field: 'status',
-            headerName: 'Status',
+            headerName: 'My Feedback',
+            width: 300,
+        },
+        {
+            field: 'educatorId',
+            headerName: 'Contact Educator',
             width: 300,
         },
     ];

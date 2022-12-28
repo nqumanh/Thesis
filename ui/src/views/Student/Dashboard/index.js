@@ -1,12 +1,11 @@
 import { Box, Container, Grid } from '@mui/material';
-import { TotalCourse } from 'components/dashboard/TotalCourse';
-// import { Sales } from 'components/dashboard/sales';
-// import { TrafficByDevice } from 'components/dashboard/traffic-by-device';
-import { TasksProgress } from 'components/dashboard/AtRiskPercentage';
-import { TotalCustomers } from 'components/dashboard/TotalStudent';
-import { TotalAssessment } from 'components/dashboard/TotalAssessment';
+import { TotalCourse } from './TotalCourse';
+import { TotalWarning } from './TotalWarning';
+import { TotalAssessment } from './TotalAssessment';
+import AssessmentChart from './AssessmentType';
+import StudentAssessment from './StudentAssessment';
 
-const Dashboard = () => (
+const StudentDashboard = () => (
     <>
         <Box
             component="main"
@@ -22,7 +21,7 @@ const Dashboard = () => (
                 >
                     <Grid
                         item
-                        sm={6}
+                        sm={4}
                         lg={4}
                         xl={4}
                         xs={12}
@@ -31,16 +30,16 @@ const Dashboard = () => (
                     </Grid>
                     <Grid
                         item
-                        sm={6}
+                        sm={4}
                         lg={4}
                         xl={4}
                         xs={12}
                     >
-                        <TotalCustomers />
+                        <TotalWarning />
                     </Grid>
                     <Grid
                         item
-                        sm={6}
+                        sm={4}
                         lg={4}
                         xl={4}
                         xs={12}
@@ -54,7 +53,7 @@ const Dashboard = () => (
                         xl={9}
                         xs={12}
                     >
-                        {/* <Sales /> */}
+                        <StudentAssessment sx={{ height: '100%' }} />
                     </Grid>
                     <Grid
                         item
@@ -63,7 +62,7 @@ const Dashboard = () => (
                         xl={3}
                         xs={12}
                     >
-                        {/* <TrafficByDevice sx={{ height: '100%' }} /> */}
+                        <AssessmentChart sx={{ height: '100%' }} />
                     </Grid>
                 </Grid>
             </Container>
@@ -71,4 +70,4 @@ const Dashboard = () => (
     </>
 );
 
-export default Dashboard;
+export default StudentDashboard;

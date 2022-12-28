@@ -88,10 +88,10 @@ const Setting = () => {
                                 margin="normal"
                                 required
                                 fullWidth
-                                name="password"
+                                name="current-password"
                                 label="Password"
                                 type="password"
-                                id="password"
+                                id="current-password"
                                 autoComplete="current-password"
                                 onChange={onChange}
                             />
