@@ -3,11 +3,9 @@ import Layout from "layout";
 import Login from "views/Login";
 import Message from "views/Message";
 
-import CourseList from "views/Student/CourseListStudent";
 import CourseDetailStudent from "views/Student/CourseDetailStudent";
 import StudentProfile from "views/Student/Profile";
 import Warning from "views/Student/Warning";
-import Dashboard from "views/Dashboard";
 
 import ChildCourseList from "views/Parents/CourseList";
 import ParentsProfile from "views/Parents/Profile";
@@ -20,6 +18,9 @@ import Setting from "views/Setting";
 import NotFound from "views/NotFound";
 import StudentDetail from "views/Educator/StudentDetail";
 import StudentDashboard from "views/Student/Dashboard";
+import ParentsDashboard from "views/Parents/Dashboard";
+import StudentCourseList from "views/Student/StudentCourseList";
+import CourseDetailForParents from "views/Parents/CourseDetail";
 
 const Routes = () => {
     const role = localStorage.getItem('role');
@@ -30,14 +31,14 @@ const Routes = () => {
             path: "/",
             element: <Layout />,
             children: [
-                { path: "", element: (role === "student") ? <CourseList /> : (role === "educator") ? <CourseListEducator /> : <ChildCourseList /> },
-                { path: "dashboard", element: (role === "educator") ? <EducatorDashboard /> : (role === "student") ? <StudentDashboard /> : <Dashboard /> },
+                { path: "", element: (role === "student") ? <StudentCourseList /> : (role === "educator") ? <CourseListEducator /> : <ChildCourseList /> },
+                { path: "dashboard", element: (role === "educator") ? <EducatorDashboard /> : (role === "student") ? <StudentDashboard /> : <ParentsDashboard /> },
                 { path: "profile", element: (role === "student") ? <StudentProfile /> : <ParentsProfile /> },
                 { path: "warning", element: <Warning /> },
                 { path: "message", element: <Message /> },
                 { path: "setting", element: <Setting /> },
                 { path: "course/student", element: (role === 'educator') ? <StudentDetail /> : <NotFound /> },
-                { path: "course", element: (role === "student") ? <CourseDetailStudent /> : <CourseDetailEducator /> },
+                { path: "course", element: (role === "student") ? <CourseDetailStudent /> : (role === "educator") ? <CourseDetailEducator /> : <CourseDetailForParents /> },
             ],
         },
     ]);

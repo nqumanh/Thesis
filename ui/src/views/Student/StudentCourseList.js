@@ -39,7 +39,7 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
     },
 }));
 
-const Dashboard = () => {
+const StudentCourseList = () => {
     const navigate = useNavigate()
     const [pageSize, setPageSize] = useState(5);
 
@@ -54,8 +54,8 @@ const Dashboard = () => {
             role === 'student' ? `http://127.0.0.1:5000/student-register/${id}` : `http://localhost:5000/get-courses-of-educator/${id}`;
         axios
             .get(url, { headers: { Authorization: `Bearer ${token}` } })
-            .then((response) => {
-                setCourses(response.data);
+            .then((res) => {
+                setCourses(res.data);
             })
             .catch((error) => {
                 localStorage.clear()
@@ -106,7 +106,7 @@ const Dashboard = () => {
 
     const handleRowClick = (params) => {
         navigate(`course`, {
-            state: { presentation: params.row }
+            state: { codeModule: params.row.codeModule, codePresentation: params.row.codePresentation }
         })
     };
 
@@ -153,4 +153,4 @@ const Dashboard = () => {
     )
 }
 
-export default Dashboard;
+export default StudentCourseList;

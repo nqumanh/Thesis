@@ -1,25 +1,24 @@
-import { Avatar, Box, Card, CardContent, CircularProgress, Grid, Typography } from '@mui/material';
+import { Avatar, Box, Card, CardContent, CircularProgress, Grid, LinearProgress, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Warning } from '@mui/icons-material';
-import { getWarnings } from 'api';
+import { getResponseWarningPercentageOfStudent } from 'api';
 
-export const TotalWarning = () => {
-  const [totalWarning, setTotalWarning] = useState(0)
-  const token = localStorage.getItem('token');
+export const ResponsePercentage = () => {
+  const [percent, setPercent] = useState(0)
   const [loading, setLoading] = useState(true)
+
 
   useEffect(() => {
     const username = localStorage.getItem('username');
     const id = parseInt(username?.substring(1));
-    getWarnings(id)
+    getResponseWarningPercentageOfStudent(id)
       .then((res) => {
-        setTotalWarning(res.data.length);
         setLoading(false)
+        setPercent(res.data.percent)
+      }).catch((err) => {
+        console.log(err)
       })
-      .catch((error) => {
-        console.log(error)
-      });
-  }, [token]);
+  }, []);
 
   return (
     <Card
@@ -37,7 +36,7 @@ export const TotalWarning = () => {
               gutterBottom
               variant="overline"
             >
-              TOTAL WARNING
+              RESPOND WARNING PERCENTAGE
             </Typography>
             {loading ?
               <Box sx={{ display: 'flex' }}>
@@ -48,14 +47,13 @@ export const TotalWarning = () => {
                 color="textPrimary"
                 variant="h4"
               >
-                {totalWarning}
-              </Typography>
-            }
+                {percent}%
+              </Typography>}
           </Grid>
           <Grid item>
             <Avatar
               sx={{
-                backgroundColor: 'error.main',
+                backgroundColor: 'success.main',
                 height: 56,
                 width: 56
               }}
@@ -64,6 +62,17 @@ export const TotalWarning = () => {
             </Avatar>
           </Grid>
         </Grid>
+        {!loading &&
+          <Box sx={{ pt: 3 }}>
+            <LinearProgress
+              value={percent}
+              variant="determinate"
+              aria-busy="true"
+              role="progressbar"
+              aria-label="At Risk Percentage"
+            />
+          </Box>
+        }
       </CardContent>
     </Card>
   )

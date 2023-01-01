@@ -1,23 +1,28 @@
 import { Box, Card, CardContent, CardHeader, CircularProgress, Divider, InputBase, NativeSelect, styled, useTheme } from "@mui/material";
-import axios from "axios";
+import { useEffect, useState } from "react";
+import React from 'react';
 import {
     Chart as ChartJS,
     CategoryScale,
     LinearScale,
-    BarElement,
+    PointElement,
+    LineElement,
     Title,
     Tooltip,
+    Filler,
     Legend,
 } from 'chart.js';
-import { useEffect, useState } from "react";
-import { Bar } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
+import axios from "axios";
 
 ChartJS.register(
     CategoryScale,
     LinearScale,
-    BarElement,
+    PointElement,
+    LineElement,
     Title,
     Tooltip,
+    Filler,
     Legend
 );
 
@@ -51,18 +56,19 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
     },
 }));
 
-function StudentAssessment() {
+function AssessmentResult() {
     const theme = useTheme();
+
+    const username = localStorage.getItem('username');
+    const studentId = parseInt(username?.substring(1));
     const token = localStorage.getItem('token');
     const [courseId, setCourseId] = useState("")
     const [courses, setCourses] = useState([])
     const [assessments, setAssessments] = useState([])
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
-        const username = localStorage.getItem('username');
-        const id = parseInt(username?.substring(1));
-        let url = `http://localhost:5000/get-courses-of-educator/${id}`;
+        let url = `http://127.0.0.1:5000/student-register/${studentId}`;
         axios
             .get(url, { headers: { Authorization: `Bearer ${token}` } })
             .then((res) => {
@@ -72,16 +78,19 @@ function StudentAssessment() {
             .catch((error) => {
                 console.log(error)
             });
-    }, [token])
+    }, [token, studentId])
 
     useEffect(() => {
         if (courses.length > 0) {
-            setLoading(true)
+            // setLoading(true)
             let id = parseInt(courseId)
             let codeModule = courses[id].codeModule
             let codePresentation = courses[id].codePresentation
-            axios.get(`http://localhost:5000/get-assessment-statistics-in-course/${codeModule}/${codePresentation}`, { headers: { Authorization: `Bearer ${token}` } })
+            let url = `http://127.0.0.1:5000/student-assessment/${studentId}/${codeModule}/${codePresentation}`;
+            axios
+                .get(url, { headers: { Authorization: `Bearer ${token}` } })
                 .then((res) => {
+                    res.data.sort((a, b) => a.date_submitted - b.date_submitted)
                     setAssessments(res.data);
                     setLoading(false)
                 })
@@ -89,32 +98,23 @@ function StudentAssessment() {
                     console.log(error)
                 });
         }
-    }, [courseId, courses, token])
+    }, [courseId, courses, token, studentId])
+
+    const handleChange = (event) => {
+        setCourseId(event.target.value);
+    };
 
     const data = {
+        labels: assessments.map(x => x.assessment_type + ` (${x.date_submitted})`),
         datasets: [
             {
-                backgroundColor: '#3F51B5',
-                barPercentage: 0.5,
-                barThickness: 12,
-                borderRadius: 4,
-                categoryPercentage: 0.5,
-                data: assessments.map(x => x.good),
-                label: 'Good',
-                maxBarThickness: 10
+                fill: true,
+                label: 'Score',
+                data: assessments.map(x => x.score),
+                borderColor: 'rgb(53, 162, 235)',
+                backgroundColor: 'rgba(53, 162, 235, 0.5)',
             },
-            {
-                backgroundColor: '#EEEEEE',
-                barPercentage: 0.5,
-                barThickness: 12,
-                borderRadius: 4,
-                categoryPercentage: 0.5,
-                data: assessments.map(x => x.bad),
-                label: 'Bad',
-                maxBarThickness: 10
-            }
         ],
-        labels: assessments.map(x => x.assessment_type + ` (${x.date})`)
     };
 
     const options = {
@@ -166,10 +166,6 @@ function StudentAssessment() {
         }
     };
 
-    const handleChange = (event) => {
-        setCourseId(event.target.value);
-    };
-
     return (
         <Card>
             <CardHeader
@@ -186,7 +182,7 @@ function StudentAssessment() {
                         )}
                     </NativeSelect>
                 )}
-                title="Student Assessment Result"
+                title="Assessment Result"
             />
             <Divider />
             <CardContent>
@@ -201,10 +197,7 @@ function StudentAssessment() {
                             position: 'relative'
                         }}
                     >
-                        <Bar
-                            data={data}
-                            options={options}
-                        />
+                        <Line options={options} data={data} />
                     </Box>
                 }
             </CardContent>
@@ -212,4 +205,4 @@ function StudentAssessment() {
     );
 }
 
-export default StudentAssessment;
+export default AssessmentResult;

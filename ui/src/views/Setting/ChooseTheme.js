@@ -58,19 +58,19 @@ const ChooseTheme = () => {
                 <div>
                     <ColorBox bgcolor="#ceccf8" color="blue" title="default" />
                     <Stack direction="row" justifyContent="center">
-                        <FormControlLabel value="default" control={<Radio />} />
+                        <FormControlLabel value="default" control={<Radio />} aria-labelledby="default"/>
                     </Stack>
                 </div>
                 <div>
                     <ColorBox bgcolor="#000" color="#fff" title="dark" />
                     <Stack direction="row" justifyContent="center">
-                        <FormControlLabel value="dark" control={<Radio />} />
+                        <FormControlLabel value="dark" control={<Radio />} aria-labelledby="dark"/>
                     </Stack>
                 </div>
                 <div>
                     <ColorBox bgcolor="#fff" color="#000" title="light" />
                     <Stack direction="row" justifyContent="center">
-                        <FormControlLabel value="light" control={<Radio />} />
+                        <FormControlLabel value="light" control={<Radio />} aria-labelledby="light"/>
                     </Stack>
                 </div>
             </RadioGroup>

@@ -1,3 +1,4 @@
+import { Tooltip } from "@mui/material";
 import { Box, styled } from "@mui/system";
 
 const MessageRowRight = styled(Box)(() => ({
@@ -5,12 +6,14 @@ const MessageRowRight = styled(Box)(() => ({
     justifyContent: "flex-end",
 }))
 
-function MessageRight({ message }) {
+function MessageRight({ message, createdTime }) {
     return (
         <MessageRowRight>
-            <Box bgcolor="primary.main" sx={{ px: 2, py: 1, borderRadius: '20px', m: 1, maxWidth: "60%", color: '#fff' }}>
-                {message}
-            </Box>
+            <Tooltip title={createdTime} placement="left">
+                <Box bgcolor="primary.main" sx={{ px: 2, py: 1, borderRadius: '20px', m: 1, maxWidth: "60%", color: '#fff' }}>
+                    {message}
+                </Box>
+            </Tooltip>
         </MessageRowRight>
     );
 }

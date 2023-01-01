@@ -15,6 +15,8 @@ import { useNavigate } from 'react-router-dom';
 import { login } from 'api';
 import { Snackbar } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
+import { useDispatch } from 'react-redux';
+import { fetchChannels, setCurrentChannel } from 'features/message/messageSlice';
 // import Link from '@mui/material/Link';
 
 const theme = createTheme();
@@ -25,6 +27,8 @@ const Alert = forwardRef(function Alert(props, ref) {
 
 const Login = () => {
     const navigate = useNavigate()
+    const dispatch = useDispatch()
+
     const handleSubmit = (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
@@ -32,12 +36,13 @@ const Login = () => {
             username: data.get('username'),
             password: data.get('password'),
         };
-        login(loginForm).then(async (response) => {
-            localStorage.setItem("username", response.data.username);
-            localStorage.setItem("role", response.data.role);
-            localStorage.setItem("id", response.data.id);
-            await localStorage.setItem("token", response.data.access_token);
-            window.location.reload();
+        login(loginForm).then((res) => {
+            localStorage.setItem("username", res.data.username);
+            localStorage.setItem("role", res.data.role);
+            localStorage.setItem("id", res.data.id);
+            localStorage.setItem("token", res.data.access_token);
+            dispatch(fetchChannels(res.data.id))
+            dispatch(setCurrentChannel(null))
             navigate('/')
         }).catch((err) => setOpen(true))
     };

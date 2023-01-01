@@ -3,12 +3,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import DataGridTable from "components/DataGridTable"
 import { DataGrid, gridClasses, GridToolbarContainer, GridToolbarColumnsButton, GridToolbarFilterButton, GridToolbarExport } from "@mui/x-data-grid";
-import { alpha, Box, Button, Card, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Stack, styled, Typography } from "@mui/material";
+import { alpha, Box, Button, Card, Chip, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Stack, styled, TextField, Typography } from "@mui/material";
 import DoneIcon from '@mui/icons-material/Done';
 import { Close, Telegram } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { addChannel, setCurrentChannel } from "features/message/messageSlice";
 import { v4 } from "uuid";
+import { getCourseByCode } from "api";
 
 const ODD_OPACITY = 0.2;
 
@@ -127,6 +128,7 @@ export default function CourseDetailEducator() {
     const [assessments, setAssessments] = useState([]);
     const [students, setStudents] = useState([]);
     const [studentListLoading, setStudentListLoading] = useState(false)
+    const [content, setContent] = useState("")
 
     const handleSendMessage = (e, id) => {
         e.stopPropagation();
@@ -152,12 +154,17 @@ export default function CourseDetailEducator() {
         {
             field: 'name',
             headerName: 'Name',
-            width: 200,
+            width: 180,
+        },
+        {
+            field: 'email',
+            headerName: 'Email',
+            width: 240,
         },
         {
             field: 'gender',
             headerName: 'Gender',
-            width: 75,
+            width: 100,
         },
         {
             field: 'highest_education',
@@ -170,19 +177,14 @@ export default function CourseDetailEducator() {
             width: 100,
         },
         {
-            field: 'age_band',
-            headerName: 'Age band',
-            width: 100,
-        },
-        {
             field: 'disability',
             headerName: 'Disability',
             width: 100,
         },
         {
             field: 'num_of_prev_attempts',
-            headerName: 'Previous attempts',
-            width: 150,
+            headerName: 'Attempted',
+            width: 100,
         },
         {
             field: 'is_risk',
@@ -202,8 +204,8 @@ export default function CourseDetailEducator() {
         },
         {
             field: 'systemId',
-            headerName: 'Contact Student',
-            width: 120,
+            headerName: 'Contact',
+            width: 100,
             renderCell: (params) =>
                 <IconButton aria-label="send message" onClick={(e) => handleSendMessage(e, params.value)}>
                     <Telegram color="primary" />
@@ -226,11 +228,7 @@ export default function CourseDetailEducator() {
                 console.log(error)
             });
 
-        axios
-            .get(
-                `http://127.0.0.1:5000/get-course/${course.codeModule}/${course.codePresentation}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-            )
+        getCourseByCode(course.codeModule, course.codePresentation)
             .then((response) => {
                 setPresentation(response.data)
             })
@@ -333,7 +331,7 @@ export default function CourseDetailEducator() {
         setStudentListLoading(true)
 
         axios.put(`http://127.0.0.1:5000/warn-all-students`,
-            { codeModule: course.codeModule, codePresentation: course.codePresentation },
+            { codeModule: course.codeModule, codePresentation: course.codePresentation, content: content },
             { headers: { Authorization: `Bearer ${token}` } }
         ).then((res) => {
             setStudents(res.data)
@@ -373,7 +371,6 @@ export default function CourseDetailEducator() {
                     <Typography>Course Module: {presentation.codeModule}</Typography>
                     <Typography>Course Presentation: {presentation.codePresentation}</Typography>
                     <Typography>Major: {presentation.major}</Typography>
-                    <Typography>Year: {presentation.year}</Typography>
                     <Typography>Starting Month: {presentation.monthStart}</Typography>
                     <Typography>Course Length (day): {presentation.length}</Typography>
                     <Typography>Number of students: {students.length}</Typography>
@@ -434,6 +431,17 @@ export default function CourseDetailEducator() {
                                 <DialogContentText id="confirm-warn-all-at-risk-students">
                                     Do you want to send messages to all at-risk students?
                                 </DialogContentText>
+                                <TextField
+                                    autoFocus
+                                    margin="dense"
+                                    id="feedback"
+                                    label=""
+                                    type="text"
+                                    fullWidth
+                                    variant="standard"
+                                    value={content}
+                                    onChange={(e) => { setContent(e.target.value) }}
+                                />
                             </DialogContent>
                             <DialogActions>
                                 <Button onClick={handleCloseWarnDialog}>Cancel</Button>
@@ -477,7 +485,6 @@ export default function CourseDetailEducator() {
                         Assessment List
                     </Typography>
                     <DataGridTable rows={assessments} columns={assessmentColumns} />
-
                 </Card>
             </Box>
         </Container >

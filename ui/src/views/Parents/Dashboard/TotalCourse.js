@@ -1,19 +1,18 @@
 import { Avatar, Box, Card, CardContent, CircularProgress, Grid, Typography } from '@mui/material';
+import { School } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
-import { Warning } from '@mui/icons-material';
-import { getWarnings } from 'api';
+import { getCourseListOfStudentByParentsId } from 'api';
 
-export const TotalWarning = () => {
-  const [totalWarning, setTotalWarning] = useState(0)
+export const TotalCourse = (props) => {
+  const [totalCourse, setTotalCourse] = useState(0)
   const token = localStorage.getItem('token');
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const username = localStorage.getItem('username');
-    const id = parseInt(username?.substring(1));
-    getWarnings(id)
+    getCourseListOfStudentByParentsId(username)
       .then((res) => {
-        setTotalWarning(res.data.length);
+        setTotalCourse(res.data.length);
         setLoading(false)
       })
       .catch((error) => {
@@ -24,6 +23,7 @@ export const TotalWarning = () => {
   return (
     <Card
       sx={{ height: '100%' }}
+      {...props}
     >
       <CardContent>
         <Grid
@@ -37,7 +37,7 @@ export const TotalWarning = () => {
               gutterBottom
               variant="overline"
             >
-              TOTAL WARNING
+              TOTAL COURSE
             </Typography>
             {loading ?
               <Box sx={{ display: 'flex' }}>
@@ -48,19 +48,19 @@ export const TotalWarning = () => {
                 color="textPrimary"
                 variant="h4"
               >
-                {totalWarning}
+                {totalCourse}
               </Typography>
             }
           </Grid>
           <Grid item>
             <Avatar
               sx={{
-                backgroundColor: 'error.main',
+                backgroundColor: 'warning.main',
                 height: 56,
                 width: 56
               }}
             >
-              <Warning />
+              <School />
             </Avatar>
           </Grid>
         </Grid>

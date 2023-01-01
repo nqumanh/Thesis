@@ -1,43 +1,24 @@
 import { Avatar, Box, Card, CardContent, CircularProgress, Grid, LinearProgress, Typography } from '@mui/material';
-import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { Warning } from '@mui/icons-material';
+import { getResponseWarningPercentageOfStudent } from 'api';
 
-export const AtRiskPercentage = () => {
-  const [atRiskStudentNumber, setAtRiskStudentNumber] = useState(0)
-  const [totalStudent, setTotalStudent] = useState(0)
-  const token = localStorage.getItem('token');
+export const ResponsePercentage = () => {
+  const [percent, setPercent] = useState(0)
   const [loading, setLoading] = useState(true)
 
 
   useEffect(() => {
     const username = localStorage.getItem('username');
     const id = parseInt(username?.substring(1));
-    const fetchData = async () => {
-      await axios
-        .get(`http://localhost:5000/get-number-of-students-of-educator/${id}`, { headers: { Authorization: `Bearer ${token}` } })
-        .then((res) => {
-          setTotalStudent(res.data);
-        })
-        .catch((error) => {
-          console.log(error)
-        });
-
-      await axios
-        .get(`http://localhost:5000/get-number-of-at-risk-students-of-educator/${id}`, { headers: { Authorization: `Bearer ${token}` } })
-        .then((res) => {
-          setAtRiskStudentNumber(res.data);
-          setLoading(false)
-        })
-        .catch((error) => {
-          console.log(error)
-        });
-    }
-
-    fetchData()
-  }, [token]);
-
-  let percentage = totalStudent === 0 ? 100 : (atRiskStudentNumber * 100 / totalStudent)
+    getResponseWarningPercentageOfStudent(id)
+      .then((res) => {
+        setLoading(false)
+        setPercent(res.data.percent)
+      }).catch((err) => {
+        console.log(err)
+      })
+  }, []);
 
   return (
     <Card
@@ -55,7 +36,7 @@ export const AtRiskPercentage = () => {
               gutterBottom
               variant="overline"
             >
-              AT RISK PERCENTAGE
+              RESPOND WARNING PERCENTAGE
             </Typography>
             {loading ?
               <Box sx={{ display: 'flex' }}>
@@ -66,13 +47,13 @@ export const AtRiskPercentage = () => {
                 color="textPrimary"
                 variant="h4"
               >
-                {percentage.toFixed(2)}%
+                {percent}%
               </Typography>}
           </Grid>
           <Grid item>
             <Avatar
               sx={{
-                backgroundColor: 'error.main',
+                backgroundColor: 'success.main',
                 height: 56,
                 width: 56
               }}
@@ -84,7 +65,7 @@ export const AtRiskPercentage = () => {
         {!loading &&
           <Box sx={{ pt: 3 }}>
             <LinearProgress
-              value={Math.round(percentage)}
+              value={percent}
               variant="determinate"
               aria-busy="true"
               role="progressbar"

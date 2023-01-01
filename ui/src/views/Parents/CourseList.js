@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import axios from 'axios'
 import { Box, Card, Container, styled, Typography, alpha } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { DataGrid, GridToolbar, gridClasses } from "@mui/x-data-grid";
+import { getCourseListOfStudentByParentsId } from "api";
 
 const ODD_OPACITY = 0.2;
 
@@ -37,22 +37,25 @@ const StripedDataGrid = styled(DataGrid)(({ theme }) => ({
             },
         },
     },
+    [`& .${gridClasses.row}.odd`]: {
+        '&:hover, &.Mui-hovered': {
+            backgroundColor: alpha(theme.palette.primary.main, ODD_OPACITY),
+            '@media (hover: none)': {
+                backgroundColor: 'transparent',
+            },
+        },
+    },
 }));
 
 const ChildCourseList = () => {
     const navigate = useNavigate()
     const [pageSize, setPageSize] = useState(5);
-
-    const role = localStorage.getItem('role');
     const [courses, setCourses] = useState([]);
     const token = localStorage.getItem('token');
 
     useEffect(() => {
-        const username = localStorage.getItem('username');
-        const id = parseInt(username.substring(1));
-        let url = `http://127.0.0.1:5000/student-register/${id}`;
-        axios
-            .get(url, { headers: { Authorization: `Bearer ${token}` } })
+        const personal_id = localStorage.getItem('username');
+        getCourseListOfStudentByParentsId(personal_id)
             .then((response) => {
                 setCourses(response.data);
             })
@@ -61,9 +64,15 @@ const ChildCourseList = () => {
                 navigate('/login')
                 console.log(error)
             });
-    }, [role, token, navigate]);
+    }, [token, navigate]);
 
     const courseColumns = [
+        {
+            field: 'childName',
+            headerName: 'Child Name',
+            width: 300,
+            hideable: false
+        },
         {
             field: 'name',
             headerName: 'Course',
@@ -105,7 +114,7 @@ const ChildCourseList = () => {
 
     const handleRowClick = (params) => {
         navigate(`course`, {
-            state: { presentation: params.row }
+            state: { codeModule: params.row.codeModule, codePresentation: params.row.codePresentation, studentId: params.row.studentId }
         })
     };
 

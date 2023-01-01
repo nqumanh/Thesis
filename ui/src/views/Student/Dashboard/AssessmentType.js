@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CircularProgress, Divider, Typography, useTheme } from "@mui/material";
 import { Box } from "@mui/system";
-import axios from "axios";
+import { getNumberOfAssessmentsOfStudent } from "api";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { useEffect, useState } from "react";
 import { Doughnut } from 'react-chartjs-2';
@@ -9,16 +9,13 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 function AssessmentChart() {
     const theme = useTheme();
-    const token = localStorage.getItem('token');
     const [assessmentTypes, setAssessmentType] = useState({})
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         const username = localStorage.getItem('username');
         const id = parseInt(username?.substring(1));
-        let url = `http://localhost:5000/get-number-of-assessment-types-of-educator/${id}`;
-        axios
-            .get(url, { headers: { Authorization: `Bearer ${token}` } })
+        getNumberOfAssessmentsOfStudent(id)
             .then((res) => {
                 setAssessmentType(res.data);
                 setLoading(false)
@@ -26,7 +23,7 @@ function AssessmentChart() {
             .catch((error) => {
                 console.log(error)
             });
-    }, [token])
+    }, [])
 
     const data = {
         labels: ['TMA', 'CMA', 'Exam'],

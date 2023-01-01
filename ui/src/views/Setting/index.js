@@ -2,10 +2,8 @@ import { Box, Button, Card, Container, TextField, Typography } from "@mui/materi
 import axios from "axios";
 import ChooseTheme from "views/Setting/ChooseTheme";
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 const Setting = () => {
-    const navigate = useNavigate();
 
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
@@ -47,7 +45,6 @@ const Setting = () => {
             })
             .then((response) => {
                 alert(response.data);
-                navigate("/dashboard");
             })
             .catch((error) => alert(error.response.data));
     };
@@ -84,6 +81,12 @@ const Setting = () => {
                             width: '40%',
                             alignItems: 'center',
                         }}>
+                            <input
+                                type="text"
+                                name="email"
+                                autoComplete="username email"
+                                style={{ display: "none" }}
+                            ></input>
                             <TextField
                                 margin="normal"
                                 required

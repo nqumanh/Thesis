@@ -1,7 +1,7 @@
 import { Avatar, Box, Card, CardContent, CircularProgress, Grid, Typography } from '@mui/material';
 import { School } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { getNumberOfCoursesOfStudent } from 'api';
 
 export const TotalCourse = (props) => {
   const [totalCourse, setTotalCourse] = useState(0)
@@ -11,9 +11,7 @@ export const TotalCourse = (props) => {
   useEffect(() => {
     const username = localStorage.getItem('username');
     const id = parseInt(username?.substring(1));
-    let url = `http://localhost:5000/get-number-of-courses-of-educator/${id}`;
-    axios
-      .get(url, { headers: { Authorization: `Bearer ${token}` } })
+    getNumberOfCoursesOfStudent(id)
       .then((res) => {
         setTotalCourse(res.data);
         setLoading(false)

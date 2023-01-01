@@ -1,25 +1,44 @@
-import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
-import DataGridTable from "components/DataGridTable"
 import { Box, Button, Card, Container, Stack, Typography } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
-import { getCourseByCode } from "api";
+import { getCourseByCode, getStudentAssessments } from "api";
+import DataGridTable from "components/DataGridTable";
 import { addChannel, setCurrentChannel } from "features/message/messageSlice";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
 import { v4 } from "uuid";
 
-export default function CourseDetailStudent() {
+const assessmentColumns = [
+    {
+        field: 'assessment_type',
+        headerName: 'Assessment Type',
+        width: 300,
+    },
+    {
+        field: 'date_submitted',
+        headerName: 'Date Submitted',
+        width: 300,
+    },
+    {
+        field: 'score',
+        headerName: 'Score',
+        width: 300,
+    },
+    {
+        field: 'weight',
+        headerName: 'Weight',
+        width: 300,
+    },
+];
+
+function CourseDetailForParents() {
+    const navigate = useNavigate()
     const location = useLocation();
-    
-    const id = parseInt(localStorage.getItem("username").substring(1));
     const token = localStorage.getItem("token");
+
     const codeModule = location.state.codeModule
     const codePresentation = location.state.codePresentation
+    const studentId = location.state.studentId
     const [course, setCourse] = useState({})
-
-    const navigate = useNavigate()
-
-    const [materials, setMaterials] = useState([]);
     const [assessments, setAssessments] = useState([]);
 
     const channels = useSelector(state => state.message.channels)
@@ -48,76 +67,15 @@ export default function CourseDetailStudent() {
     }, [codeModule, codePresentation])
 
     useEffect(() => {
-        axios
-            .get(
-                `http://127.0.0.1:5000/materials/${codeModule}/${codePresentation}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-            )
-            .then((response) => setMaterials(response.data))
-            .catch((error) => {
-                console.log(error)
-            });
-    }, [codeModule, codePresentation, token, navigate]);
-
-    useEffect(() => {
-        let url = `http://127.0.0.1:5000/student-assessment/${id}/${codeModule}/${codePresentation}`;
-        axios
-            .get(url, { headers: { Authorization: `Bearer ${token}` } })
-            .then((response) => {
-                let assessments = response.data.map((row, index) => ({ id: index, ...row }))
-                setAssessments(assessments)
+        getStudentAssessments(studentId, codeModule, codePresentation)
+            .then((res) => {
+                console.log(res.data)
+                setAssessments(res.data)
             })
             .catch((error) => {
                 console.log(error)
             });
-    }, [id, codeModule, codePresentation, token, navigate]);
-
-    const assessmentColumns = [
-        {
-            field: 'assessment_type',
-            headerName: 'Assessment Type',
-            width: 300,
-        },
-        {
-            field: 'date_submitted',
-            headerName: 'Date Submitted',
-            width: 300,
-        },
-        {
-            field: 'score',
-            headerName: 'Score',
-            width: 300,
-        },
-        {
-            field: 'weight',
-            headerName: 'Weight',
-            width: 300,
-        },
-    ];
-
-    const materialColumns = [
-        {
-            field: 'id',
-            headerName: 'ID',
-            width: 300,
-            hideable: false
-        },
-        {
-            field: 'activity_type',
-            headerName: 'Activity Type',
-            width: 300,
-        },
-        {
-            field: 'week_from',
-            headerName: 'From',
-            width: 300,
-        },
-        {
-            field: 'week_to',
-            headerName: 'To',
-            width: 300,
-        },
-    ];
+    }, [codeModule, codePresentation, token, studentId]);
 
     return (
         <Container maxWidth={false}>
@@ -160,15 +118,6 @@ export default function CourseDetailStudent() {
             <Box sx={{ mt: 3 }}>
                 <Card sx={{ p: 3 }}>
                     <Typography gutterBottom variant="h5" component="div">
-                        Material List
-                    </Typography>
-                    <DataGridTable rows={materials} columns={materialColumns} />
-                </Card>
-            </Box>
-
-            <Box sx={{ mt: 3 }}>
-                <Card sx={{ p: 3 }}>
-                    <Typography gutterBottom variant="h5" component="div">
                         Assessment List
                     </Typography>
                     <DataGridTable rows={assessments} columns={assessmentColumns} />
@@ -178,3 +127,5 @@ export default function CourseDetailStudent() {
         </Container>
     );
 }
+
+export default CourseDetailForParents;

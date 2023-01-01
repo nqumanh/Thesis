@@ -1,28 +1,25 @@
 import { Avatar, Card, CardContent, CircularProgress, Grid, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Assessment } from '@mui/icons-material';
 import { Box } from '@mui/system';
+import { getNumberOfAssessmentsOfStudent } from 'api';
 
 export const TotalAssessment = (props) => {
   const [totalAssessment, setTotalAssessment] = useState(0)
-  const token = localStorage.getItem('token');
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const username = localStorage.getItem('username');
     const id = parseInt(username?.substring(1));
-    let url = `http://localhost:5000/get-number-of-assessments-of-educator/${id}`;
-    axios
-      .get(url, { headers: { Authorization: `Bearer ${token}` } })
+    getNumberOfAssessmentsOfStudent(id)
       .then((res) => {
-        setTotalAssessment(res.data);
+        setTotalAssessment(res.data.totalSubmission);
         setLoading(false)
       })
       .catch((error) => {
         console.log(error)
       });
-  }, [token]);
+  }, []); 
 
   return (
     <Card {...props}>
@@ -38,7 +35,7 @@ export const TotalAssessment = (props) => {
               gutterBottom
               variant="overline"
             >
-              Total Assessment
+              Total Submitted Assessment
             </Typography>
             {loading ?
               <Box sx={{ display: 'flex' }}>

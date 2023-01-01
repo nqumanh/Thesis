@@ -36,7 +36,7 @@ export default function Message() {
     const currentChannelId = useSelector(state => state.message.currentChannelId)
 
     useEffect(() => {
-        // if (channels.length === 0)
+        if (channels.length === 0) //stop fetch channels because at first chat, the channel have not been in database if it has no message
             dispatch(fetchChannels(id))
     }, [dispatch, id, channels.length])
 
@@ -58,7 +58,7 @@ export default function Message() {
         if (messages.length === 0) {
             let participants = [id, channels.find(x => x.id === currentChannelId).userId].join(" ")
             await createNewChannel(currentChannelId, '', '', participants).then((res) => {
-                console.log(res)
+                console.log(res.data)
             }).catch((err) => {
                 console.log(err)
             })
@@ -69,9 +69,9 @@ export default function Message() {
             message: typingMessage,
         }
         await sendMessage(newMessage).then((res) => {
-            console.log(res.data)
             setMessages(messages => [...messages, res.data]);
         }).catch((err) => { console.log(err) })
+
         setTypingMessage("");
     };
 
@@ -110,6 +110,7 @@ export default function Message() {
                                 flexWrap: 'wrap',
                                 m: -1,
                                 p: 2,
+                                height: '80px'
                             }}>
                                 <Typography
                                     sx={{ m: 1 }}
@@ -153,6 +154,7 @@ export default function Message() {
                                     flexWrap: 'wrap',
                                     m: -1,
                                     p: 2,
+                                    height: '80px',
                                 }}>
                                     <Button>
                                         {onChatChannel?.name}

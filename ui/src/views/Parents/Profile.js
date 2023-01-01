@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
     const [profile, setProfile] = useState([]);
-    const [childInfo, setChildInfo] = useState([]);
     const token = localStorage.getItem("token");
     const navigate = useNavigate()
 
@@ -20,24 +19,20 @@ export default function Profile() {
                 setProfile(res.data)
             })
             .catch((error) => {
-                localStorage.clear()
-                navigate('/login')
                 console.log(error)
             });
 
-        let childId = parseInt(id.substring(1));
-        axios
-            .get(`http://127.0.0.1:5000/student/${childId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-            .then((res) => {
-                setChildInfo(res.data)
-            })
-            .catch((error) => {
-                localStorage.clear()
-                navigate('/login')
-                console.log(error)
-            });
+        // let childId = parseInt(id.substring(1));
+        // axios
+        //     .get(`http://127.0.0.1:5000/student/${childId}`, {
+        //         headers: { Authorization: `Bearer ${token}` },
+        //     })
+        //     .then((res) => {
+        //         setChildInfo(res.data)
+        //     })
+        //     .catch((error) => {
+        //         console.log(error)
+        //     });
 
     }, [token, navigate]);
 
@@ -78,7 +73,7 @@ export default function Profile() {
                 </Box>
             </Card>
 
-            <Card sx={{ p: 3 }}>
+            {/* <Card sx={{ p: 3 }}>
                 <Typography gutterBottom variant="h5" component="div">
                     Child's Information
                 </Typography>
@@ -90,7 +85,7 @@ export default function Profile() {
                     <div>Region: {childInfo.region}</div>
                     <div>Highest Education: {childInfo.highest_education}</div>
                 </Box>
-            </Card>
+            </Card> */}
         </Container>
     );
 }

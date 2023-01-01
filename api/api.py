@@ -417,19 +417,13 @@ class DynamicPredict(Resource):
             # print(len(prob_predicted))
             # print(len(students))
             predictions = []
-            count = 0
             for i in range(len(students)):
                 prediction = {
                     'id_student': students[i]["id"],
-                    'created_date': 100,
                     'is_risk': predicted[i],
                     'probability': prob_predicted[i][predicted[i]]
                 }
                 predictions.append(prediction)
-                if prediction['is_risk'] == 0:
-                    count += 1
-
-            print(len(prob_predicted), count)
 
             cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
             cursor.execute("""
@@ -438,16 +432,18 @@ class DynamicPredict(Resource):
             """.format(code_module, code_presentation))
             cursor.execute("SET FOREIGN_KEY_CHECKS=1;")
 
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
             for prediction in predictions:
                 cursor.execute("""
-                            INSERT INTO predictions (id_student, code_module, code_presentation, created_date, is_risk, probability, is_warned)
-                            VALUES (\'{}\', \'{}\',\'{}\', {}, {}, {}, 0);
-                        """.format(prediction["id_student"], code_module, code_presentation, prediction["created_date"], prediction["is_risk"], prediction["probability"]))
+                            INSERT INTO predictions (id_student, code_module, code_presentation, is_risk, probability, is_warned, isParentsWarned, CreatedTime)
+                            VALUES ('{}', '{}','{}', {}, {}, 0, 0, '{}');
+                        """.format(prediction["id_student"], code_module, code_presentation, prediction["is_risk"], prediction["probability"], now))
 
             con.commit()
-            return 1
+            return make_response("Predict successfully!", 200)
         except Exception as e:
-            return {'error': str(e)}
+            return make_response(str(e), 400)
         finally:
             cursor.close()
             con.close()
@@ -565,7 +561,6 @@ class EditUserPassword(Resource):
             auth_state = check_password_hash(password_hash, oldPassword)
             if auth_state:
                 hash_password = generate_password_hash(newPassword)
-                print(hash_password)
                 cursor.execute("""UPDATE user_account
                                 SET password = \"{}\"
                                 WHERE username=\"{}\";
@@ -621,7 +616,6 @@ class CreateChannel(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             participants = participantsStr.split(" ")
-            print(participants)
             cursor.execute("""INSERT INTO message_channel (Id, AdminId, Name)
             VALUES (\'{}\',{},{});"""
                            .format(
@@ -649,21 +643,19 @@ class CreateMessage(Resource):
     def post(self):
         try:
             data = request.json
-            print(data)
             ChannelId, SenderId, Message = data.get('channelId'), data.get(
                 'senderId'), data.get('message')
             con = mysql.connect()
             cursor = con.cursor()
             CreatedTime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            print(CreatedTime)
             cursor.execute("""INSERT INTO messages (ChannelId, SenderId, Message, CreatedTime)
-            VALUES (\'{}\',\'{}\',\'{}\',\'{}\');"""
+            VALUES ('{}','{}',"{}",'{}');"""
                            .format(ChannelId, SenderId, Message, CreatedTime))
 
             cursor.execute(
-                """SELECT Id, ChannelId, SenderId, Message, CreatedTime 
+                """SELECT Id, ChannelId, SenderId, Message, CreatedTime
                 FROM messages
-                WHERE ChannelId=\'{}\' AND CreatedTime=\'{}\';"""
+                WHERE ChannelId='{}' AND CreatedTime='{}';"""
                 .format(ChannelId, CreatedTime))
             mes = cursor.fetchone()
             return make_response({
@@ -720,18 +712,22 @@ class GetAllCourses(Resource):
 
 
 class GetCourseByCode(Resource):
-    @jwt_required()
-    def get(self, code_module, code_presentation):
+    def get(self):
         try:
             conn = mysql.connect()
             cursor = conn.cursor()
+            args = request.args
+            CodeModule, CodePresentation = args.get(
+                'CodeModule'), args.get('CodePresentation')
             cursor.execute(
-                """SELECT name,courses.code_module,code_presentation, major, length
-                FROM courses
-                JOIN course_info
-                ON courses.code_module = course_info.code_module
-                WHERE courses.code_module =\"{}\" AND courses.code_presentation=\"{}\";
-                """.format(code_module, code_presentation)
+                """SELECT i.name, c.code_module, code_presentation, i.major, length, id_system, e.name
+                FROM courses c
+                JOIN course_info i
+                    ON c.code_module = c.code_module
+                JOIN educator e
+                    ON c.id_educator = e.id_educator
+                WHERE c.code_module =\"{}\" AND c.code_presentation=\"{}\";
+                """.format(CodeModule, CodePresentation)
             )
             data = cursor.fetchall()[0]
             year = data[2][0:4]
@@ -744,6 +740,8 @@ class GetCourseByCode(Resource):
                 "year": year,
                 "monthStart": monthStart,
                 "length": data[4],
+                "educatorSystemId": data[5],
+                "educatorName": data[6]
             }
 
         except Exception as e:
@@ -753,7 +751,7 @@ class GetCourseByCode(Resource):
             conn.close()
 
 
-class GetStudentById(Resource):
+class GetStudentInfoById(Resource):
     @ jwt_required()
     def get(self, id):
         try:
@@ -786,6 +784,51 @@ class GetStudentById(Resource):
             con.close()
 
 
+class GetStudentById(Resource):
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            args = request.args
+            id = args.get("id")
+            cursor.execute(
+                """SELECT s.id_student, s.id_system, s.parents_id, s.name, s.relationship_with_parents,
+                    s.gender, s.region, s.highest_education, s.imd_band, s.age_band, s.disability, s.email,
+                    p.name, p.email, p.phone_number, p.job, p.id_system
+                FROM student_info s
+                JOIN parents p
+                    ON s.parents_id = p.personal_id
+                WHERE id_student = \"{}\";
+                """.format(id))
+            info = cursor.fetchall()[0]
+            profile = {
+                "studentId": info[0],
+                "systemId": info[1],
+                "parentsId": info[2],
+                "name": info[3],
+                "parentsRelationship": info[4],
+                "gender": "Male" if info[5] == "M" else "Female",
+                "region": info[6],
+                "highestEducation": info[7],
+                "imdBand": info[8],
+                "ageBand": info[9],
+                "disability": info[10],
+                "email": info[11],
+                "parentsName": info[12],
+                "parentsEmail": info[13],
+                "parentsPhonenumber": info[14],
+                "parentsJob": info[15],
+                "parentsSystemId": info[16],
+            }
+            return make_response(profile, 200)
+
+        except Exception as e:
+            return make_response(str(e), 404)
+        finally:
+            cursor.close()
+            con.close()
+
+
 class GetParentsById(Resource):
     @ jwt_required()
     def get(self, id):
@@ -798,7 +841,6 @@ class GetParentsById(Resource):
                 WHERE personal_id = {};
                 """.format(id))
             info = cursor.fetchall()
-            print(info)
             info = info[0]
             profile = {
                 "id": info[0],
@@ -925,7 +967,7 @@ class GetAllStudents(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             students = []
-            cursor.execute("""SELECT i.id_student, name, gender, highest_education, imd_band, age_band, disability, num_of_prev_attempts, is_risk, is_warned, id_system
+            cursor.execute("""SELECT i.id_student, name, gender, highest_education, imd_band, age_band, disability, num_of_prev_attempts, is_risk, is_warned, id_system, Email
                 FROM student_register r
                 JOIN student_info i
                 ON r.id_student = i.id_student
@@ -939,15 +981,16 @@ class GetAllStudents(Resource):
                 student = {
                     "id": row[0],
                     "name": row[1],
-                    "gender": row[2],
+                    "gender": "Male" if row[2] == "M" else "Female",
                     "highest_education": row[3],
                     "imd_band": row[4],
                     "age_band": row[5],
-                    "disability": row[6],
+                    "disability": "No" if row[6] == "N" else "Yes",
                     "num_of_prev_attempts": row[7],
                     "is_risk": "Yes" if row[8] == 0 else "No",
                     "is_warned": row[9],
-                    "systemId": row[10]
+                    "systemId": row[10],
+                    "email": row[11],
                 }
                 students.append(student)
             return students
@@ -966,21 +1009,68 @@ class WarnAllStudents(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             data = request.json
-            code_module, code_presentation = data.get(
-                'codeModule'), data.get('codePresentation')
+            code_module, code_presentation, content = data.get(
+                'codeModule'), data.get('codePresentation'), data.get('content')
+
+            print(content)
+
+            cursor.execute("""SELECT i.id_student, Email
+                                FROM predictions p
+                                JOIN student_info i
+                                    ON i.id_student = p.id_student
+                                WHERE is_risk = 0
+                                    AND code_module =\"{}\"
+                                    AND code_presentation=\"{}\"
+                                    AND is_warned = 0;
+                                """.format(code_module, code_presentation)
+                           )
+
+            predictions = cursor.fetchall()
+
+            emails = list(map(lambda x: x[1], list(predictions)))[
+                :5]  # can be 100
+
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            for prediction in predictions:
+                cursor.execute("""INSERT INTO warning (id_student, code_module, code_presentation, Content, CreatedTime)
+                                VALUES ('{}', '{}', '{}', '{}', '{}');"""
+                               .format(prediction[0], code_module, code_presentation, content, now))
+
             cursor.execute("""UPDATE predictions
                 SET is_warned = 1
-                WHERE is_risk = 0 AND code_module =\"{}\" AND code_presentation=\"{}\"  AND is_warned <> 1;
+                WHERE is_risk = 0 AND code_module =\"{}\" AND code_presentation=\"{}\"  AND is_warned = 0;
                 """.format(code_module, code_presentation)
                            )
+
+            con.commit()
+
+            service = build('gmail', 'v1', credentials=creds)
+
+            message = EmailMessage()
+
+            message.set_content(content)
+
+            message['To'] = emails
+            message['From'] = """EARLY WARNING SYSTEM <nqumanh@gmail.com>"""
+            message['Subject'] = """WARNING FROM {} - {}""".format(
+                code_module, code_presentation)
+
+            # encoded message
+            encoded_message = base64.urlsafe_b64encode(message.as_bytes()) \
+                .decode()
+
+            create_message = {
+                'raw': encoded_message
+            }
+            service.users().messages().send(userId="me", body=create_message).execute()
 
             students = []
             cursor.execute("""SELECT i.id_student, name, gender, highest_education, imd_band, age_band, disability, num_of_prev_attempts, is_risk, is_warned
                 FROM student_register r
                 JOIN student_info i
-                ON r.id_student = i.id_student
+                    ON r.id_student = i.id_student
                 LEFT JOIN predictions p
-                ON r.id_student = p.id_student AND r.code_module = p.code_module AND r.code_presentation = p.code_presentation
+                    ON r.id_student = p.id_student AND r.code_module = p.code_module AND r.code_presentation = p.code_presentation
                 WHERE r.code_module =\"{}\" AND r.code_presentation=\"{}\";
                 """.format(code_module, code_presentation)
                            )
@@ -1000,11 +1090,12 @@ class WarnAllStudents(Resource):
                 }
                 students.append(student)
 
-            con.commit()
-            return students
+            # con.commit()
+
+            return make_response(students, 200)
 
         except Exception as e:
-            return {'error': str(e)}
+            return make_response(str(e), 400)
         finally:
             cursor.close()
             con.close()
@@ -1012,31 +1103,38 @@ class WarnAllStudents(Resource):
 
 class WarnStudent(Resource):
     @ jwt_required()
-    def put(self):
+    def post(self):
         try:
             con = mysql.connect()
             cursor = con.cursor()
             data = request.json
-            code_module, code_presentation, id = data.get(
-                'codeModule'), data.get('codePresentation'), data.get('id')
+            code_module, code_presentation, id, email, content = data.get('codeModule'), data.get(
+                'codePresentation'), data.get('id'), data.get('email'), data.get('content')
+
             cursor.execute("""UPDATE predictions
                 SET is_warned = 1
-                WHERE is_risk = 0 
-                AND id_student = \"{}\" 
+                WHERE is_risk = 0
+                AND id_student = \"{}\"
                 AND code_module = \"{}\"
                 AND code_presentation = \"{}\";
                 """.format(id, code_module, code_presentation)
                            )
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            cursor.execute("""INSERT INTO warning (id_student, code_module, code_presentation, Content, CreatedTime)
+                            VALUES ('{}', '{}', '{}', '{}', '{}');"""
+                           .format(id, code_module, code_presentation, content, now))
+            con.commit()
 
             service = build('gmail', 'v1', credentials=creds)
 
             message = EmailMessage()
 
-            message.set_content('This is the content of the warning!')
+            message.set_content(content)
 
-            message['To'] = 'quangmanh1998@gmail.com'
-            message['From'] = 'nqumanh@gmail.com'
-            message['Subject'] = 'WARNING FROM PRINCIPLE OF PROGRAMMING LANGUAGE (CCC) - SEMESTER 2014B'
+            message['To'] = email
+            message['From'] = """EARLY WARNING SYSTEM <nqumanh@gmail.com>"""
+            message['Subject'] = """WARNING FROM {} - {}""".format(
+                code_module, code_presentation)
 
             # encoded message
             encoded_message = base64.urlsafe_b64encode(message.as_bytes()) \
@@ -1047,38 +1145,97 @@ class WarnStudent(Resource):
             }
             service.users().messages().send(userId="me", body=create_message).execute()
 
-            cursor.execute("""SELECT s.id_student, s.name, is_risk, probability, is_warned
+            cursor.execute("""SELECT s.id_student, s.name, is_risk, probability, is_warned, IsParentsWarned
                 FROM predictions p
                 JOIN student_info s
                 ON p.id_student = s.id_student
-                WHERE p.id_student = \"{}\" 
+                WHERE p.id_student = \"{}\"
                 AND code_module = \"{}\"
                 AND code_presentation = \"{}\";
                 """.format(id, code_module, code_presentation)
                            )
-            data = cursor.fetchall()[0]
+            data = cursor.fetchone()
 
-            cursor.execute("""SELECT s.id_student, s.name, is_risk, probability, is_warned
-                FROM predictions p
-                JOIN student_info s
-                ON p.id_student = s.id_student
-                WHERE p.id_student = \"{}\" 
-                AND code_module = \"{}\"
-                AND code_presentation = \"{}\";
-                """.format(id, code_module, code_presentation)
-                           )
-
-            con.commit()
-            return {
+            return make_response({
                 "id": data[0],
                 "name": data[1],
                 "isRisk": "Yes" if data[2] == 0 else "No",
                 "probability": str(data[3]),
-                "isWarned": data[4]
-            }
+                "isWarned": data[4],
+                "isParentsWarned": data[5],
+            }, 200)
 
         except Exception as e:
-            return {'error': str(e)}
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
+class WarnParents(Resource):
+    @ jwt_required()
+    def post(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            data = request.json
+            code_module, code_presentation, id, email, content = data.get('codeModule'), data.get(
+                'codePresentation'), data.get('id'), data.get('email'), data.get('content')
+            cursor.execute("""UPDATE predictions
+                SET isParentsWarned = 1
+                WHERE id_student = \"{}\"
+                    AND code_module = \"{}\"
+                    AND code_presentation = \"{}\";
+                """.format(id, code_module, code_presentation)
+                           )
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            # cursor.execute("""INSERT INTO warning (id_student, code_module, code_presentation, Content, CreatedTime)
+            #                 VALUES ('{}', '{}', '{}', '{}', '{}');"""
+            #                .format(id, code_module, code_presentation, content, now))
+            # con.commit()
+
+            service = build('gmail', 'v1', credentials=creds)
+
+            message = EmailMessage()
+
+            message.set_content(content)
+
+            message['To'] = email
+            message['From'] = """EARLY WARNING SYSTEM <nqumanh@gmail.com>"""
+            message['Subject'] = """WARNING FROM {} - {}""".format(
+                code_module, code_presentation)
+
+            # encoded message
+            encoded_message = base64.urlsafe_b64encode(message.as_bytes()) \
+                .decode()
+
+            create_message = {
+                'raw': encoded_message
+            }
+            service.users().messages().send(userId="me", body=create_message).execute()
+
+            cursor.execute("""SELECT s.id_student, s.name, is_risk, probability, is_warned, IsParentsWarned
+                FROM predictions p
+                JOIN student_info s
+                ON p.id_student = s.id_student
+                WHERE p.id_student = \"{}\"
+                AND code_module = \"{}\"
+                AND code_presentation = \"{}\";
+                """.format(id, code_module, code_presentation)
+                           )
+            data = cursor.fetchone()
+
+            return make_response({
+                "id": data[0],
+                "name": data[1],
+                "isRisk": "Yes" if data[2] == 0 else "No",
+                "probability": str(data[3]),
+                "isWarned": data[4],
+                "isParentsWarned": data[5],
+            }, 200)
+
+        except Exception as e:
+            return make_response(str(e), 400)
         finally:
             cursor.close()
             con.close()
@@ -1129,29 +1286,30 @@ class GetAllMessages(Resource):
 
 
 class GetAllWarning(Resource):
-    @ jwt_required()
-    def get(self, id):
+    def get(self):
         try:
-            warnings = []
             con = mysql.connect()
             cursor = con.cursor()
-            cursor.execute("""SELECT code_module, code_presentation, content, StudentResponse, description, created_time
+            args = request.args
+            id = args.get("id")
+            cursor.execute("""SELECT Id, code_module, code_presentation, Content, StudentResponse, CreatedTime
                             FROM warning
                             WHERE id_student = \"{}\"
-                            ORDER BY created_time DESC;
+                            ORDER BY CreatedTime DESC;
                             """.format(id))
             data = cursor.fetchall()
+            warnings = []
             for row in data:
                 warning = {
-                    "code_module": row[0],
-                    "code_presentation": row[1],
-                    "content": row[2],
-                    "status": row[3],
-                    "description": row[4],
+                    "id": row[0],
+                    "code_module": row[1],
+                    "code_presentation": row[2],
+                    "content": row[3],
+                    "studentResponse": row[4],
                     "created_time": str(row[5]),
                 }
                 warnings.append(warning)
-            return warnings
+            return make_response(warnings, 200)
 
         except Exception as e:
             return make_response(str(e), 400)
@@ -1178,7 +1336,6 @@ class GetCoursesOfEducator(Resource):
                     WHERE courses.id_educator = \"{}\";
                 """.format(id))
             data = cursor.fetchall()
-            print(data)
             courses = []
             for idx, row in enumerate(data):
                 item = {
@@ -1229,7 +1386,7 @@ class GetNumberOfStudentsOfEducator(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute(
-                """SELECT COUNT(*) FROM student_register s 
+                """SELECT COUNT(*) FROM student_register s
                 JOIN courses c
                 ON c.code_module = s.code_module AND c.code_presentation = s.code_presentation
                 WHERE id_educator = \'{}\'
@@ -1251,10 +1408,10 @@ class GetNumberOfAtRiskStudentsOfEducator(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute(
-                """SELECT COUNT(*) FROM student_register s 
+                """SELECT COUNT(*) FROM student_register s
                 JOIN courses c
                 ON c.code_module = s.code_module AND c.code_presentation = s.code_presentation
-                LEFT JOIN predictions p 
+                LEFT JOIN predictions p
                 ON s.id_student = p.id_student AND s.code_module = p.code_module AND s.code_presentation = p.code_presentation
                 WHERE id_educator = \'{}\' AND is_risk = 0
                 """.format(id))
@@ -1318,7 +1475,6 @@ class GetNumberOfAssessmentTypesOfEducator(Resource):
                 """.format(id))
             exm = cursor.fetchone()[0]
             sum = tma + cma + exm
-            print(round(4/9*100, 2))
             return {
                 'tma': round(tma/sum*100),
                 'cma': round(cma/sum*100),
@@ -1441,18 +1597,20 @@ class GetPredictionOnStudent(Resource):
                 FROM predictions p
                 JOIN student_info s
                     ON p.id_student = s.id_student
-                WHERE p.id_student = \"{}\" 
+                WHERE p.id_student = \"{}\"
                     AND code_module = \"{}\"
                     AND code_presentation = \"{}\";
                 """.format(id, code_module, code_presentation)
                            )
-            data = cursor.fetchall()[0]
+            data = cursor.fetchone()
             return {
-                "id": data[0],
-                "name": data[1],
                 "isRisk": "Yes" if data[2] == 0 else "No",
                 "probability": str(data[3]),
                 "isWarned": data[4],
+            } if data else {
+                "isRisk": "No",
+                "probability": 100,
+                "isWarned": 0,
             }
 
         except Exception as e:
@@ -1529,7 +1687,7 @@ class GetNameByUsername(Resource):
 
 
 class GetAllChannelsByUserId(Resource):
-    # @ jwt_required()
+    @ jwt_required()
     def get(self):
         try:
             con = mysql.connect()
@@ -1537,43 +1695,54 @@ class GetAllChannelsByUserId(Resource):
             args = request.args
             id = args.get("id")
             cursor.execute("""SELECT ChannelId FROM message_participants
-                           WHERE UserId = \"{}\";
+                           WHERE UserId = '{}';
                            """.format(id))
             channelList = cursor.fetchall()
             channels = []
             for row in channelList:
-                print(row)
                 # cursor.execute("""SELECT SenderId, Message, CreatedTime, AdminId, Name
                 #             FROM message_participants p
                 #             JOIN message_channel c
                 #             ON p.ChannelId = c.ChannelId
-                #             WHERE p.ChannelId = \"{}\"
+                #             WHERE p.ChannelId = '{}'
                 #             ORDER BY CreatedTime
                 #             """.format(row[0]))
                 # # LIMIT 1;
                 # lastMessage = cursor.fetchall()[0]
                 # lastMessage = ['']*5
                 # lastSender = lastMessage[0][0]
-                cursor.execute("""SELECT UserId, role 
+                cursor.execute("""SELECT UserId, role
                                 FROM message_participants p
                                 JOIN user_account a
                                     ON p.UserId = a.id
-                                WHERE ChannelId = \"{}\" AND UserId <> \"{}\";
+                                WHERE ChannelId = '{}' AND UserId <> '{}';
                            """.format(row[0], id))
                 account = cursor.fetchone()
+
+                if account is None:
+                    continue
+
                 user = {'id': account[0], 'name': ''}
+
                 if account[1] == "student":
-                    cursor.execute("""SELECT name 
+                    cursor.execute("""SELECT name
                                 FROM student_info
-                                WHERE id_system = \"{}\";
+                                WHERE id_system = '{}';
                            """.format(user["id"]))
                     user["name"] = cursor.fetchone()[0]
                 elif account[1] == "educator":
-                    cursor.execute("""SELECT name 
+                    cursor.execute("""SELECT name
                                 FROM educator
-                                WHERE id_system = \"{}\";
+                                WHERE id_system = '{}';
                            """.format(user["id"]))
                     user["name"] = cursor.fetchone()[0]
+                else:
+                    cursor.execute("""SELECT name
+                                FROM parents
+                                WHERE id_system = '{}';
+                           """.format(user["id"]))
+                    user["name"] = cursor.fetchone()[0]
+
                 channel = {
                     "id": row[0],
                     "name": user["name"],
@@ -1583,6 +1752,7 @@ class GetAllChannelsByUserId(Resource):
                     "createdTime": '',
                 }
                 channels.append(channel)
+
             return make_response(channels, 200)
 
         except Exception as e:
@@ -1593,7 +1763,7 @@ class GetAllChannelsByUserId(Resource):
 
 
 class GetAllMessagesByChannelId(Resource):
-    # @ jwt_required()
+    @ jwt_required()
     def get(self):
         try:
             con = mysql.connect()
@@ -1615,6 +1785,235 @@ class GetAllMessagesByChannelId(Resource):
                 messages.append(message)
 
             return make_response(messages, 200)
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
+class AddFeedbackToWarning(Resource):
+    @jwt_required()
+    def put(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            data = request.json
+            id, feedback = data.get("id"), data.get("feedback")
+            cursor.execute("""UPDATE warning
+                            SET StudentResponse = '{}'
+                            WHERE Id = {};
+                           """.format(feedback, id))
+            con.commit()
+            cursor.execute("""SELECT Id, code_module, code_presentation, Content, StudentResponse, CreatedTime
+                            FROM warning
+                            WHERE Id = {};
+                            """.format(id))
+            data = cursor.fetchone()
+            warning = {
+                "id": data[0],
+                "code_module": data[1],
+                "code_presentation": data[2],
+                "content": data[3],
+                "studentResponse": data[4],
+                "created_time": str(data[5]),
+            }
+            return make_response(warning, 200)
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetNumberOfCoursesOfStudent(Resource):
+    @jwt_required()
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            args = request.args
+            id = args.get('id')
+            cursor.execute("""
+                SELECT COUNT(*) FROM student_register
+                WHERE id_student = '{}';
+            """.format(id))
+            numberOfCourses = str(cursor.fetchone()[0])
+            return make_response(numberOfCourses, 200)
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetResponseWarningPercentageOfStudent(Resource):
+    @jwt_required()
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            args = request.args
+            id = args.get('id')
+            cursor.execute("""
+                SELECT COUNT(*) FROM warning
+                WHERE id_student = '{}';
+            """.format(id))
+
+            totalWarning = cursor.fetchone()[0]
+
+            cursor.execute("""
+                SELECT COUNT(*) FROM warning
+                WHERE id_student = '{}' AND StudentResponse is not NULL;
+            """.format(id))
+
+            totalResponse = cursor.fetchone()[0]
+            print(totalResponse)
+
+            return make_response({"percent": 100 if totalWarning == 0 else totalResponse*100/totalWarning}, 200)
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetNumberOfAssessmentsOfStudent(Resource):
+    @jwt_required()
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            args = request.args
+            id = args.get('id')
+            cursor.execute("""
+                SELECT COUNT(*) FROM student_assessments a
+                WHERE id_student = '{}';
+            """.format(id))
+
+            totalSubmission = cursor.fetchone()[0]
+
+            cursor.execute("""
+                SELECT COUNT(*) FROM assessments a
+                JOIN courses c
+                    ON a.code_module = c.code_module AND a.code_presentation = c.code_presentation
+                JOIN student_register s
+                    ON a.code_module = s.code_module AND a.code_presentation = s.code_presentation
+                WHERE id_student = '{}' AND assessment_type = \'TMA\';
+            """.format(id))
+            tma = cursor.fetchone()[0]
+            cursor.execute("""
+                SELECT COUNT(*) FROM assessments a
+                JOIN courses c
+                    ON a.code_module = c.code_module AND a.code_presentation = c.code_presentation
+                JOIN student_register s
+                    ON a.code_module = s.code_module AND a.code_presentation = s.code_presentation
+                WHERE id_student = '{}' AND assessment_type = \'CMA\';
+            """.format(id))
+            cma = cursor.fetchone()[0]
+            cursor.execute("""
+                SELECT COUNT(*) FROM assessments a
+                JOIN courses c
+                    ON a.code_module = c.code_module AND a.code_presentation = c.code_presentation
+                JOIN student_register s
+                    ON a.code_module = s.code_module AND a.code_presentation = s.code_presentation
+                WHERE id_student = '{}' AND assessment_type = \'Exam\';
+            """.format(id))
+            exm = cursor.fetchone()[0]
+            sum = tma + cma + exm
+
+            return make_response({
+                'tma': round(tma/sum*100),
+                'cma': round(cma/sum*100),
+                'exam': 100 - round(tma/sum*100) - round(cma/sum*100),
+                "totalSubmission": totalSubmission
+            }, 200)
+
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetCourseListOfStudentByParentsId(Resource):
+    @jwt_required()
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            args = request.args
+            Id = args.get('Id')
+            cursor.execute("""SELECT i.name, i.code_module, c.code_presentation, i.major, c.length, r.id_student, s.name
+                FROM student_register r
+                JOIN student_info s
+                    ON r.id_student = s.id_student
+                JOIN courses c
+                    ON r.code_module = c.code_module AND r.code_presentation = c.code_presentation
+                LEFT JOIN course_info i
+                    ON c.code_module = i.code_module
+                WHERE s.parents_id = '{}';
+            """.format(Id))
+            data = cursor.fetchall()
+            courses = []
+            for i, row in enumerate(data):
+                course = {
+                    "id": i,
+                    "name": row[0],
+                    "codeModule": row[1],
+                    "codePresentation": row[2],
+                    "major": row[3],
+                    "year": row[2][:4],
+                    "monthStart": "February" if (row[2][4] == "B") else "October",
+                    "length": row[4],
+                    "studentId": row[5],
+                    "childName": row[6],
+                }
+                courses.append(course)
+
+            return make_response(courses, 200)
+        except Exception as e:
+            return make_response(str(e), 400)
+        finally:
+            cursor.close()
+            con.close()
+
+
+class GetStudentAssessments(Resource):
+    @jwt_required()
+    def get(self):
+        try:
+            con = mysql.connect()
+            cursor = con.cursor()
+            args = request.args
+            StudentId, CodeModule, CodePresentation = args.get(
+                "StudentId"), args.get("CodeModule"), args.get("CodePresentation")
+            cursor.execute("""SELECT a.id_assessment, assessment_type, date_submitted, score, weight
+                FROM student_assessments AS s
+                JOIN assessments AS a
+                ON a.id_assessment = s.id_assessment
+                WHERE id_student = \'{}\' AND a.code_module = \'{}\' AND a.code_presentation = \'{}\';
+                """.format(StudentId, CodeModule, CodePresentation)
+                           )
+            assessments = []
+            data = cursor.fetchall()
+            for idx, row in enumerate(data):
+                assessment = {
+                    'id': idx,
+                    'id_assessment': row[0],
+                    'assessment_type': row[1],
+                    'date_submitted': row[2],
+                    'score': row[3],
+                    'weight': row[4]
+                }
+                assessments.append(assessment)
+            assessments = sorted(assessments, key=lambda x: int(x['date_submitted']))
+
+            return make_response(assessments, 200)
 
         except Exception as e:
             return make_response(str(e), 400)
@@ -1647,22 +2046,28 @@ api.add_resource(EditUserPassword, '/edit-user-password')
 api.add_resource(GetAllMessages,
                  '/message/<username>')
 api.add_resource(GetContacts, '/get-contacts')
-api.add_resource(
-    GetCourseByCode, '/get-course/<code_module>/<code_presentation>')
-api.add_resource(GetAllChannelsByUserId, '/get-channels')
+api.add_resource(GetAllChannelsByUserId, '/GetChannels')
 api.add_resource(GetAllMessagesByChannelId, '/get-messages')
-
+api.add_resource(GetStudentById, '/GetStudentById')
+api.add_resource(GetStudentAssessments, '/GetStudentAssessments')
 
 # student
 api.add_resource(GetStudentName, '/get-student-name/<username>')
 api.add_resource(GetAllCoursesOfStudent, '/student-register/<id>')
-api.add_resource(GetStudentById, '/student/<id>')
+api.add_resource(GetStudentInfoById, '/student/<id>')
 api.add_resource(GetAllWarning,
-                 '/warning/<id>')
+                 '/GetWarnings')
 api.add_resource(GetStudentAssessment,
                  '/student-assessment/<id>/<code_module>/<code_presentation>')
 api.add_resource(GetPredictionOnStudent,
                  '/predict-student/<id>/<code_module>/<code_presentation>')
+api.add_resource(AddFeedbackToWarning, '/AddFeedbackToWarning')
+api.add_resource(GetNumberOfCoursesOfStudent, '/GetNumberOfCoursesOfStudent')
+api.add_resource(GetResponseWarningPercentageOfStudent,
+                 '/GetResponseWarningPercentageOfStudent')
+api.add_resource(GetNumberOfAssessmentsOfStudent,
+                 '/GetNumberOfAssessmentsOfStudent')
+api.add_resource(GetCourseByCode, '/GetCourseByCode')
 
 # educator
 api.add_resource(GetEducatorName, '/get-educator-name/<username>')
@@ -1690,9 +2095,12 @@ api.add_resource(WarnAllStudents,
                  '/warn-all-students')
 api.add_resource(WarnStudent,
                  '/warn-student')
+api.add_resource(WarnParents, '/WarnParents')
 
 # parents
 api.add_resource(GetParentsById, '/parents/<id>')
+api.add_resource(GetCourseListOfStudentByParentsId,
+                 '/GetCourseListOfStudentByParentsId')
 
 
 if __name__ == '__main__':
