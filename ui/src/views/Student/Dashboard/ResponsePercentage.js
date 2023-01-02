@@ -1,17 +1,15 @@
 import { Avatar, Box, Card, CardContent, CircularProgress, Grid, LinearProgress, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Warning } from '@mui/icons-material';
-import { getResponseWarningPercentageOfStudent } from 'api';
+import { getResponseWarningPercentage } from 'api';
 
 export const ResponsePercentage = () => {
   const [percent, setPercent] = useState(0)
   const [loading, setLoading] = useState(true)
 
-
   useEffect(() => {
-    const username = localStorage.getItem('username');
-    const id = parseInt(username?.substring(1));
-    getResponseWarningPercentageOfStudent(id)
+    const id =  localStorage.getItem('id');
+    getResponseWarningPercentage(id)
       .then((res) => {
         setLoading(false)
         setPercent(res.data.percent)

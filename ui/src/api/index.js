@@ -2,9 +2,8 @@ import axios from 'axios';
 
 const BASE_URL = "http://localhost:5000";
 
-const token = localStorage.getItem("token")
-
 const getAxios = (url, params = {}) => {
+    const token = localStorage.getItem("token")
     let config = {
         params: params,
         headers: { Authorization: `Bearer ${token}` },
@@ -21,8 +20,10 @@ const login = (loginForm) =>
 const getChannelsOfUser = (id) =>
     getAxios("http://localhost:5000/GetChannels", { id: id })
 
-const createNewChannel = (id, adminId, channelName, participants) =>
-    axios.post(
+const createNewChannel = (id, adminId, channelName, participants) => {
+    const token = localStorage.getItem("token")
+
+    return axios.post(
         `${BASE_URL}/create-channel`,
         {
             id: id,
@@ -34,18 +35,22 @@ const createNewChannel = (id, adminId, channelName, participants) =>
             headers: { Authorization: `Bearer ${token}` },
         }
     );
+}
 
 const getMesseges = (id) =>
     getAxios("http://localhost:5000/get-messages", { id: id })
 
-const sendMessage = (message) =>
-    axios.post(
+const sendMessage = (message) => {
+    const token = localStorage.getItem("token")
+
+    return axios.post(
         `${BASE_URL}/create-message`,
         message,
         {
             headers: { Authorization: `Bearer ${token}` },
         }
     );
+}
 
 const getStudentById = (id) =>
     getAxios("http://localhost:5000/GetStudentById", { id: id })
@@ -53,8 +58,8 @@ const getStudentById = (id) =>
 const getNumberOfCoursesOfStudent = (id) =>
     getAxios("http://localhost:5000/GetNumberOfCoursesOfStudent", { id: id })
 
-const getResponseWarningPercentageOfStudent = (id) =>
-    getAxios("http://localhost:5000/GetResponseWarningPercentageOfStudent", { id: id })
+const getResponseWarningPercentage = (id) =>
+    getAxios("http://localhost:5000/GetResponseWarningPercentage", { ReceiverId: id })
 
 const getNumberOfAssessmentsOfStudent = (id) =>
     getAxios("http://localhost:5000/GetNumberOfAssessmentsOfStudent", { id: id })
@@ -63,25 +68,31 @@ const getCourseByCode = (codeModule, codePresentation) =>
     getAxios("http://localhost:5000/GetCourseByCode", { CodeModule: codeModule, CodePresentation: codePresentation })
 
 const getWarnings = (id) =>
-    getAxios("http://localhost:5000/GetWarnings", { id: id })
+    getAxios("http://localhost:5000/GetWarnings", { ReceiverId: id })
 
-const addFeedbackToWarning = (id, feedback) =>
-    axios.put(
+const addFeedbackToWarning = (id, feedback) => {
+    const token = localStorage.getItem("token")
+
+    return axios.put(
         `${BASE_URL}/AddFeedbackToWarning`,
         {
-            id: id,
-            feedback: feedback,
+            Id: id,
+            Feedback: feedback,
         },
         {
             headers: { Authorization: `Bearer ${token}` },
         }
     );
+}
 
 const getCourseListOfStudentByParentsId = (id) =>
     getAxios("http://localhost:5000/GetCourseListOfStudentByParentsId", { Id: id })
 
 const getStudentAssessments = (studentId, codeModule, codePresentation) =>
     getAxios("http://localhost:5000/GetStudentAssessments", { StudentId: studentId, CodeModule: codeModule, CodePresentation: codePresentation })
+
+const getSentWarnings = (codeModule, codePresentation) =>
+    getAxios("http://localhost:5000/GetSentWarnings", { CodeModule: codeModule, CodePresentation: codePresentation })
 
 export {
     login,
@@ -94,7 +105,7 @@ export {
 
     getStudentById,
     getNumberOfCoursesOfStudent,
-    getResponseWarningPercentageOfStudent,
+    getResponseWarningPercentage,
     getNumberOfAssessmentsOfStudent,
     getCourseByCode,
 
@@ -104,4 +115,5 @@ export {
     getStudentAssessments,
 
     getCourseListOfStudentByParentsId,
+    getSentWarnings,
 };

@@ -51,7 +51,6 @@ const ChildCourseList = () => {
     const navigate = useNavigate()
     const [pageSize, setPageSize] = useState(5);
     const [courses, setCourses] = useState([]);
-    const token = localStorage.getItem('token');
 
     useEffect(() => {
         const personal_id = localStorage.getItem('username');
@@ -64,11 +63,11 @@ const ChildCourseList = () => {
                 navigate('/login')
                 console.log(error)
             });
-    }, [token, navigate]);
+    }, [navigate]);
 
     const courseColumns = [
         {
-            field: 'childName',
+            field: 'studentName',
             headerName: 'Child Name',
             width: 300,
             hideable: false

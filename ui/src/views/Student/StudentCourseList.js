@@ -50,8 +50,7 @@ const StudentCourseList = () => {
     useEffect(() => {
         const username = localStorage.getItem('username');
         const id = parseInt(username.substring(1));
-        let url =
-            role === 'student' ? `http://127.0.0.1:5000/student-register/${id}` : `http://localhost:5000/get-courses-of-educator/${id}`;
+        let url = `http://127.0.0.1:5000/student-register/${id}`
         axios
             .get(url, { headers: { Authorization: `Bearer ${token}` } })
             .then((res) => {

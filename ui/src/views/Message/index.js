@@ -70,6 +70,7 @@ export default function Message() {
         }
         await sendMessage(newMessage).then((res) => {
             setMessages(messages => [...messages, res.data]);
+            dispatch(fetchChannels(id))
         }).catch((err) => { console.log(err) })
 
         setTypingMessage("");

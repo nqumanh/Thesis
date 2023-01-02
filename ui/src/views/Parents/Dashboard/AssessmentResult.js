@@ -82,7 +82,6 @@ function AssessmentResult() {
             setLoading(true)
             getStudentAssessments(selectedCourse.studentId, selectedCourse.codeModule, selectedCourse.codePresentation)
                 .then((res) => {
-                    console.log(res.data)
                     setAssessments(res.data)
                     setLoading(false)
                 })

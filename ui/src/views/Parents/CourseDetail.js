@@ -69,7 +69,6 @@ function CourseDetailForParents() {
     useEffect(() => {
         getStudentAssessments(studentId, codeModule, codePresentation)
             .then((res) => {
-                console.log(res.data)
                 setAssessments(res.data)
             })
             .catch((error) => {

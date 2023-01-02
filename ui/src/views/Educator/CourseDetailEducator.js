@@ -9,7 +9,7 @@ import { Close, Telegram } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { addChannel, setCurrentChannel } from "features/message/messageSlice";
 import { v4 } from "uuid";
-import { getCourseByCode } from "api";
+import { getCourseByCode, getSentWarnings } from "api";
 
 const ODD_OPACITY = 0.2;
 
@@ -112,6 +112,46 @@ const materialColumns = [
     },
 ];
 
+const warningColumns = [
+    {
+        field: 'role',
+        headerName: 'To',
+        width: 100,
+    },
+    {
+        field: 'studentName',
+        headerName: 'At risk student',
+        width: 200,
+        hideable: false
+    },
+    {
+        field: 'studentId',
+        headerName: 'Student ID',
+        width: 100,
+        hideable: false
+    },
+    {
+        field: 'content',
+        headerName: 'Educator\'s Comment',
+        width: 450,
+    },
+    {
+        field: 'feedback',
+        headerName: 'Feedback',
+        width: 450,
+    },
+    {
+        field: 'responseTime',
+        headerName: 'Response Time',
+        width: 150,
+    },
+    {
+        field: 'createdTime',
+        headerName: 'Created Time',
+        width: 150,
+    },
+];
+
 export default function CourseDetailEducator() {
     const location = useLocation();
     const navigate = useNavigate()
@@ -119,8 +159,6 @@ export default function CourseDetailEducator() {
     const dispatch = useDispatch()
 
     const course = location.state.presentation;
-    const role = localStorage.getItem("role");
-    const id = parseInt(localStorage.getItem("username").substring(1));
     const token = localStorage.getItem("token");
 
     const [presentation, setPresentation] = useState({})
@@ -129,6 +167,8 @@ export default function CourseDetailEducator() {
     const [students, setStudents] = useState([]);
     const [studentListLoading, setStudentListLoading] = useState(false)
     const [content, setContent] = useState("")
+    const [updateWarnings, setUpdateWarnings] = useState(false)
+    const [warnings, setWarnings] = useState([])
 
     const handleSendMessage = (e, id) => {
         e.stopPropagation();
@@ -214,6 +254,14 @@ export default function CourseDetailEducator() {
     ];
 
     useEffect(() => {
+        getSentWarnings(course.codeModule, course.codePresentation)
+            .then((res) => {
+                setWarnings(res.data)
+            }).catch((err) => console.log(err))
+        setUpdateWarnings(true)
+    }, [course, updateWarnings])
+
+    useEffect(() => {
         axios
             .get(
                 `http://127.0.0.1:5000/materials/${course.codeModule}/${course.codePresentation}`,
@@ -237,6 +285,20 @@ export default function CourseDetailEducator() {
                 navigate('/login')
                 console.log(error)
             });
+
+        let url = `http://127.0.0.1:5000/assessments/${course.codeModule}/${course.codePresentation}`;
+        axios
+            .get(url, { headers: { Authorization: `Bearer ${token}` } })
+            .then((response) => {
+                let assessments = response.data.map((row, index) => ({ id: index, ...row }))
+                setAssessments(assessments)
+            })
+            .catch((error) => {
+                localStorage.clear()
+                navigate('/login')
+                console.log(error)
+            });
+
     }, [course, token, navigate]);
 
     const [afterPredict, setAfterPredict] = useState(false)
@@ -280,21 +342,6 @@ export default function CourseDetailEducator() {
     }
 
     useEffect(() => {
-        let url = `http://127.0.0.1:5000/assessments/${course.codeModule}/${course.codePresentation}`;
-        axios
-            .get(url, { headers: { Authorization: `Bearer ${token}` } })
-            .then((response) => {
-                let assessments = response.data.map((row, index) => ({ id: index, ...row }))
-                setAssessments(assessments)
-            })
-            .catch((error) => {
-                localStorage.clear()
-                navigate('/login')
-                console.log(error)
-            });
-    }, [id, role, course, token, navigate]);
-
-    useEffect(() => {
         setStudentListLoading(true)
         axios
             .get(
@@ -331,12 +378,14 @@ export default function CourseDetailEducator() {
         setStudentListLoading(true)
 
         axios.put(`http://127.0.0.1:5000/warn-all-students`,
-            { codeModule: course.codeModule, codePresentation: course.codePresentation, content: content },
+            { CodeModule: course.codeModule, CodePresentation: course.codePresentation, Content: content },
             { headers: { Authorization: `Bearer ${token}` } }
         ).then((res) => {
             setStudents(res.data)
+            setUpdateWarnings(false)
             setStudentListLoading(false)
         }).catch((err) => {
+            setStudentListLoading(false)
             console.log(err)
         })
         setOpenWarnDialog(false);
@@ -468,6 +517,15 @@ export default function CourseDetailEducator() {
                         />
                     </Card>
                 }
+            </Box>
+
+            <Box sx={{ mt: 3 }}>
+                <Card sx={{ p: 3 }}>
+                    <Typography gutterBottom variant="h5" component="div">
+                        Warning List
+                    </Typography>
+                    <DataGridTable rows={warnings} columns={warningColumns} />
+                </Card>
             </Box>
 
             <Box sx={{ mt: 3 }}>

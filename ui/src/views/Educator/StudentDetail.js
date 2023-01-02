@@ -102,8 +102,6 @@ export default function StudentDetail() {
                 setPrediction(res.data)
             })
             .catch((error) => {
-                localStorage.clear()
-                navigate('/login')
                 console.log(error)
             });
     }, [location.state, role, token, navigate, id]);
@@ -126,7 +124,14 @@ export default function StudentDetail() {
     const handleWarnParents = () => {
         setLoading(true)
         axios.post(`http://127.0.0.1:5000/WarnParents`,
-            { id: id, codeModule: location.state.codeModule, codePresentation: location.state.codePresentation, email: student.email, content: content },
+            { 
+                ParentsSystemId: student.parentsSystemId, 
+                StudentId: id, 
+                CodeModule: location.state.codeModule, 
+                CodePresentation: location.state.codePresentation, 
+                ParentsEmail: student.parentsEmail, 
+                Content: content 
+            },
             { headers: { Authorization: `Bearer ${token}` } }
         ).then((res) => {
             setPrediction(res.data)
@@ -233,7 +238,6 @@ export default function StudentDetail() {
                                                 Warn
                                             </Button>
                                         }
-
                                         {
                                             prediction.isRisk !== "No" &&
                                             <Button variant='contained'

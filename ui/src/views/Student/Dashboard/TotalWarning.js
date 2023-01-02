@@ -9,8 +9,7 @@ export const TotalWarning = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const username = localStorage.getItem('username');
-    const id = parseInt(username?.substring(1));
+    const id = localStorage.getItem('id');
     getWarnings(id)
       .then((res) => {
         setTotalWarning(res.data.length);

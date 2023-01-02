@@ -5,12 +5,10 @@ import { getWarnings } from 'api';
 
 export const TotalWarning = () => {
   const [totalWarning, setTotalWarning] = useState(0)
-  const token = localStorage.getItem('token');
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const username = localStorage.getItem('username');
-    const id = parseInt(username?.substring(1));
+    const id = localStorage.getItem('id');
     getWarnings(id)
       .then((res) => {
         setTotalWarning(res.data.length);
@@ -19,7 +17,7 @@ export const TotalWarning = () => {
       .catch((error) => {
         console.log(error)
       });
-  }, [token]);
+  }, []);
 
   return (
     <Card

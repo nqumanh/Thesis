@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Box, Button, Card, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Typography } from "@mui/material";
 import { addFeedbackToWarning, getWarnings } from "api";
 
-const Warning = () => {
+const ParentsWarning = () => {
     const [warnings, setWarnings] = useState([]);
     let systemId = localStorage.getItem("id")
     const navigate = useNavigate()
@@ -35,9 +35,21 @@ const Warning = () => {
 
     const columns = [
         {
+            field: 'studentName',
+            headerName: 'Student Name',
+            width: 150,
+            hideable: false
+        },
+        {
+            field: 'studentId',
+            headerName: 'Student ID',
+            width: 100,
+            hideable: false
+        },
+        {
             field: 'codeModule',
             headerName: 'Code Module',
-            width: 150,
+            width: 100,
             hideable: false
         },
         {
@@ -130,4 +142,4 @@ const Warning = () => {
     );
 }
 
-export default Warning;
+export default ParentsWarning;

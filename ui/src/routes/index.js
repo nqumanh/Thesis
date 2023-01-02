@@ -21,6 +21,7 @@ import StudentDashboard from "views/Student/Dashboard";
 import ParentsDashboard from "views/Parents/Dashboard";
 import StudentCourseList from "views/Student/StudentCourseList";
 import CourseDetailForParents from "views/Parents/CourseDetail";
+import ParentsWarning from "views/Parents/Warning";
 
 const Routes = () => {
     const role = localStorage.getItem('role');
@@ -34,7 +35,7 @@ const Routes = () => {
                 { path: "", element: (role === "student") ? <StudentCourseList /> : (role === "educator") ? <CourseListEducator /> : <ChildCourseList /> },
                 { path: "dashboard", element: (role === "educator") ? <EducatorDashboard /> : (role === "student") ? <StudentDashboard /> : <ParentsDashboard /> },
                 { path: "profile", element: (role === "student") ? <StudentProfile /> : <ParentsProfile /> },
-                { path: "warning", element: <Warning /> },
+                { path: "warning", element: (role === 'student') ? <Warning /> : <ParentsWarning /> },
                 { path: "message", element: <Message /> },
                 { path: "setting", element: <Setting /> },
                 { path: "course/student", element: (role === 'educator') ? <StudentDetail /> : <NotFound /> },
