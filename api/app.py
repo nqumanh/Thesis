@@ -7,11 +7,6 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 import os.path
 from re import X
-from flask import Flask, make_response, request, jsonify
-from flask_restful import Resource, Api
-from flaskext.mysql import MySQL
-from flask_cors import CORS  # , cross_origin
-from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 from functools import reduce
 import numpy as np
@@ -23,7 +18,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import mean_squared_error
-from flask_jwt_extended import create_access_token, jwt_required, JWTManager
 from sklearn import metrics
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -31,7 +25,6 @@ from sklearn.svm import SVC
 from sklearn import svm
 from sklearn.svm import LinearSVC
 # from flask_jwt_extended import get_jwt_identity
-from datetime import timedelta
 from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import cross_validate
 from imblearn.ensemble import BalancedBaggingClassifier
@@ -41,6 +34,16 @@ from imblearn.pipeline import make_pipeline as make_pipeline_with_sampler
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.ensemble import BalancedRandomForestClassifier
 from datetime import datetime
+
+from flask import Flask, make_response, request, jsonify
+from flask_restful import Resource, Api
+from flaskext.mysql import MySQL
+from flask_cors import CORS
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import create_access_token, jwt_required, JWTManager
+from datetime import timedelta
+
+from api.resources.login import Login
 
 mysql = MySQL()
 app = Flask(__name__)
@@ -567,35 +570,6 @@ class EditUserPassword(Resource):
                                 """.format(hash_password, username))
                 con.commit()
                 return make_response('Password changed!', 200)
-            else:
-                return make_response('Wrong Password!', 403)
-
-        except Exception as e:
-            return make_response(str(e), 400)
-        finally:
-            cursor.close()
-            con.close()
-
-
-class Login(Resource):
-    def post(self):
-        try:
-            data = request.json
-            username, password = data.get('username'), data.get('password')
-            con = mysql.connect()
-            cursor = con.cursor()
-            cursor.execute("""SELECT id, username, password, role
-                            FROM user_account
-                            WHERE username=\"{}\";"""
-                           .format(username))
-            data = cursor.fetchall()
-            if (len(data) == 0):
-                return make_response("Account does not exist", 404)
-            id, username, password_hash, role = data[0]
-            auth_state = check_password_hash(password_hash, password)
-            if auth_state:
-                access_token = create_access_token(identity=username)
-                return jsonify(access_token=access_token, id=id, username=username, role=role)
             else:
                 return make_response('Wrong Password!', 403)
 
