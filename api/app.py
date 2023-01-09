@@ -33,6 +33,7 @@ from sklearn.tree import DecisionTreeClassifier
 from imblearn.pipeline import make_pipeline as make_pipeline_with_sampler
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.ensemble import BalancedRandomForestClassifier
+from imblearn.over_sampling import RandomOverSampler
 from datetime import datetime
 
 from flask import Flask, make_response, request, jsonify
@@ -364,7 +365,7 @@ class DynamicPredict(Resource):
                         result.extend([typ, assessment["weight"], score])
                     result.append(student["result"])
                     train_set.append(result)
-
+            
             X_train = np.array(train_set)[:, :-1]
             y_train = np.array(train_set)[:, -1]
             X_test = np.array(test_set)[:, :-1]
@@ -383,6 +384,9 @@ class DynamicPredict(Resource):
             # smote_bagging
             clf = BalancedRandomForestClassifier(
                 max_depth=2, random_state=0).fit(X_train, y_train)
+            # ros = RandomOverSampler()
+            # X_resampled, y_resampled = ros.fit_resample(X_train, y_train)
+            # clf = svm.SVC().fit(X_resampled, y_resampled)
 
             # clf = LogisticRegression(max_iter=100).fit(X_train, y_train)
             # clf = BaggingClassifier(
@@ -512,16 +516,16 @@ class Predict(Resource):
             # (True Positive + True Negative) / Total Predictions
             Accuracy = metrics.accuracy_score(y_test, predicted)
 
+            # True Negative / (True Negative + False Positive)
+            Specificity = metrics.recall_score(y_test, predicted, pos_label=0)
+
             # True Positive / (True Positive + False Positive)
             Precision = metrics.precision_score(y_test, predicted)
 
             # True Positive / (True Positive + False Negative)
             Sensitivity_recall = metrics.recall_score(y_test, predicted)
 
-            # True Negative / (True Negative + False Positive)
-            Specificity = metrics.recall_score(y_test, predicted, pos_label=0)
-
-            # 2 * ((Precision * Sensitivity) / (Precision + Sensitivity))   HAMONIC mean of precision and recall
+            # 2 * ((Precision * recall) / (Precision + recall))   HAMONIC mean of precision and recall
             F1_score = metrics.f1_score(y_test, predicted)
 
             # print({"Score": Score, "Accuracy": Accuracy, "Precision": Precision, "Sensitivity_recall":
@@ -626,6 +630,7 @@ class CreateMessage(Resource):
             VALUES ('{}','{}',"{}",'{}');"""
                            .format(ChannelId, SenderId, Message, CreatedTime))
 
+            con.commit()
             cursor.execute(
                 """SELECT Id, ChannelId, SenderId, Message, CreatedTime
                 FROM messages
@@ -643,7 +648,6 @@ class CreateMessage(Resource):
         except Exception as e:
             return make_response(str(e), 400)
         finally:
-            con.commit()
             cursor.close()
             con.close()
 
@@ -693,19 +697,21 @@ class GetCourseByCode(Resource):
             args = request.args
             CodeModule, CodePresentation = args.get(
                 'CodeModule'), args.get('CodePresentation')
+            print(CodeModule)
             cursor.execute(
                 """SELECT i.name, c.code_module, code_presentation, i.major, length, id_system, e.name
                 FROM courses c
                 JOIN course_info i
-                    ON c.code_module = c.code_module
+                    ON i.code_module = c.code_module
                 JOIN educator e
                     ON c.id_educator = e.id_educator
-                WHERE c.code_module =\"{}\" AND c.code_presentation=\"{}\";
+                WHERE c.code_module ='{}' AND c.code_presentation='{}';
                 """.format(CodeModule, CodePresentation)
             )
             data = cursor.fetchall()[0]
             year = data[2][0:4]
             monthStart = "February" if (data[2][4] == "B") else "October"
+            print(data[0])
             return {
                 "name": data[0],
                 "codeModule": data[1],
@@ -732,22 +738,23 @@ class GetStudentInfoById(Resource):
             con = mysql.connect()
             cursor = con.cursor()
             cursor.execute(
-                """SELECT id_student, parents_id, relationship_with_parents, gender, region, highest_education, imd_band, age_band, disability, name
+                """SELECT id_student, parents_id, relationship_with_parents, gender, region, highest_education, imd_band, age_band, disability, name,email
                 FROM student_info
                 WHERE id_student = \"{}\";
                 """.format(id))
             info = cursor.fetchall()[0]
             profile = {
-                "id_student": info[0],
+                "studentId": info[0],
                 "parents_id": info[1],
                 "relationship_with_parents": info[2],
                 "gender": "Male" if info[3] == "M" else "Female",
                 "region": info[4],
-                "highest_education": info[5],
+                "highestEducation": info[5],
                 "imd_band": info[6],
                 "age_band": info[7],
                 "disability": info[8],
-                "name": info[9]
+                "name": info[9],
+                "email": info[10],
             }
             return profile
 
@@ -1593,7 +1600,7 @@ class GetPredictionOnStudent(Resource):
                 "isParentsWarned": data[5],
             } if data else {
                 "isRisk": "No",
-                "probability": 100,
+                "probability": 1,
                 "isWarned": 0,
                 "isParentsWarned": 0,
             }

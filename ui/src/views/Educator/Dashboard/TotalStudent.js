@@ -2,6 +2,7 @@ import { Avatar, Box, Card, CardContent, CircularProgress, Grid, Typography } fr
 import PeopleIcon from '@mui/icons-material/PeopleOutlined';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export const TotalCustomers = () => {
   const [totalStudent, setTotalStudent] = useState(0)
@@ -55,15 +56,17 @@ export const TotalCustomers = () => {
             }
           </Grid>
           <Grid item>
-            <Avatar
-              sx={{
-                backgroundColor: 'success.main',
-                height: 56,
-                width: 56
-              }}
-            >
-              <PeopleIcon />
-            </Avatar>
+            <Link to='/'>
+              <Avatar
+                sx={{
+                  backgroundColor: 'success.main',
+                  height: 56,
+                  width: 56
+                }}
+              >
+                <PeopleIcon />
+              </Avatar>
+            </Link>
           </Grid>
         </Grid>
       </CardContent>

@@ -2,6 +2,7 @@ import { Avatar, Box, Card, CardContent, CircularProgress, Grid, Typography } fr
 import { School } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 export const TotalCourse = (props) => {
   const [totalCourse, setTotalCourse] = useState(0)
@@ -56,15 +57,17 @@ export const TotalCourse = (props) => {
             }
           </Grid>
           <Grid item>
-            <Avatar
-              sx={{
-                backgroundColor: 'warning.main',
-                height: 56,
-                width: 56
-              }}
-            >
-              <School />
-            </Avatar>
+            <Link to='/'>
+              <Avatar
+                sx={{
+                  backgroundColor: 'warning.main',
+                  height: 56,
+                  width: 56
+                }}
+              >
+                <School />
+              </Avatar>
+            </Link>
           </Grid>
         </Grid>
       </CardContent>

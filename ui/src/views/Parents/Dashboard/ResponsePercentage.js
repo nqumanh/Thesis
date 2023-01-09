@@ -2,13 +2,14 @@ import { Avatar, Box, Card, CardContent, CircularProgress, Grid, LinearProgress,
 import { useEffect, useState } from 'react';
 import { Warning } from '@mui/icons-material';
 import { getResponseWarningPercentage } from 'api';
+import { Link } from 'react-router-dom';
 
 export const ResponsePercentage = () => {
   const [percent, setPercent] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const id =  localStorage.getItem('id');
+    const id = localStorage.getItem('id');
     getResponseWarningPercentage(id)
       .then((res) => {
         setLoading(false)
@@ -49,15 +50,17 @@ export const ResponsePercentage = () => {
               </Typography>}
           </Grid>
           <Grid item>
-            <Avatar
-              sx={{
-                backgroundColor: 'success.main',
-                height: 56,
-                width: 56
-              }}
-            >
-              <Warning />
-            </Avatar>
+            <Link to='/warning'>
+              <Avatar
+                sx={{
+                  backgroundColor: 'success.main',
+                  height: 56,
+                  width: 56
+                }}
+              >
+                <Warning />
+              </Avatar>
+            </Link>
           </Grid>
         </Grid>
         {!loading &&

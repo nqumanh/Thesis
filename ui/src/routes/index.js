@@ -1,7 +1,7 @@
 import { useRoutes } from "react-router-dom";
 import Layout from "layout";
 import Login from "views/Login";
-import Message from "views/Message";
+import Message from "components/Message";
 
 import CourseDetailStudent from "views/Student/CourseDetailStudent";
 import StudentProfile from "views/Student/Profile";
@@ -34,8 +34,8 @@ const Routes = () => {
             children: [
                 { path: "", element: (role === "student") ? <StudentCourseList /> : (role === "educator") ? <CourseListEducator /> : <ChildCourseList /> },
                 { path: "dashboard", element: (role === "educator") ? <EducatorDashboard /> : (role === "student") ? <StudentDashboard /> : <ParentsDashboard /> },
-                { path: "profile", element: (role === "student") ? <StudentProfile /> : <ParentsProfile /> },
-                { path: "warning", element: (role === 'student') ? <Warning /> : <ParentsWarning /> },
+                { path: "profile", element: (role === "student") ? <StudentProfile /> : (role === "parents") ? <ParentsProfile /> : <NotFound/> },
+                { path: "warning", element: (role === 'student') ? <Warning /> : (role === "parents") ? <ParentsWarning />: <NotFound/> },
                 { path: "message", element: <Message /> },
                 { path: "setting", element: <Setting /> },
                 { path: "course/student", element: (role === 'educator') ? <StudentDetail /> : <NotFound /> },

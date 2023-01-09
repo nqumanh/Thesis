@@ -113,6 +113,7 @@ export default function StudentDetail() {
             { headers: { Authorization: `Bearer ${token}` } }
         ).then((res) => {
             setPrediction(res.data)
+            setContent("")
             setLoading(false)
         }).catch((err) => {
             setLoading(false)
@@ -135,6 +136,7 @@ export default function StudentDetail() {
             { headers: { Authorization: `Bearer ${token}` } }
         ).then((res) => {
             setPrediction(res.data)
+            setContent("")
             setLoading(false)
         }).catch((err) => {
             console.log(err)

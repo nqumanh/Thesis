@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Assessment } from '@mui/icons-material';
 import { Box } from '@mui/system';
+import { Link } from 'react-router-dom';
 
 export const TotalAssessment = (props) => {
   const [totalAssessment, setTotalAssessment] = useState(0)
@@ -54,15 +55,17 @@ export const TotalAssessment = (props) => {
             }
           </Grid>
           <Grid item>
-            <Avatar
-              sx={{
-                backgroundColor: 'primary.main',
-                height: 56,
-                width: 56
-              }}
-            >
-              <Assessment />
-            </Avatar>
+            <Link to='/'>
+              <Avatar
+                sx={{
+                  backgroundColor: 'primary.main',
+                  height: 56,
+                  width: 56
+                }}
+              >
+                <Assessment />
+              </Avatar>
+            </Link>
           </Grid>
         </Grid>
       </CardContent>

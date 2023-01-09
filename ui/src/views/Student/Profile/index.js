@@ -17,7 +17,9 @@ export default function Profile() {
       .get(`http://127.0.0.1:5000/student/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((response) => setProfile(response.data))
+      .then((res) => {
+        setProfile(res.data)
+      })
       .catch((error) => {
         localStorage.clear()
         navigate('/login')
@@ -50,7 +52,7 @@ export default function Profile() {
             md={6}
             xs={12}
           >
-            <AccountProfile />
+            <AccountProfile profile={profile}/>
           </Grid>
           <Grid
             item
@@ -58,7 +60,7 @@ export default function Profile() {
             md={6}
             xs={12}
           >
-            <AccountProfileDetails />
+            <AccountProfileDetails profile={profile}/>
           </Grid>
         </Grid>
       </Container>

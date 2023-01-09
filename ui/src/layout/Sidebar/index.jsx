@@ -29,18 +29,16 @@ function Sidebar(props) {
     if (role === 'student') {
         items = [
             { name: "Course", icon: <School />, to: '/' },
-            { name: "Profile", icon: <AccountCircle />, to: '/profile' },
             { name: "Warning", icon: <Warning />, to: '/warning' },
-            { name: "Dashboard", icon: <LineAxis />, to: '/dashboard' },
             { name: "Message", icon: <Mail />, to: '/message' },
+            { name: "Dashboard", icon: <LineAxis />, to: '/dashboard' },
         ]
     } else if (role === 'parents') {
         items = [
             { name: "Course", icon: <School />, to: '/' },
-            { name: "Profile", icon: <AccountCircle />, to: '/profile' },
             { name: "Warning", icon: <Warning />, to: '/warning' },
-            { name: "Dashboard", icon: <LineAxis />, to: '/dashboard' },
             { name: "Message", icon: <Mail />, to: '/message' },
+            { name: "Dashboard", icon: <LineAxis />, to: '/dashboard' },
         ]
     } else if (role === 'educator') {
         items = [
@@ -108,10 +106,32 @@ function Sidebar(props) {
                         </NavLink>
                     </ListItem>
                 ))}
+                {(role !== 'educator') &&
+                    <>
+                        < Divider sx={{
+                            borderColor: '#2D3748',
+                        }} />
+                        <ListItem disablePadding key={'profile'}>
+                            <NavLink to='/profile' style={({ isActive }) =>
+                                isActive ? activeStyle : inactiveStyle
+                            }
+                            >
+                                <ListItemButton>
+                                    <ListItemIcon>
+                                        <AccountCircle />
+                                    </ListItemIcon>
+                                    <ListItemText primary='Profile' />
+                                </ListItemButton>
+                            </NavLink>
+                        </ListItem>
+                    </>
+                }
             </List>
+
             <Divider sx={{
                 borderColor: '#2D3748',
             }} />
+
             <List sx={{ my: 3 }}>
                 {otherItems.map((item) => (
                     <ListItem disablePadding key={item.name}>

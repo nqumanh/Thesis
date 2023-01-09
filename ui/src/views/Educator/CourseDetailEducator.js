@@ -134,11 +134,15 @@ const warningColumns = [
         field: 'content',
         headerName: 'Educator\'s Comment',
         width: 450,
+        headerAlign: 'center',
+        align: 'center'
     },
     {
         field: 'feedback',
         headerName: 'Feedback',
         width: 450,
+        headerAlign: 'center',
+        align: 'center'
     },
     {
         field: 'responseTime',
@@ -151,6 +155,11 @@ const warningColumns = [
         width: 150,
     },
 ];
+
+const warningVisibility = {
+    responseTime: false,
+    createdTime: false,
+}
 
 export default function CourseDetailEducator() {
     const location = useLocation();
@@ -499,6 +508,7 @@ export default function CourseDetailEducator() {
                                 </Button>
                             </DialogActions>
                         </Dialog>
+
                         <StripedDataGrid
                             rows={students}
                             columns={studentColumns}
@@ -524,7 +534,7 @@ export default function CourseDetailEducator() {
                     <Typography gutterBottom variant="h5" component="div">
                         Warning List
                     </Typography>
-                    <DataGridTable rows={warnings} columns={warningColumns} />
+                    <DataGridTable rows={warnings} columns={warningColumns} visibility={warningVisibility} />
                 </Card>
             </Box>
 
@@ -545,6 +555,7 @@ export default function CourseDetailEducator() {
                     <DataGridTable rows={assessments} columns={assessmentColumns} />
                 </Card>
             </Box>
+
         </Container >
     );
 }

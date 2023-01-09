@@ -1,4 +1,5 @@
-import { Box, Card, CardContent, CardHeader, CircularProgress, Divider, InputBase, NativeSelect, styled, useTheme } from "@mui/material";
+import { ArrowRight } from "@mui/icons-material";
+import { Box, Button, Card, CardContent, CardHeader, CircularProgress, Divider, InputBase, NativeSelect, styled, useTheme } from "@mui/material";
 import axios from "axios";
 import {
     Chart as ChartJS,
@@ -11,6 +12,7 @@ import {
 } from 'chart.js';
 import { useEffect, useState } from "react";
 import { Bar } from 'react-chartjs-2';
+import { useNavigate } from "react-router-dom";
 
 ChartJS.register(
     CategoryScale,
@@ -58,10 +60,12 @@ function StudentAssessment() {
     const [courses, setCourses] = useState([])
     const [assessments, setAssessments] = useState([])
     const [loading, setLoading] = useState(true)
+    const navigate = useNavigate()
 
     useEffect(() => {
         const username = localStorage.getItem('username');
         const id = parseInt(username?.substring(1));
+
         let url = `http://localhost:5000/get-courses-of-educator/${id}`;
         axios
             .get(url, { headers: { Authorization: `Bearer ${token}` } })
@@ -208,7 +212,29 @@ function StudentAssessment() {
                     </Box>
                 }
             </CardContent>
-        </Card>
+            <Divider />
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    p: 2
+                }}
+            >
+                <Button
+                    color="primary"
+                    endIcon={<ArrowRight />}
+                    size="small"
+                    variant="text"
+                    onClick={() => {
+                        navigate(`/course`, {
+                            state: { presentation: courses.find(x => x.id === courseId) }
+                        })
+                    }}
+                >
+                    Detail
+                </Button>
+            </Box>
+        </Card >
     );
 }
 

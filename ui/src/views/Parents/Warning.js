@@ -4,6 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { Box, Button, Card, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Typography } from "@mui/material";
 import { addFeedbackToWarning, getWarnings } from "api";
 
+const warningVisibility = {
+    responseTime: false,
+    createdTime: false,
+}
+
 const ParentsWarning = () => {
     const [warnings, setWarnings] = useState([]);
     let systemId = localStorage.getItem("id")
@@ -110,7 +115,7 @@ const ParentsWarning = () => {
                         <Typography gutterBottom variant="h5" component="div">
                             Warnings
                         </Typography>
-                        <DataGridTable rows={warnings} columns={columns} />
+                        <DataGridTable rows={warnings} columns={columns} visibility={warningVisibility} />
                     </Card>
                 </Box>
             </Container>

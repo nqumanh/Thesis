@@ -1,7 +1,12 @@
-import { Box, Button, Card, Container, TextField, Typography } from "@mui/material";
+import { Box, Button, Card, Container, Snackbar, TextField, Typography } from "@mui/material";
 import axios from "axios";
 import ChooseTheme from "views/Setting/ChooseTheme";
-import React, { useState } from "react";
+import MuiAlert from '@mui/material/Alert';
+import React, { forwardRef, useState } from "react";
+
+const Alert = forwardRef(function Alert(props, ref) {
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 const Setting = () => {
 
@@ -11,6 +16,17 @@ const Setting = () => {
 
     const username = localStorage.getItem("username");
     const token = localStorage.getItem("token");
+
+    const [alert, setAlert] = useState({ message: "", type: "error" })
+    const [open, setOpen] = useState(false);
+
+    const handleClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setOpen(false);
+    };
 
     const onChange = (e) => {
         const { name, value } = e.target;
@@ -30,7 +46,14 @@ const Setting = () => {
     const handleSubmit = async (event) => {
         event.preventDefault();
         if (newPassword !== confirmPassword) {
-            alert("Password does not match!");
+            setAlert({ message: "Password does not match", type: "error" })
+            setOpen(true)
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            setAlert({ message: "Password should have at least 6 digits!", type: "error" })
+            setOpen(true)
             return;
         }
 
@@ -43,14 +66,26 @@ const Setting = () => {
             .post("http://localhost:5000/edit-user-password", formData, {
                 headers: { Authorization: `Bearer ${token}` },
             })
-            .then((response) => {
-                alert(response.data);
+            .then((res) => {
+                setNewPassword("")
+                setConfirmPassword("")
+                setCurrentPassword("")
+                setAlert({ message: "Change password successfully!", type: "success" })
+                setOpen(true)
             })
-            .catch((error) => alert(error.response.data));
+            .catch((error) => {
+                setAlert({ message: error.response.data, type: "error" })
+                setOpen(true)
+            });
     };
 
     return (
         <Container maxWidth={false}>
+            <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={open} autoHideDuration={5000} onClose={handleClose}>
+                <Alert onClose={handleClose} severity={alert.type} sx={{ width: '100%' }}>
+                    {alert.message}
+                </Alert>
+            </Snackbar>
             <Box
                 sx={{
                     alignItems: 'center',
@@ -81,12 +116,6 @@ const Setting = () => {
                             width: '40%',
                             alignItems: 'center',
                         }}>
-                            <input
-                                type="text"
-                                name="email"
-                                autoComplete="username email"
-                                style={{ display: "none" }}
-                            ></input>
                             <TextField
                                 margin="normal"
                                 required
@@ -96,6 +125,7 @@ const Setting = () => {
                                 type="password"
                                 id="current-password"
                                 autoComplete="current-password"
+                                value={currentPassword}
                                 onChange={onChange}
                             />
                             <TextField
@@ -106,6 +136,7 @@ const Setting = () => {
                                 label="New Password"
                                 type="password"
                                 id="new-password"
+                                value={newPassword}
                                 autoComplete="new-password"
                                 onChange={onChange}
                             />
@@ -117,9 +148,16 @@ const Setting = () => {
                                 label=" Confirm Password"
                                 type="password"
                                 id="confirm-password"
+                                value={confirmPassword}
                                 autoComplete="confirm-password"
                                 onChange={onChange}
                             />
+                            <input
+                                type="text"
+                                name="email"
+                                autoComplete="username email"
+                                style={{ display: "none" }}
+                            ></input>
                             <Button
                                 type="submit"
                                 fullWidth

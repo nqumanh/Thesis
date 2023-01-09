@@ -82,7 +82,7 @@ function AssessmentChart() {
     };
 
     return (
-        <Card>
+        <Card sx={{height: '100%'}}>
             <CardHeader title="Assessment Types" />
             <Divider />
             <CardContent>
@@ -139,7 +139,6 @@ function AssessmentChart() {
                     </>
                 }
             </CardContent>
-
         </Card>
     );
 }

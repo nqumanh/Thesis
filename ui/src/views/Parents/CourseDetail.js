@@ -38,6 +38,7 @@ function CourseDetailForParents() {
     const codeModule = location.state.codeModule
     const codePresentation = location.state.codePresentation
     const studentId = location.state.studentId
+    console.log(location.state)
     const [course, setCourse] = useState({})
     const [assessments, setAssessments] = useState([]);
 
@@ -59,6 +60,7 @@ function CourseDetailForParents() {
     useEffect(() => {
         getCourseByCode(codeModule, codePresentation)
             .then((res) => {
+                console.log(res.data)
                 setCourse(res.data)
             })
             .catch((err) => {

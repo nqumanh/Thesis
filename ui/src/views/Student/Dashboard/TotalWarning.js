@@ -2,6 +2,7 @@ import { Avatar, Box, Card, CardContent, CircularProgress, Grid, Typography } fr
 import { useEffect, useState } from 'react';
 import { Warning } from '@mui/icons-material';
 import { getWarnings } from 'api';
+import { Link } from 'react-router-dom';
 
 export const TotalWarning = () => {
   const [totalWarning, setTotalWarning] = useState(0)
@@ -52,15 +53,17 @@ export const TotalWarning = () => {
             }
           </Grid>
           <Grid item>
-            <Avatar
-              sx={{
-                backgroundColor: 'error.main',
-                height: 56,
-                width: 56
-              }}
-            >
-              <Warning />
-            </Avatar>
+            <Link to='/'>
+              <Avatar
+                sx={{
+                  backgroundColor: 'error.main',
+                  height: 56,
+                  width: 56
+                }}
+              >
+                <Warning />
+              </Avatar>
+            </Link>
           </Grid>
         </Grid>
       </CardContent>

@@ -2,6 +2,7 @@ import { Avatar, Box, Card, CardContent, CircularProgress, Grid, LinearProgress,
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { Warning } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
 
 export const AtRiskPercentage = () => {
   const [atRiskStudentNumber, setAtRiskStudentNumber] = useState(0)
@@ -70,15 +71,17 @@ export const AtRiskPercentage = () => {
               </Typography>}
           </Grid>
           <Grid item>
-            <Avatar
-              sx={{
-                backgroundColor: 'error.main',
-                height: 56,
-                width: 56
-              }}
-            >
-              <Warning />
-            </Avatar>
+            <Link to='/'>
+              <Avatar
+                sx={{
+                  backgroundColor: 'error.main',
+                  height: 56,
+                  width: 56
+                }}
+              >
+                <Warning />
+              </Avatar>
+            </Link>
           </Grid>
         </Grid>
         {!loading &&

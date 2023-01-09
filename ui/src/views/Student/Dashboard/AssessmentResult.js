@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, CardHeader, CircularProgress, Divider, InputBase, NativeSelect, styled, useTheme } from "@mui/material";
+import { Box, Button, Card, CardContent, CardHeader, CircularProgress, Divider, InputBase, NativeSelect, styled, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import React from 'react';
 import {
@@ -14,6 +14,8 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import axios from "axios";
+import { ArrowRight } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 ChartJS.register(
     CategoryScale,
@@ -58,11 +60,12 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
 
 function AssessmentResult() {
     const theme = useTheme();
+    const navigate = useNavigate()
 
     const username = localStorage.getItem('username');
     const studentId = parseInt(username?.substring(1));
     const token = localStorage.getItem('token');
-    const [courseId, setCourseId] = useState("")
+    const [course, setCourse] = useState({ id: "" })
     const [courses, setCourses] = useState([])
     const [assessments, setAssessments] = useState([])
     const [loading, setLoading] = useState(false)
@@ -73,7 +76,7 @@ function AssessmentResult() {
             .get(url, { headers: { Authorization: `Bearer ${token}` } })
             .then((res) => {
                 setCourses(res.data);
-                if (res.data.length > 0) setCourseId(res.data[0].id)
+                if (res.data.length > 0) setCourse(res.data[0])
             })
             .catch((error) => {
                 console.log(error)
@@ -83,10 +86,7 @@ function AssessmentResult() {
     useEffect(() => {
         if (courses.length > 0) {
             // setLoading(true)
-            let id = parseInt(courseId)
-            let codeModule = courses[id].codeModule
-            let codePresentation = courses[id].codePresentation
-            let url = `http://127.0.0.1:5000/student-assessment/${studentId}/${codeModule}/${codePresentation}`;
+            let url = `http://127.0.0.1:5000/student-assessment/${studentId}/${course.codeModule}/${course.codePresentation}`;
             axios
                 .get(url, { headers: { Authorization: `Bearer ${token}` } })
                 .then((res) => {
@@ -98,11 +98,13 @@ function AssessmentResult() {
                     console.log(error)
                 });
         }
-    }, [courseId, courses, token, studentId])
+    }, [course, courses, token, studentId])
 
-    const handleChange = (event) => {
-        setCourseId(event.target.value);
+    const handleChange = (e) => {
+        setCourse(courses.find(x => x.id === parseInt(e.target.value)));
     };
+
+
 
     const data = {
         labels: assessments.map(x => x.assessment_type + ` (${x.date_submitted})`),
@@ -172,7 +174,7 @@ function AssessmentResult() {
                 action={(
                     <NativeSelect
                         id="demo-customized-select-native"
-                        value={courseId}
+                        value={course.id}
                         onChange={handleChange}
                         input={<BootstrapInput />}
                         sx={{ py: 0 }}
@@ -201,6 +203,28 @@ function AssessmentResult() {
                     </Box>
                 }
             </CardContent>
+            <Divider />
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    p: 2
+                }}
+            >
+                <Button
+                    color="primary"
+                    endIcon={<ArrowRight />}
+                    size="small"
+                    variant="text"
+                    onClick={() => {
+                        navigate(`/course`, {
+                            state: { codeModule: course.codeModule, codePresentation: course.codePresentation }
+                        })
+                    }}
+                >
+                    Detail
+                </Button>
+            </Box>
         </Card>
     );
 }

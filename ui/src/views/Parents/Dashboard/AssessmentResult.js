@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, CardHeader, CircularProgress, Divider, InputBase, NativeSelect, styled, useTheme } from "@mui/material";
+import { Box, Button, Card, CardContent, CardHeader, CircularProgress, Divider, InputBase, NativeSelect, styled, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import React from 'react';
 import {
@@ -14,6 +14,8 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { getCourseListOfStudentByParentsId, getStudentAssessments } from "api";
+import { ArrowRight } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 ChartJS.register(
     CategoryScale,
@@ -58,27 +60,28 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
 
 function AssessmentResult() {
     const theme = useTheme();
+    const navigate = useNavigate();
 
-    const personal_id = localStorage.getItem('username');
-    const [courseId, setCourseId] = useState(undefined)
+    const personalId = localStorage.getItem('username');
+    const [course, setCourse] = useState({ id: undefined })
     const [courses, setCourses] = useState([])
     const [assessments, setAssessments] = useState([])
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
-        getCourseListOfStudentByParentsId(personal_id)
+        getCourseListOfStudentByParentsId(personalId)
             .then((res) => {
                 setCourses(res.data);
-                if (res.data.length > 0) setCourseId(res.data[0].id)
+                if (res.data.length > 0) setCourse(res.data[0])
             })
             .catch((error) => {
                 console.log(error)
             });
-    }, [personal_id])
+    }, [personalId])
 
     useEffect(() => {
-        if (courseId !== undefined) {
-            let selectedCourse = courses.find(x => x.id === parseInt(courseId))
+        if (course.id !== undefined) {
+            let selectedCourse = courses.find(x => x.id === parseInt(course.id))
             setLoading(true)
             getStudentAssessments(selectedCourse.studentId, selectedCourse.codeModule, selectedCourse.codePresentation)
                 .then((res) => {
@@ -89,10 +92,10 @@ function AssessmentResult() {
                     console.log(err)
                 })
         }
-    }, [courses, courseId])
+    }, [courses, course])
 
-    const handleChange = (event) => {
-        setCourseId(event.target.value);
+    const handleChange = (e) => {
+        setCourse(courses.find(x => x.id === parseInt(e.target.value)));
     };
 
     const data = {
@@ -163,13 +166,15 @@ function AssessmentResult() {
                 action={(
                     <NativeSelect
                         id="demo-customized-select-native"
-                        value={courseId}
+                        value={course.id}
                         onChange={handleChange}
                         input={<BootstrapInput />}
                         sx={{ py: 0 }}
                     >
                         {courses.map(course =>
-                            <option key={course.id} value={course.id}>{course.childName} - {course.name} - {course.codePresentation}</option>
+                            <option key={course.id} value={course.id}>
+                                {course.studentName} - {course.name} - {course.codePresentation}
+                            </option>
                         )}
                     </NativeSelect>
                 )}
@@ -192,6 +197,28 @@ function AssessmentResult() {
                     </Box>
                 }
             </CardContent>
+            <Divider />
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    p: 2
+                }}
+            >
+                <Button
+                    color="primary"
+                    endIcon={<ArrowRight />}
+                    size="small"
+                    variant="text"
+                    onClick={() => {
+                        navigate(`/course`, {
+                            state: { codeModule: course.codeModule, codePresentation: course.codePresentation, studentId: course.studentId }
+                        })
+                    }}
+                >
+                    Detail
+                </Button>
+            </Box>
         </Card>
     );
 }

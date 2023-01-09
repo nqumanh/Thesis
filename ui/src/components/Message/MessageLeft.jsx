@@ -10,7 +10,7 @@ function MessageLeft({ message, createdTime }) {
     return (
         <MessageRowLeft>
             <Tooltip title={createdTime} placement="left">
-                <Box sx={{ px: 2, py: 1, backgroundColor: '#eee', borderRadius: '20px', m: 1, maxWidth: "60%" }}>
+                <Box sx={{ overflowWrap: 'break-word', px: 2, py: 1, backgroundColor: '#eee', borderRadius: '20px', m: 1, maxWidth: "60%" }}>
                     {message}
                 </Box>
             </Tooltip>

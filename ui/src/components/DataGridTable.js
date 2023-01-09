@@ -55,9 +55,10 @@ function CustomToolbar() {
     );
 }
 
-export default function DataGridTable(props) {
+export default function DataGridTable({ rows, columns, visibility = {} }) {
     const [pageSize, setPageSize] = useState(5);
-    const { rows, columns } = props;
+
+    const [columnVisibilityModel, setColumnVisibilityModel] = useState(visibility);
 
     return (
         <StripedDataGrid
@@ -73,6 +74,10 @@ export default function DataGridTable(props) {
             }}
             getRowClassName={(params) =>
                 params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'
+            }
+            columnVisibilityModel={columnVisibilityModel}
+            onColumnVisibilityModelChange={(newModel) =>
+                setColumnVisibilityModel(newModel)
             }
         />
     );

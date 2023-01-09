@@ -11,7 +11,6 @@ const Warning = () => {
 
     useEffect(() => {
         getWarnings(systemId).then((res) => {
-            console.log(res.data)
             setWarnings(res.data)
         }).catch((error) => {
             console.log(error)
